@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 rocket = { version = "0.5.1", features = ["tls"] }
 rand = "0.8"
+rocket_dyn_templates = { version = "0.2", features = ["handlebars"] }

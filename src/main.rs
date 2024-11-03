@@ -6,6 +6,7 @@ use std::sync::atomic::{AtomicI32, Ordering};
 use rocket::data::{Data, ToByteUnit};
 use rocket::response::content::RawText;
 use rocket::tokio::fs::{self, File};
+use rocket_dyn_templates::{Template, context};
 
 // In a real application, these would be retrieved dynamically from a config.
 // const HOST: Absolute<'static> = uri!("http://*:8000");
@@ -44,24 +45,17 @@ async fn delete(id: RecordId) -> Option<()> {
 }
 
 #[get("/")]
-fn index() -> &'static str {
-    "
-    USAGE
-
-      POST /
-
-          accepts raw data in the body of the request and responds with a URL of
-          a page containing the body's content
-
-          EXAMPLE: curl --data-binary @file.txt http://localhost:8000
-
-      GET /<id>
-
-          retrieves the content for the paste with id `<id>`
-    "
+fn index() -> Template {
+    Template::render("index", context! {
+        title: "Hello",
+        name: Some("Fanda"),
+        items: vec!["One", "Two", "Three"],
+    })
 }
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![index, upload, delete, retrieve])
+    rocket::build()
+        .attach(Template::fairing())
+        .mount("/", routes![index, upload, delete, retrieve])
 }
