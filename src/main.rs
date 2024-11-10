@@ -1,10 +1,16 @@
 #[macro_use] extern crate rocket;
 
+use std::collections::BTreeMap;
 use std::io;
+use std::os::linux::raw::stat;
 use std::path::{PathBuf};
 use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::RwLock;
+use home::home_dir;
 use rocket::data::{Data, ToByteUnit};
 use rocket::response::content::RawText;
+use serde::Deserialize;
+use rocket::State;
 use rocket::tokio::fs::{self, File};
 use rocket_dyn_templates::{Template, context};
 
@@ -47,15 +53,38 @@ async fn delete(id: RecordId) -> Option<()> {
 #[get("/")]
 fn index() -> Template {
     Template::render("index", context! {
-        title: "Hello",
-        name: Some("Fanda"),
-        items: vec!["One", "Two", "Three"],
+        title: "Quick Event Exchange Server",
+    })
+}
+#[get("/events")]
+fn get_events(state: &State<SharedQxState>) -> Template {
+    let events = state.read().unwrap().events.keys().map(String::to_owned).collect::<Vec<_>>();
+    Template::render("events", context! {
+        events: events,
     })
 }
 
+struct Event {
+    ochecklist_changeset_id_last: usize,
+}
+struct QxState {
+    events: BTreeMap<String, Event>,
+}
+#[derive(Debug, Deserialize)]
+struct AppConfig {
+    data_dir: String,
+}
+type SharedQxState = RwLock<QxState>;
 #[launch]
 fn rocket() -> _ {
+    let data_dir = home_dir().unwrap().join(".qxhttpd/data").as_os_str().to_str().unwrap().to_string();
+    let app_config = AppConfig { data_dir };
+    let state = QxState {
+        events: BTreeMap::from([("test-event".to_string(), Event { ochecklist_changeset_id_last: 0 })])
+    };
     rocket::build()
         .attach(Template::fairing())
-        .mount("/", routes![index, upload, delete, retrieve])
+        .manage(SharedQxState::new(state))
+        .manage(app_config)
+        .mount("/", routes![index, get_events, upload, delete, retrieve])
 }

@@ -1,0 +1,17 @@
+{{#*inline "page"}}
+
+    <h1>Events</h1>
+    <section>
+        <ul>
+            {{#each events}}
+                <li>{{ this }}</li>
+            {{/each}}
+        </ul>
+    </section>
+
+    <!--<section id="custom-helper">-->
+    <!--  <p>Try going to <a href="/hello/Your%20Name">/hbs/hello/Your Name</a>.</p>-->
+    <!--</section>-->
+
+{{/inline}}
+{{> layout}}
