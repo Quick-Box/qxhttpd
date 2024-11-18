@@ -4,6 +4,7 @@
 address = "0.0.0.0"
 port = 8000
 # limits = { form = "64 kB", json = "1 MiB" }
+qx_data_dir = "~/.qx/data"
 
 [tls]
 certs = "private/rsa_sha256_cert.pem"

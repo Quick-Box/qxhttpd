@@ -10,3 +10,4 @@ rocket_dyn_templates = { version = "0.2", features = ["handlebars"] }
 home = "0.5"
 serde = "1.0"
 serde_yaml = "0.9"
+log = "0.4.22"

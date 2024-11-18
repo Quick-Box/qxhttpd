@@ -1,11 +1,14 @@
 {{#*inline "page"}}
 
     <h1>{{ title }}</h1>
-<section>
-    <ul>
-        <li><a href="/events">Events</a></li>
-    </ul>
-</section>
+    <h2>Events</h2>
+    <section>
+        <ul>
+            {{#each events}}
+                <li><a href="/event/{{ this }}">{{ this }}</a></li>
+            {{/each}}
+        </ul>
+    </section>
 
 <!--<section id="custom-helper">-->
 <!--  <p>Try going to <a href="/hello/Your%20Name">/hbs/hello/Your Name</a>.</p>-->

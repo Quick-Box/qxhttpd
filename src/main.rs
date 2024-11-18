@@ -1,90 +1,97 @@
 #[macro_use] extern crate rocket;
 
 use std::collections::BTreeMap;
-use std::io;
-use std::os::linux::raw::stat;
-use std::path::{PathBuf};
-use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::RwLock;
 use home::home_dir;
-use rocket::data::{Data, ToByteUnit};
-use rocket::response::content::RawText;
-use serde::Deserialize;
+use rocket::fs::{relative, FileServer};
 use rocket::State;
-use rocket::tokio::fs::{self, File};
 use rocket_dyn_templates::{Template, context};
+use log::info;
 
 // In a real application, these would be retrieved dynamically from a config.
 // const HOST: Absolute<'static> = uri!("http://*:8000");
-const DATA_DIR: &'static str = "/tmp/qxhttpd/data";
-static RECENT_RECORD_ID: AtomicI32 = AtomicI32::new(0);
-
 type RecordId = i32;
-fn next_record_id() -> RecordId {
-    let old_id = RECENT_RECORD_ID.fetch_add(1, Ordering::SeqCst);
-    old_id + 1
-}
-fn record_file(id: RecordId) -> io::Result<PathBuf> {
-    std::fs::create_dir_all(DATA_DIR)?;
-    Ok(PathBuf::from(DATA_DIR).join(format!("{:04}", id)))
-}
+type EventId = String;
+//fn record_file(data_dir: &str, id: RecordId) -> io::Result<PathBuf> {
+//    std::fs::create_dir_all(data_dir)?;
+//    Ok(PathBuf::from(data_dir).join(format!("{:05}", id)))
+//}
 
-#[post("/", data = "<paste>")]
-async fn upload(paste: Data<'_>) -> io::Result<String> {
-    let id = next_record_id();
-    let file_path = record_file(id)?;
-    println!("file path: {:?}", file_path);
-    paste.open(128.kibibytes()).into_file(file_path).await?;
-    Ok(id.to_string())
-}
+//#[post("/", data = "<paste>")]
+//async fn upload(paste: Data<'_>) -> io::Result<String> {
+//    let id = next_record_id();
+//    let file_path = record_file(id)?;
+//    println!("file path: {:?}", file_path);
+//    paste.open(128.kibibytes()).into_file(file_path).await?;
+//    Ok(id.to_string())
+//}
 
-#[get("/api/<id>")]
-async fn retrieve(id: RecordId) -> Option<RawText<File>> {
-    let Ok(file_path) = record_file(id) else { return None };
-    File::open(file_path).await.map(RawText).ok()
-}
+//#[get("/api/<id>")]
+//async fn retrieve(id: RecordId) -> Option<RawText<File>> {
+//    let Ok(file_path) = record_file(id) else { return None };
+//    File::open(file_path).await.map(RawText).ok()
+//}
 
-#[delete("/<id>")]
-async fn delete(id: RecordId) -> Option<()> {
-    let Ok(file_path) = record_file(id) else { return None };
-    fs::remove_file(file_path).await.ok()
-}
+//#[delete("/<id>")]
+//async fn delete(id: RecordId) -> Option<()> {
+//    let Ok(file_path) = record_file(id) else { return None };
+//    fs::remove_file(file_path).await.ok()
+//}
 
 #[get("/")]
-fn index() -> Template {
+fn index(state: &State<SharedQxState>) -> Template {
+    let events = state.read().unwrap().events.keys().map(String::to_owned).collect::<Vec<_>>();
     Template::render("index", context! {
         title: "Quick Event Exchange Server",
+        events: events,
     })
 }
-#[get("/events")]
-fn get_events(state: &State<SharedQxState>) -> Template {
-    let events = state.read().unwrap().events.keys().map(String::to_owned).collect::<Vec<_>>();
-    Template::render("events", context! {
-        events: events,
+#[get("/event/<event_id>")]
+fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Template {
+    let ochecklist_changeset_id_last = state.read().unwrap().events.get(&event_id).map(|event| event.ochecklist_changeset_id_last).unwrap_or(0);
+    Template::render("event", context! {
+        ochecklist_changeset_id_last
     })
 }
 
 struct Event {
     ochecklist_changeset_id_last: usize,
 }
-struct QxState {
-    events: BTreeMap<String, Event>,
-}
-#[derive(Debug, Deserialize)]
 struct AppConfig {
     data_dir: String,
+}
+impl Default for AppConfig {
+    fn default() -> Self {
+        AppConfig { data_dir: "/tmp/qx/data".to_string() }
+    }
+}
+struct QxState {
+    events: BTreeMap<EventId, Event>,
 }
 type SharedQxState = RwLock<QxState>;
 #[launch]
 fn rocket() -> _ {
-    let data_dir = home_dir().unwrap().join(".qxhttpd/data").as_os_str().to_str().unwrap().to_string();
-    let app_config = AppConfig { data_dir };
     let state = QxState {
         events: BTreeMap::from([("test-event".to_string(), Event { ochecklist_changeset_id_last: 0 })])
     };
-    rocket::build()
+    let rocket = rocket::build()
         .attach(Template::fairing())
         .manage(SharedQxState::new(state))
-        .manage(app_config)
-        .mount("/", routes![index, get_events, upload, delete, retrieve])
+        .mount("/", FileServer::from(relative!("static")))
+        .mount("/", routes![index, get_event]);
+
+    let figment = rocket.figment();
+    let data_dir = figment.extract_inner::<String>("qx_data_dir");
+    let mut cfg = AppConfig::default();
+    if let Ok(data_dir) = data_dir {
+        if !data_dir.is_empty() {
+            cfg.data_dir = data_dir;
+        }
+    }
+    if cfg.data_dir.starts_with("~/") {
+        let home_dir = home_dir().expect("home dir");
+        cfg.data_dir = home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path");
+    }
+    info!("QX data dir: {}", cfg.data_dir);
+    rocket.manage(cfg)
 }

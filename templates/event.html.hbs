@@ -1,12 +1,8 @@
 {{#*inline "page"}}
 
-    <h1>Events</h1>
+    <h1>Event {{ event_id }}</h1>
     <section>
-        <ul>
-            {{#each events}}
-                <li>{{ this }}</li>
-            {{/each}}
-        </ul>
+        Last OCheckList import id: {{ ochecklist_changeset_id_last }}
     </section>
 
     <!--<section id="custom-helper">-->
@@ -14,4 +10,5 @@
     <!--</section>-->
 
 {{/inline}}
+{{> nav}}
 {{> layout}}
