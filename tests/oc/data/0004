@@ -1,0 +1,18 @@
+Version: 1.5
+Creator: "O Checklist v4.2"
+Created: 2024-11-22T17:02:34+01:00
+Event:   "Demo"
+Data:
+  - Runner:
+      StartStatus: Started OK
+      Id:          "2967"
+      Bib:         "119"
+      Name:        "William Adams"
+      Org:         "Portland"
+      Card:        9216973
+      StartTime:   17:11:00
+      ClassName:   "M40"
+    ChangeLog:     null
+EndOfData:
+  NumRunners: 1
+  NumLines:   18

@@ -1,0 +1,18 @@
+Version: 1.5
+Creator: "O Checklist v4.2"
+Created: 2024-11-22T17:02:40+01:00
+Event:   "Demo"
+Data:
+  - Runner:
+      StartStatus: Started OK
+      Id:          "7826"
+      Bib:         "168"
+      Name:        "Lucas White"
+      Org:         "Winston–Salem"
+      Card:        1913439
+      StartTime:   17:15:00
+      ClassName:   "M16"
+    ChangeLog:     null
+EndOfData:
+  NumRunners: 1
+  NumLines:   18

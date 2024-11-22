@@ -14,6 +14,7 @@ key = "private/rsa_sha256_key.pem"
 [debug]
 ## only the `json` key from `default` will be overridden; `form` will remain
 # limits = { json = "10MiB" }
+qx_oc_test_data_dir = "tests/oc/data"
 
 ## set only when the `nyc` profile is selected
 [nyc]

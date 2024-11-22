@@ -1,0 +1,18 @@
+Version: 1.5
+Creator: "O Checklist v4.2"
+Created: 2024-11-22T17:02:26+01:00
+Event:   "Demo"
+Data:
+  - Runner:
+      StartStatus: Started OK
+      Id:          "8124"
+      Bib:         "171"
+      Name:        "Austin Thompson"
+      Org:         "El Paso"
+      Card:        258888
+      StartTime:   17:10:00
+      ClassName:   "M55"
+    ChangeLog:     null
+EndOfData:
+  NumRunners: 1
+  NumLines:   18

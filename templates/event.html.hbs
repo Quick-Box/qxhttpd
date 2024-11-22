@@ -1,13 +1,36 @@
 {{#*inline "page"}}
 
     <h1>Event {{ event_id }}</h1>
-    <section>
-        Last OCheckList import id: {{ ochecklist_changeset_id_last }}
-    </section>
-
     <!--<section id="custom-helper">-->
-    <!--  <p>Try going to <a href="/hello/Your%20Name">/hbs/hello/Your Name</a>.</p>-->
+      <p>Change sets</p>
     <!--</section>-->
+    {{#each event.oc.change_sets}}
+        <p>{{ this.created }}</p>
+        <table>
+            <thead><tr>
+                <th>Id</th>
+                <th>Status</th>
+                <th>SI</th>
+                <th>Class</th>
+                <th>Start</th>
+                <th>Comment</th>
+            </tr></thead>
+            <tbody>
+            {{#each this.data}}
+                <tr>
+                    <td>{{ this.runner.id }}</td>
+                    <td>{{ this.runner.start_status }}</td>
+                    <td>{{ this.runner.si }}</td>
+                    <td>{{ this.runner.class_name }}</td>
+                    <td>{{ this.runner.runner_name }}</td>
+                    <td>{{ this.runner.start_time }}</td>
+                    <td>{{ this.runner.comment }}</td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    {{/each}}
+
 
 {{/inline}}
 {{> nav}}

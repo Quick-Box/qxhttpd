@@ -1,0 +1,28 @@
+Version: 1.5
+Creator: "O Checklist v4.2"
+Created: 2024-11-22T17:02:12+01:00
+Event:   "Demo"
+Data:
+  - Runner:
+      StartStatus: Started OK
+      Id:          "7410"
+      Bib:         "164"
+      Name:        "Asher Watson"
+      Org:         "Charlotte"
+      Card:        1756938
+      StartTime:   17:06:00
+      ClassName:   "M80"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "9932"
+      Bib:         "189"
+      Name:        "Mason Mitchell"
+      Org:         "Scottsdale"
+      Card:        2312287
+      StartTime:   17:06:00
+      ClassName:   "M50"
+    ChangeLog:     null
+EndOfData:
+  NumRunners: 2
+  NumLines:   28

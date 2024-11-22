@@ -1,0 +1,88 @@
+Version: 1.5
+Creator: "O Checklist v4.2"
+Created: 2024-11-22T17:02:53+01:00
+Event:   "Demo"
+Data:
+  - Runner:
+      StartStatus: Started OK
+      Id:          "8336"
+      Bib:         "173"
+      Name:        "Jameson Walker"
+      Org:         "Chandler"
+      Card:        8442
+      StartTime:   17:21:00
+      ClassName:   "M35"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "5037"
+      Bib:         "140"
+      Name:        "Autumn Kaur"
+      Org:         "Nashville"
+      Card:        16728424
+      StartTime:   17:22:00
+      ClassName:   "W65"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "5552"
+      Bib:         "145"
+      Name:        "Sarah Taylor"
+      Org:         "Richmond"
+      Card:        9238437
+      StartTime:   17:23:00
+      ClassName:   "W45"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "10122"
+      Bib:         "191"
+      Name:        "Santiago Miller"
+      Org:         "Honolulu"
+      Card:        8994374
+      StartTime:   17:24:00
+      ClassName:   "M10"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "1364"
+      Bib:         "103"
+      Name:        "Robert Powell"
+      Org:         "Spokane"
+      Card:        16757015
+      StartTime:   17:25:00
+      ClassName:   "M14"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "7797"
+      Bib:         "167"
+      Name:        "Jayden Mills"
+      Org:         "Philadelphia"
+      Card:        19038
+      StartTime:   17:25:00
+      ClassName:   "M18"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "9791"
+      Bib:         "187"
+      Name:        "Sadie Davis"
+      Org:         "Tucson"
+      Card:        9124102
+      StartTime:   17:25:00
+      ClassName:   "W10"
+    ChangeLog:     null
+  - Runner:
+      StartStatus: Started OK
+      Id:          "4755"
+      Bib:         "137"
+      Name:        "Michael Davies"
+      Org:         "Mesa"
+      Card:        16720121
+      StartTime:   17:26:00
+      ClassName:   "M14"
+    ChangeLog:     null
+EndOfData:
+  NumRunners: 8
+  NumLines:   88
