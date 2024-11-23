@@ -1,5 +1,6 @@
 #[macro_use] extern crate rocket;
 
+use std::cmp::min;
 use std::collections::BTreeMap;
 use std::fs;
 use std::sync::RwLock;
@@ -43,31 +44,17 @@ fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template
 fn get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
     let quard = state.read().unwrap();
     let event = quard.events.get(&event_id).ok_or(format!("Invalid event ID: {event_id}"))?;
-    let mut lst: Vec<QEChangeRecord> = vec![];
-    let offset = offset.unwrap_or(0);
-    let limit = limit.unwrap_or(100);
-    let mut ix = 0;
-    let mut cnt = 0;
-    for set in &event.oc.change_sets {
-        for rec in &set.Data {
-            if ix >= offset && cnt < limit {
-                let rec = QERunsRecord::try_from(rec)?;
-                lst.push(QEChangeRecord::Runs(rec));
-                cnt += 1;
-            }
-            ix += 1;
-        }
-    }
+    let offset = offset.unwrap_or(0) as usize;
+    let offset2 = min(offset + limit.unwrap_or(100) as usize, event.qe.len());
+    let lst = event.qe[offset .. offset2].to_vec();
     Ok(Json(lst))
 }
 #[post("/event/<event_id>/oc", data = "<data>")]
-async fn add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> Result<String, Status> {
+async fn add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> Result<(), Status> {
     let content = data.open(128.kibibytes()).into_string().await.map_err(|_| Status::InternalServerError)?;
     let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
-    let mut quard = state.write().unwrap();
-    let event = quard.events.get_mut(&event_id).ok_or(Status::NotFound)?;
-    event.oc.change_sets.push(oc);
-    Ok(format!("{}", event.oc.change_sets.len()))
+    state.write().unwrap().add_oc_change_set(&event_id, oc).map_err(|_| Status::NotFound)?;
+    Ok(())
 }
 #[derive(Serialize, Clone, Debug)]
 enum QEChangeRecord {
@@ -85,16 +72,16 @@ struct QERunsRecord {
     #[serde(default)]
     comment: String,
 }
-impl TryFrom<&OCheckListChange> for QERunsRecord {
+impl TryFrom<&OCheckListChange> for QEChangeRecord {
     type Error = String;
 
     fn try_from(oc: &OCheckListChange) -> Result<Self, Self::Error> {
-        Ok(Self {
+        Ok(Self::Runs(QERunsRecord {
             id: RunId::from_str_radix(&oc.Runner.Id, 10).map_err(|e| e.to_string())?,
             siId: oc.Runner.Card,
             checkTime: oc.Runner.StartTime.clone(),
             comment: oc.Runner.Comment.clone(),
-        })
+        }))
     }
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -107,7 +94,8 @@ struct QERadioRecord {
 
 #[derive(Serialize, Clone, Debug)]
 struct Event {
-    oc: OCheckListData,
+    qe: Vec<QEChangeRecord>,
+    oc: Vec<OCheckListChangeSet>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -123,10 +111,6 @@ struct OCheckListChangeSet {
 struct OCheckListChange {
     Runner: OChecklistRunner,
     ChangeLog: String,
-}
-#[derive(Serialize, Clone, Debug)]
-struct OCheckListData {
-    change_sets: Vec<OCheckListChangeSet>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 enum OChecklistStartStatus {
@@ -158,6 +142,17 @@ impl Default for AppConfig {
 }
 struct QxState {
     events: BTreeMap<EventId, Event>,
+}
+impl QxState {
+    fn add_oc_change_set(&mut self, event_id: &str, change_set: OCheckListChangeSet) -> Result<(), String> {
+        let event = self.events.get_mut(event_id).ok_or(format!("Invalid event Id: {event_id}"))?;
+        for rec in &change_set.Data {
+            let rec = QEChangeRecord::try_from(rec).map_err(|e| e.to_string())?;
+            event.qe.push(rec);
+        }
+        event.oc.push(change_set);
+        Ok(())
+    }
 }
 type SharedQxState = RwLock<QxState>;
 fn load_test_oc_data(data_dir: &str) -> Vec<OCheckListChangeSet> {
@@ -205,9 +200,12 @@ fn rocket() -> _ {
     } else { 
         Default::default()
     };
-    let state = QxState {
-        events: BTreeMap::from([("test-event".to_string(), Event { oc: OCheckListData { change_sets: oc_changes } })])
+    let mut state = QxState {
+        events: BTreeMap::from([("test-event".to_string(), Event { qe: vec![], oc: vec![] })])
     };
+    for s in oc_changes {
+        state.add_oc_change_set("test-event", s).unwrap()
+    }
     let rocket = rocket.manage(SharedQxState::new(state));
     rocket
 }
