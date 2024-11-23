@@ -5,14 +5,14 @@ use std::fs;
 use std::sync::RwLock;
 use home::home_dir;
 use rocket::fs::{relative, FileServer};
-use rocket::State;
+use rocket::{Data, State};
 use rocket_dyn_templates::{Template, context};
 use log::info;
+use rocket::data::ToByteUnit;
 use rocket::http::Status;
 use rocket::response::status::NotFound;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
-use rocket::time::macros::offset;
 use serde::{Deserialize};
 
 // In a real application, these would be retrieved dynamically from a config.
@@ -39,23 +39,35 @@ fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template
         }))
 }
 
-#[get("/event/<event_id>/qe/chng/in?<offset>")]
-fn get_in_changes(event_id: EventId, offset: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
+#[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
+fn get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
     let quard = state.read().unwrap();
     let event = quard.events.get(&event_id).ok_or(format!("Invalid event ID: {event_id}"))?;
     let mut lst: Vec<QEChangeRecord> = vec![];
     let offset = offset.unwrap_or(0);
+    let limit = limit.unwrap_or(100);
     let mut ix = 0;
+    let mut cnt = 0;
     for set in &event.oc.change_sets {
         for rec in &set.Data {
-            if ix >= offset {
+            if ix >= offset && cnt < limit {
                 let rec = QERunsRecord::try_from(rec)?;
                 lst.push(QEChangeRecord::Runs(rec));
+                cnt += 1;
             }
             ix += 1;
         }
     }
     Ok(Json(lst))
+}
+#[post("/event/<event_id>/oc", data = "<data>")]
+async fn add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> Result<String, Status> {
+    let content = data.open(128.kibibytes()).into_string().await.map_err(|_| Status::InternalServerError)?;
+    let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
+    let mut quard = state.write().unwrap();
+    let event = quard.events.get_mut(&event_id).ok_or(Status::NotFound)?;
+    event.oc.change_sets.push(oc);
+    Ok(format!("{}", event.oc.change_sets.len()))
 }
 #[derive(Serialize, Clone, Debug)]
 enum QEChangeRecord {
@@ -163,7 +175,12 @@ fn rocket() -> _ {
     let rocket = rocket::build()
         .attach(Template::fairing())
         .mount("/", FileServer::from(relative!("static")))
-        .mount("/", routes![index, get_event, get_in_changes]);
+        .mount("/", routes![
+            index,
+            get_event,
+            get_in_changes,
+            add_oc_change_set
+        ]);
 
     let figment = rocket.figment();
     let data_dir = figment.extract_inner::<String>("qx_data_dir");

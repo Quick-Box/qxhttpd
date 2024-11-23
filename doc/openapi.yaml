@@ -190,6 +190,12 @@ paths:
           type: integer
           default: 0
           minimum: 0
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          default: 100
+          minimum: 0
       responses:
         '200':
           description: Table of changes with index greater or equal offset, may be paginated
