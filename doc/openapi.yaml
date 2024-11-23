@@ -177,7 +177,7 @@ paths:
       tags:
         - API
       summary: Read change set list
-      operationId: getQEChangeSetList
+      operationId: get_in_changes
       parameters:
       - name: eventId
         in: path
@@ -185,14 +185,14 @@ paths:
         schema:
           $ref: '#/components/schemas/EventId'
       - in: query
-        name: idgt
+        name: offset
         schema:
           type: integer
           default: 0
           minimum: 0
       responses:
         '200':
-          description: Table of changes ithi chngId greater than idgt, may be paginated
+          description: Table of changes with index greater or equal offset, may be paginated
           content:
             application/json:
               schema:

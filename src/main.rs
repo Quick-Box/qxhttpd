@@ -8,38 +8,18 @@ use rocket::fs::{relative, FileServer};
 use rocket::State;
 use rocket_dyn_templates::{Template, context};
 use log::info;
+use rocket::http::Status;
+use rocket::response::status::NotFound;
+use rocket::serde::json::Json;
 use rocket::serde::Serialize;
+use rocket::time::macros::offset;
 use serde::{Deserialize};
 
 // In a real application, these would be retrieved dynamically from a config.
 // const HOST: Absolute<'static> = uri!("http://*:8000");
+type RunId = u64;
 type SiId = u64;
 type EventId = String;
-//fn record_file(data_dir: &str, id: RecordId) -> io::Result<PathBuf> {
-//    std::fs::create_dir_all(data_dir)?;
-//    Ok(PathBuf::from(data_dir).join(format!("{:05}", id)))
-//}
-
-//#[post("/", data = "<paste>")]
-//async fn upload(paste: Data<'_>) -> io::Result<String> {
-//    let id = next_record_id();
-//    let file_path = record_file(id)?;
-//    println!("file path: {:?}", file_path);
-//    paste.open(128.kibibytes()).into_file(file_path).await?;
-//    Ok(id.to_string())
-//}
-
-//#[get("/api/<id>")]
-//async fn retrieve(id: RecordId) -> Option<RawText<File>> {
-//    let Ok(file_path) = record_file(id) else { return None };
-//    File::open(file_path).await.map(RawText).ok()
-//}
-
-//#[delete("/<id>")]
-//async fn delete(id: RecordId) -> Option<()> {
-//    let Ok(file_path) = record_file(id) else { return None };
-//    fs::remove_file(file_path).await.ok()
-//}
 
 #[get("/")]
 fn index(state: &State<SharedQxState>) -> Template {
@@ -50,15 +30,67 @@ fn index(state: &State<SharedQxState>) -> Template {
     })
 }
 #[get("/event/<event_id>")]
-fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Template {
-    if let Some(event) = state.read().unwrap().events.get(&event_id) {
-        Template::render("event", context! {
+fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template, NotFound<String>> {
+    let quard = state.read().unwrap();
+    let event = quard.events.get(&event_id).ok_or(NotFound(format!("Invalid event ID: {event_id}")))?;
+    Ok(Template::render("event", context! {
             event_id,
             event
-        })
-    } else {
-        Template::render("error/404", context! {})
+        }))
+}
+
+#[get("/event/<event_id>/qe/chng/in?<offset>")]
+fn get_in_changes(event_id: EventId, offset: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
+    let quard = state.read().unwrap();
+    let event = quard.events.get(&event_id).ok_or(format!("Invalid event ID: {event_id}"))?;
+    let mut lst: Vec<QEChangeRecord> = vec![];
+    let offset = offset.unwrap_or(0);
+    let mut ix = 0;
+    for set in &event.oc.change_sets {
+        for rec in &set.Data {
+            if ix >= offset {
+                let rec = QERunsRecord::try_from(rec)?;
+                lst.push(QEChangeRecord::Runs(rec));
+            }
+            ix += 1;
+        }
     }
+    Ok(Json(lst))
+}
+#[derive(Serialize, Clone, Debug)]
+enum QEChangeRecord {
+    Runs(QERunsRecord),
+    Radio(QERadioRecord),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[allow(non_snake_case)]
+struct QERunsRecord {
+    id: u64,
+    #[serde(default)]
+    siId: SiId,
+    #[serde(default)]
+    checkTime: String,
+    #[serde(default)]
+    comment: String,
+}
+impl TryFrom<&OCheckListChange> for QERunsRecord {
+    type Error = String;
+
+    fn try_from(oc: &OCheckListChange) -> Result<Self, Self::Error> {
+        Ok(Self {
+            id: RunId::from_str_radix(&oc.Runner.Id, 10).map_err(|e| e.to_string())?,
+            siId: oc.Runner.Card,
+            checkTime: oc.Runner.StartTime.clone(),
+            comment: oc.Runner.Comment.clone(),
+        })
+    }
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[allow(non_snake_case)]
+struct QERadioRecord {
+    siId: SiId,
+    #[serde(default)]
+    time: String,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -131,7 +163,7 @@ fn rocket() -> _ {
     let rocket = rocket::build()
         .attach(Template::fairing())
         .mount("/", FileServer::from(relative!("static")))
-        .mount("/", routes![index, get_event]);
+        .mount("/", routes![index, get_event, get_in_changes]);
 
     let figment = rocket.figment();
     let data_dir = figment.extract_inner::<String>("qx_data_dir");
