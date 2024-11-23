@@ -66,24 +66,19 @@ struct Event {
     oc: OCheckListData,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[allow(non_snake_case)]
 struct OCheckListChangeSet {
-    #[serde(rename(deserialize = "Version"), default)]
-    version: String,
-    #[serde(rename = "Creator", default)]
-    creator: String,
-    #[serde(rename(deserialize = "Created"))]
-    created: String,
-    #[serde(rename = "Event", default)]
-    event: String,
-    #[serde(rename(deserialize = "Data"), default)]
-    data: Vec<OCheckListChange>,
+    Version: String,
+    Creator: String,
+    Created: String,
+    Event: String,
+    Data: Vec<OCheckListChange>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[allow(non_snake_case)]
 struct OCheckListChange {
-    #[serde(rename(deserialize = "Runner"))]
-    runner: OChecklistRunner,
-    #[serde(rename = "ChangeLog", default)]
-    changelog: String,
+    Runner: OChecklistRunner,
+    ChangeLog: String,
 }
 #[derive(Serialize, Clone, Debug)]
 struct OCheckListData {
@@ -97,21 +92,16 @@ enum OChecklistStartStatus {
     LateStart,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[allow(non_snake_case)]
 struct OChecklistRunner {
-    #[serde(rename(deserialize = "Id"))]
-    id: String,
-    #[serde(rename(deserialize = "StartStatus"))]
-    start_status: OChecklistStartStatus,
-    #[serde(rename(deserialize = "Card"), default)]
-    si: SiId,
-    #[serde(rename(deserialize = "ClassName"), default)]
-    class_name: String,
-    #[serde(rename(deserialize = "Name"), default)]
-    runner_name: String,
-    #[serde(rename(deserialize = "StartTime"), default)]
-    start_time: String,
-    #[serde(rename(deserialize = "Comment"), default)]
-    comment: String,
+    Id: String,
+    StartStatus: OChecklistStartStatus,
+    Card: SiId,
+    ClassName: String,
+    Name: String,
+    StartTime: String,
+    #[serde(default)]
+    Comment: String,
 }
 
 struct AppConfig {

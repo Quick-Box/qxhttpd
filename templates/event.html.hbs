@@ -1,35 +1,34 @@
 {{#*inline "page"}}
 
-    <h1>Event {{ event_id }}</h1>
-    <!--<section id="custom-helper">-->
-      <p>Change sets</p>
-    <!--</section>-->
-    {{#each event.oc.change_sets}}
-        <p>{{ this.created }}</p>
-        <table>
-            <thead><tr>
-                <th>Id</th>
-                <th>Status</th>
-                <th>SI</th>
-                <th>Class</th>
-                <th>Start</th>
-                <th>Comment</th>
-            </tr></thead>
-            <tbody>
-            {{#each this.data}}
-                <tr>
-                    <td>{{ this.runner.id }}</td>
-                    <td>{{ this.runner.start_status }}</td>
-                    <td>{{ this.runner.si }}</td>
-                    <td>{{ this.runner.class_name }}</td>
-                    <td>{{ this.runner.runner_name }}</td>
-                    <td>{{ this.runner.start_time }}</td>
-                    <td>{{ this.runner.comment }}</td>
-                </tr>
-            {{/each}}
-            </tbody>
-        </table>
-    {{/each}}
+<h1>Event {{ event_id }}</h1>
+<h2>Change sets</h2>
+{{#each event.oc.change_sets}}
+    <p>Created <b>{{ this.Created }}</b></p>
+    <table>
+        <thead><tr>
+            <th>Id</th>
+            <th>Status</th>
+            <th>SI</th>
+            <th>Class</th>
+            <th>Name</th>
+            <th>Start</th>
+            <th>Comment</th>
+        </tr></thead>
+        <tbody>
+        {{#each this.Data}}
+            <tr>
+                <td>{{ this.Runner.Id }}</td>
+                <td>{{ this.Runner.StartStatus }}</td>
+                <td>{{ this.Runner.Card }}</td>
+                <td>{{ this.Runner.ClassName }}</td>
+                <td>{{ this.Runner.Name }}</td>
+                <td>{{ this.Runner.StartTime }}</td>
+                <td>{{ this.Runner.Comment }}</td>
+            </tr>
+        {{/each}}
+        </tbody>
+    </table>
+{{/each}}
 
 
 {{/inline}}
