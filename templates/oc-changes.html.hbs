@@ -1,0 +1,36 @@
+{{#*inline "page"}}
+
+<h1>{{ event_name }} OCheckList changes</h1>
+
+{{#each change_set}}
+    <p>Created <b>{{ this.Created }}</b></p>
+    <table>
+        <thead><tr>
+            <th>Id</th>
+            <th>Status</th>
+            <th>SI</th>
+            <th>Class</th>
+            <th>Name</th>
+            <th>Start</th>
+            <th>Comment</th>
+        </tr></thead>
+        <tbody>
+        {{#each this.Data}}
+            <tr>
+                <td>{{ this.Runner.Id }}</td>
+                <td>{{ this.Runner.StartStatus }}</td>
+                <td>{{ this.Runner.Card }}</td>
+                <td>{{ this.Runner.ClassName }}</td>
+                <td>{{ this.Runner.Name }}</td>
+                <td>{{ this.Runner.StartTime }}</td>
+                <td>{{ this.Runner.Comment }}</td>
+            </tr>
+        {{/each}}
+        </tbody>
+    </table>
+{{/each}}
+
+
+{{/inline}}
+{{> nav}}
+{{> layout}}

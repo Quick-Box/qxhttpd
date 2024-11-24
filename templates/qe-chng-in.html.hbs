@@ -1,0 +1,26 @@
+{{#*inline "page"}}
+
+<h1>{{ event_name }} QuickEvent changes</h1>
+
+<table>
+    <thead><tr>
+        <th>Id</th>
+        <th>SI</th>
+        <th>Check time</th>
+        <th>Comment</th>
+    </tr></thead>
+    <tbody>
+    {{#each change_set}}
+        <tr>
+            <td>{{ this.id }}</td>
+            <td>{{ this.siId }}</td>
+            <td>{{ this.checkTime }}</td>
+            <td>{{ this.comment }}</td>
+        </tr>
+    {{/each}}
+    </tbody>
+</table>
+
+{{/inline}}
+{{> nav}}
+{{> layout}}

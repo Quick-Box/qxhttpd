@@ -10,6 +10,7 @@ use rocket::{Data, State};
 use rocket_dyn_templates::{Template, context};
 use log::info;
 use rocket::data::ToByteUnit;
+use rocket::http::hyper::body::HttpBody;
 use rocket::http::Status;
 use rocket::response::status::NotFound;
 use rocket::serde::json::Json;
@@ -20,42 +21,8 @@ use serde::{Deserialize};
 // const HOST: Absolute<'static> = uri!("http://*:8000");
 type RunId = u64;
 type SiId = u64;
-type EventId = String;
+type EventId = usize;
 
-#[get("/")]
-fn index(state: &State<SharedQxState>) -> Template {
-    let events = state.read().unwrap().events.keys().map(String::to_owned).collect::<Vec<_>>();
-    Template::render("index", context! {
-        title: "Quick Event Exchange Server",
-        events: events,
-    })
-}
-#[get("/event/<event_id>")]
-fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template, NotFound<String>> {
-    let quard = state.read().unwrap();
-    let event = quard.events.get(&event_id).ok_or(NotFound(format!("Invalid event ID: {event_id}")))?;
-    Ok(Template::render("event", context! {
-            event_id,
-            event
-        }))
-}
-
-#[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
-fn get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
-    let quard = state.read().unwrap();
-    let event = quard.events.get(&event_id).ok_or(format!("Invalid event ID: {event_id}"))?;
-    let offset = offset.unwrap_or(0) as usize;
-    let offset2 = min(offset + limit.unwrap_or(100) as usize, event.qe.len());
-    let lst = event.qe[offset .. offset2].to_vec();
-    Ok(Json(lst))
-}
-#[post("/event/<event_id>/oc", data = "<data>")]
-async fn add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> Result<(), Status> {
-    let content = data.open(128.kibibytes()).into_string().await.map_err(|_| Status::InternalServerError)?;
-    let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
-    state.write().unwrap().add_oc_change_set(&event_id, oc).map_err(|_| Status::NotFound)?;
-    Ok(())
-}
 #[derive(Serialize, Clone, Debug)]
 enum QEChangeRecord {
     Runs(QERunsRecord),
@@ -94,6 +61,8 @@ struct QERadioRecord {
 
 #[derive(Serialize, Clone, Debug)]
 struct Event {
+    name: String,
+    api_key: String,
     qe: Vec<QEChangeRecord>,
     oc: Vec<OCheckListChangeSet>,
 }
@@ -141,10 +110,10 @@ impl Default for AppConfig {
     }
 }
 struct QxState {
-    events: BTreeMap<EventId, Event>,
+    events: Vec<Event>,
 }
 impl QxState {
-    fn add_oc_change_set(&mut self, event_id: &str, change_set: OCheckListChangeSet) -> Result<(), String> {
+    fn add_oc_change_set(&mut self, event_id: EventId, change_set: OCheckListChangeSet) -> Result<(), String> {
         let event = self.events.get_mut(event_id).ok_or(format!("Invalid event Id: {event_id}"))?;
         for rec in &change_set.Data {
             let rec = QEChangeRecord::try_from(rec).map_err(|e| e.to_string())?;
@@ -165,6 +134,69 @@ fn load_test_oc_data(data_dir: &str) -> Vec<OCheckListChangeSet> {
     }).collect()
 }
 
+#[get("/")]
+fn index(state: &State<SharedQxState>) -> Template {
+    let events = state.read().unwrap().events.iter().enumerate().map(|(ix, event)| (ix, event.name.clone()) ).collect::<Vec<_>>();
+    Template::render("index", context! {
+        title: "Quick Event Exchange Server",
+        events: events,
+    })
+}
+#[get("/event/<event_id>")]
+fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template, NotFound<String>> {
+    let quard = state.read().unwrap();
+    let event = quard.events.get(event_id).ok_or(NotFound(format!("Invalid event ID: {event_id}")))?;
+    Ok(Template::render("event", context! {
+            event_id,
+            event
+        }))
+}
+#[get("/event/<event_id>/qe/chng/in")]
+fn get_qe_chng_in(event_id: EventId, state: &State<crate::SharedQxState>) -> Template {
+    let quard = state.read().unwrap();
+    let event = quard.events.get(event_id).unwrap();
+    let event_name = &event.name;
+    let change_set: Vec<&QERunsRecord> = event.qe.iter().filter_map(|rec| {
+        if let QEChangeRecord::Runs(rec) = rec {
+            Some(rec)
+        } else {
+            None
+        }
+    }).collect();
+    Template::render("qe-chng-in", context! {
+            event_name,
+            change_set
+        })
+}
+#[get("/event/<event_id>/oc")]
+fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Template {
+    let quard = state.read().unwrap();
+    let event = quard.events.get(event_id).unwrap();
+    let event_name = &event.name;
+    let change_set = &event.oc;
+    Template::render("oc-changes", context! {
+            event_name,
+            change_set
+        })
+}
+
+#[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
+fn api_get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
+    let quard = state.read().unwrap();
+    let event = quard.events.get(event_id).ok_or(format!("Invalid event ID: {event_id}"))?;
+    let offset = offset.unwrap_or(0) as usize;
+    let offset2 = min(offset + limit.unwrap_or(100) as usize, event.qe.len());
+    let lst = event.qe[offset .. offset2].to_vec();
+    Ok(Json(lst))
+}
+#[post("/event/<event_id>/oc", data = "<data>")]
+async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> Result<(), Status> {
+    let content = data.open(128.kibibytes()).into_string().await.map_err(|_| Status::InternalServerError)?;
+    let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
+    state.write().unwrap().add_oc_change_set(event_id, oc).map_err(|_| Status::NotFound)?;
+    Ok(())
+}
+
 #[launch]
 fn rocket() -> _ {
     let rocket = rocket::build()
@@ -173,8 +205,12 @@ fn rocket() -> _ {
         .mount("/", routes![
             index,
             get_event,
-            get_in_changes,
-            add_oc_change_set
+            get_oc_changes,
+            get_qe_chng_in,
+        ])
+        .mount("/api/", routes![
+            api_get_in_changes,
+            api_add_oc_change_set
         ]);
 
     let figment = rocket.figment();
@@ -201,10 +237,14 @@ fn rocket() -> _ {
         Default::default()
     };
     let mut state = QxState {
-        events: BTreeMap::from([("test-event".to_string(), Event { qe: vec![], oc: vec![] })])
+        events: vec![
+            Event { name: "test-event1".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] },
+            Event { name: "test-event2".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] },
+        ]
     };
     for s in oc_changes {
-        state.add_oc_change_set("test-event", s).unwrap()
+        state.add_oc_change_set(0, s.clone()).unwrap();
+        state.add_oc_change_set(1, s).unwrap();
     }
     let rocket = rocket.manage(SharedQxState::new(state));
     rocket
