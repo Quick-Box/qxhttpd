@@ -1,7 +1,6 @@
 #[macro_use] extern crate rocket;
 
 use std::cmp::min;
-use std::collections::BTreeMap;
 use std::fs;
 use std::sync::RwLock;
 use home::home_dir;
@@ -10,12 +9,14 @@ use rocket::{Data, State};
 use rocket_dyn_templates::{Template, context};
 use log::info;
 use rocket::data::ToByteUnit;
-use rocket::http::hyper::body::HttpBody;
 use rocket::http::Status;
 use rocket::response::status::NotFound;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::{Deserialize};
+
+#[cfg(test)]
+mod tests;
 
 // In a real application, these would be retrieved dynamically from a config.
 // const HOST: Absolute<'static> = uri!("http://*:8000");
@@ -23,7 +24,7 @@ type RunId = u64;
 type SiId = u64;
 type EventId = usize;
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 enum QEChangeRecord {
     Runs(QERunsRecord),
     Radio(QERadioRecord),
@@ -125,6 +126,7 @@ impl QxState {
 }
 type SharedQxState = RwLock<QxState>;
 fn load_test_oc_data(data_dir: &str) -> Vec<OCheckListChangeSet> {
+    info!("Loading test data from: {data_dir}");
     fs::read_dir(data_dir).unwrap().map(|dir| {
         let file = dir.unwrap().path();
         info!("loading testing data from file: {:?}", file);
@@ -227,11 +229,15 @@ fn rocket() -> _ {
     }
     info!("QX data dir: {}", cfg.data_dir);
 
-    let oc_test_data_dir = figment.extract_inner::<String>("qx_oc_test_data_dir");
+    let oc_test_data_dir = if cfg!(test) {
+        Some("tests/oc/data".to_string())
+    } else {
+        figment.extract_inner::<String>("qx_oc_test_data_dir").ok()
+    };
 
     let rocket = rocket.manage(cfg);
 
-    let oc_changes = if let Ok(oc_test_data_dir) = oc_test_data_dir {
+    let oc_changes = if let Some(oc_test_data_dir) = oc_test_data_dir {
         load_test_oc_data(&oc_test_data_dir)
     } else { 
         Default::default()
