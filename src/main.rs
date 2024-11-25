@@ -17,6 +17,7 @@ use serde::{Deserialize};
 
 #[cfg(test)]
 mod tests;
+mod sql;
 
 // In a real application, these would be retrieved dynamically from a config.
 // const HOST: Absolute<'static> = uri!("http://*:8000");
@@ -203,6 +204,7 @@ async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<
 fn rocket() -> _ {
     let rocket = rocket::build()
         .attach(Template::fairing())
+        .attach(sql::stage())
         .mount("/", FileServer::from(relative!("static")))
         .mount("/", routes![
             index,
