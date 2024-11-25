@@ -27,10 +27,10 @@ async fn init_db(rocket: Rocket<Build>) -> Rocket<Build> {
         .run(|conn| {
             let check_table = |table: &str, create_sql: &str| {
                 match conn.query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |_| {Ok(())}) {
-                    Ok(_) => info!("table {table} exists"),
-                    Err(err) => {
+                    Ok(_) => info!("table {}:{table} exists", conn.path().unwrap_or_default()),
+                    Err(_err) => {
                         // info!("SQL error: {}", err);
-                        info!("Creating table: {}:{}", conn.path().unwrap_or_default(), table);
+                        info!("Creating table: {}:{table}", conn.path().unwrap_or_default());
                         let sql = create_sql.to_owned().replace("{table}", table);
                         conn.execute(&sql, params![]).expect("create table");
                     },

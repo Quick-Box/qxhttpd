@@ -3,8 +3,7 @@
 use std::cmp::min;
 use std::fs;
 use std::sync::RwLock;
-use home::home_dir;
-use rocket::fs::{relative, FileServer};
+use rocket::fs::{FileServer};
 use rocket::{Data, State};
 use rocket_dyn_templates::{Template, context};
 use log::info;
@@ -104,11 +103,11 @@ struct OChecklistRunner {
 }
 
 struct AppConfig {
-    data_dir: String,
+    // data_dir: String,
 }
 impl Default for AppConfig {
     fn default() -> Self {
-        AppConfig { data_dir: "/tmp/qx/data".to_string() }
+        AppConfig {  }
     }
 }
 struct QxState {
@@ -205,7 +204,7 @@ fn rocket() -> _ {
     let rocket = rocket::build()
         .attach(Template::fairing())
         .attach(sql::stage())
-        .mount("/", FileServer::from(relative!("static")))
+        .mount("/", FileServer::from("./static"))
         .mount("/", routes![
             index,
             get_event,
@@ -218,18 +217,18 @@ fn rocket() -> _ {
         ]);
 
     let figment = rocket.figment();
-    let data_dir = figment.extract_inner::<String>("qx_data_dir");
-    let mut cfg = AppConfig::default();
-    if let Ok(data_dir) = data_dir {
-        if !data_dir.is_empty() {
-            cfg.data_dir = data_dir;
-        }
-    }
-    if cfg.data_dir.starts_with("~/") {
-        let home_dir = home_dir().expect("home dir");
-        cfg.data_dir = home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path");
-    }
-    info!("QX data dir: {}", cfg.data_dir);
+    let cfg = AppConfig::default();
+    //let data_dir = figment.extract_inner::<String>("qx_data_dir");
+    //if let Ok(data_dir) = data_dir {
+    //    if !data_dir.is_empty() {
+    //        cfg.data_dir = data_dir;
+    //    }
+    //}
+    //if cfg.data_dir.starts_with("~/") {
+    //    let home_dir = home_dir().expect("home dir");
+    //    cfg.data_dir = home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path");
+    //}
+    //info!("QX data dir: {}", cfg.data_dir);
 
     let oc_test_data_dir = if cfg!(test) {
         Some("tests/oc/data".to_string())
