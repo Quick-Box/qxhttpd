@@ -16,7 +16,7 @@ use serde::{Deserialize};
 
 #[cfg(test)]
 mod tests;
-mod sql;
+mod table;
 
 // In a real application, these would be retrieved dynamically from a config.
 // const HOST: Absolute<'static> = uri!("http://*:8000");
@@ -111,11 +111,12 @@ impl Default for AppConfig {
     }
 }
 struct QxState {
-    events: Vec<Event>,
+    events: Vec<RwLock<Event>>,
 }
 impl QxState {
-    fn add_oc_change_set(&mut self, event_id: EventId, change_set: OCheckListChangeSet) -> Result<(), String> {
-        let event = self.events.get_mut(event_id).ok_or(format!("Invalid event Id: {event_id}"))?;
+    fn add_oc_change_set(&self, event_id: EventId, change_set: OCheckListChangeSet) -> Result<(), String> {
+        let mut event = self.events.get(event_id).ok_or(format!("Invalid event Id: {event_id}"))?
+            .write().unwrap();
         for rec in &change_set.Data {
             let rec = QEChangeRecord::try_from(rec).map_err(|e| e.to_string())?;
             event.qe.push(rec);
@@ -138,7 +139,7 @@ fn load_test_oc_data(data_dir: &str) -> Vec<OCheckListChangeSet> {
 
 #[get("/")]
 fn index(state: &State<SharedQxState>) -> Template {
-    let events = state.read().unwrap().events.iter().enumerate().map(|(ix, event)| (ix, event.name.clone()) ).collect::<Vec<_>>();
+    let events = state.read().unwrap().events.iter().enumerate().map(|(ix, event)| (ix, event.read().unwrap().name.clone()) ).collect::<Vec<_>>();
     Template::render("index", context! {
         title: "Quick Event Exchange Server",
         events: events,
@@ -155,8 +156,8 @@ fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template
 }
 #[get("/event/<event_id>/qe/chng/in")]
 fn get_qe_chng_in(event_id: EventId, state: &State<crate::SharedQxState>) -> Template {
-    let quard = state.read().unwrap();
-    let event = quard.events.get(event_id).unwrap();
+    let state = state.read().unwrap();
+    let event = state.events.get(event_id).unwrap().read().unwrap();
     let event_name = &event.name;
     let change_set: Vec<&QERunsRecord> = event.qe.iter().filter_map(|rec| {
         if let QEChangeRecord::Runs(rec) = rec {
@@ -172,8 +173,8 @@ fn get_qe_chng_in(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
 }
 #[get("/event/<event_id>/oc")]
 fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Template {
-    let quard = state.read().unwrap();
-    let event = quard.events.get(event_id).unwrap();
+    let state = state.read().unwrap();
+    let event = state.events.get(event_id).unwrap().read().unwrap();
     let event_name = &event.name;
     let change_set = &event.oc;
     Template::render("oc-changes", context! {
@@ -184,8 +185,8 @@ fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
 
 #[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
 fn api_get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
-    let quard = state.read().unwrap();
-    let event = quard.events.get(event_id).ok_or(format!("Invalid event ID: {event_id}"))?;
+    let state = state.read().unwrap();
+    let event = state.events.get(event_id).unwrap().read().unwrap();
     let offset = offset.unwrap_or(0) as usize;
     let offset2 = min(offset + limit.unwrap_or(100) as usize, event.qe.len());
     let lst = event.qe[offset .. offset2].to_vec();
@@ -203,7 +204,6 @@ async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<
 fn rocket() -> _ {
     let rocket = rocket::build()
         .attach(Template::fairing())
-        .attach(sql::stage())
         .mount("/", FileServer::from("./static"))
         .mount("/", routes![
             index,
@@ -243,10 +243,10 @@ fn rocket() -> _ {
     } else { 
         Default::default()
     };
-    let mut state = QxState {
+    let state = QxState {
         events: vec![
-            Event { name: "test-event1".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] },
-            Event { name: "test-event2".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] },
+            RwLock::new(Event { name: "test-event1".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] }),
+            RwLock::new(Event { name: "test-event2".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] }),
         ]
     };
     for s in oc_changes {
