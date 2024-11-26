@@ -1,8 +1,8 @@
 #[macro_use] extern crate rocket;
 
-use std::cmp::min;
 use std::fs;
 use std::sync::RwLock;
+use home::home_dir;
 use rocket::fs::{FileServer};
 use rocket::{Data, State};
 use rocket_dyn_templates::{Template, context};
@@ -13,6 +13,7 @@ use rocket::response::status::NotFound;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::{Deserialize};
+use crate::table::Table;
 
 #[cfg(test)]
 mod tests;
@@ -40,16 +41,16 @@ struct QERunsRecord {
     #[serde(default)]
     comment: String,
 }
-impl TryFrom<&OCheckListChange> for QEChangeRecord {
+impl TryFrom<&OCheckListChange> for QERunsRecord {
     type Error = String;
 
     fn try_from(oc: &OCheckListChange) -> Result<Self, Self::Error> {
-        Ok(Self::Runs(QERunsRecord {
+        Ok(QERunsRecord {
             id: RunId::from_str_radix(&oc.Runner.Id, 10).map_err(|e| e.to_string())?,
             siId: oc.Runner.Card,
             checkTime: oc.Runner.StartTime.clone(),
             comment: oc.Runner.Comment.clone(),
-        }))
+        })
     }
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -60,12 +61,12 @@ struct QERadioRecord {
     time: String,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Debug)]
 struct Event {
     name: String,
     api_key: String,
-    qe: Vec<QEChangeRecord>,
-    oc: Vec<OCheckListChangeSet>,
+    qe: Table<QERunsRecord>,
+    oc: Table<OCheckListChangeSet>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -103,11 +104,11 @@ struct OChecklistRunner {
 }
 
 struct AppConfig {
-    // data_dir: String,
+    data_dir: String,
 }
 impl Default for AppConfig {
     fn default() -> Self {
-        AppConfig {  }
+        AppConfig {  data_dir: "".to_string()}
     }
 }
 struct QxState {
@@ -118,10 +119,10 @@ impl QxState {
         let mut event = self.events.get(event_id).ok_or(format!("Invalid event Id: {event_id}"))?
             .write().unwrap();
         for rec in &change_set.Data {
-            let rec = QEChangeRecord::try_from(rec).map_err(|e| e.to_string())?;
-            event.qe.push(rec);
+            let rec = QERunsRecord::try_from(rec).map_err(|e| e.to_string())?;
+            let _ = event.qe.add_record(&rec);
         }
-        event.oc.push(change_set);
+        event.oc.add_record(&change_set).map_err(|err| err.to_string())?;
         Ok(())
     }
 }
@@ -147,11 +148,12 @@ fn index(state: &State<SharedQxState>) -> Template {
 }
 #[get("/event/<event_id>")]
 fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template, NotFound<String>> {
-    let quard = state.read().unwrap();
-    let event = quard.events.get(event_id).ok_or(NotFound(format!("Invalid event ID: {event_id}")))?;
+    let state = state.read().unwrap();
+    let event = state.events.get(event_id).unwrap().read().unwrap();
+    let event_name = &event.name;
     Ok(Template::render("event", context! {
             event_id,
-            event
+            event_name,
         }))
 }
 #[get("/event/<event_id>/qe/chng/in")]
@@ -159,13 +161,7 @@ fn get_qe_chng_in(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
     let state = state.read().unwrap();
     let event = state.events.get(event_id).unwrap().read().unwrap();
     let event_name = &event.name;
-    let change_set: Vec<&QERunsRecord> = event.qe.iter().filter_map(|rec| {
-        if let QEChangeRecord::Runs(rec) = rec {
-            Some(rec)
-        } else {
-            None
-        }
-    }).collect();
+    let change_set = event.qe.get_records(0, None).unwrap();
     Template::render("qe-chng-in", context! {
             event_name,
             change_set
@@ -176,7 +172,7 @@ fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
     let state = state.read().unwrap();
     let event = state.events.get(event_id).unwrap().read().unwrap();
     let event_name = &event.name;
-    let change_set = &event.oc;
+    let change_set = event.oc.get_records(0, None).unwrap();
     Template::render("oc-changes", context! {
             event_name,
             change_set
@@ -184,12 +180,11 @@ fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
 }
 
 #[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
-fn api_get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QEChangeRecord>>, String> {
+fn api_get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QERunsRecord>>, String> {
     let state = state.read().unwrap();
     let event = state.events.get(event_id).unwrap().read().unwrap();
     let offset = offset.unwrap_or(0) as usize;
-    let offset2 = min(offset + limit.unwrap_or(100) as usize, event.qe.len());
-    let lst = event.qe[offset .. offset2].to_vec();
+    let lst = event.qe.get_records(offset, limit.map(|l| l as usize)).unwrap();
     Ok(Json(lst))
 }
 #[post("/event/<event_id>/oc", data = "<data>")]
@@ -217,18 +212,22 @@ fn rocket() -> _ {
         ]);
 
     let figment = rocket.figment();
-    let cfg = AppConfig::default();
-    //let data_dir = figment.extract_inner::<String>("qx_data_dir");
-    //if let Ok(data_dir) = data_dir {
-    //    if !data_dir.is_empty() {
-    //        cfg.data_dir = data_dir;
-    //    }
-    //}
-    //if cfg.data_dir.starts_with("~/") {
-    //    let home_dir = home_dir().expect("home dir");
-    //    cfg.data_dir = home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path");
-    //}
-    //info!("QX data dir: {}", cfg.data_dir);
+    let mut cfg = AppConfig::default();
+    let data_dir = figment.extract_inner::<String>("qx_data_dir");
+    if let Ok(data_dir) = data_dir {
+        if !data_dir.is_empty() {
+            cfg.data_dir = data_dir;
+        }
+    }
+    if cfg.data_dir.starts_with("~/") {
+        let home_dir = home_dir().expect("home dir");
+        cfg.data_dir = home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path");
+    }
+    if cfg.data_dir.is_empty() {
+        cfg.data_dir = "/tmp/qxhttpd/data".to_owned();
+    }
+    let data_dir = cfg.data_dir.clone();
+    info!("QX data dir: {}", data_dir);
 
     let oc_test_data_dir = if cfg!(test) {
         Some("tests/oc/data".to_string())
@@ -245,8 +244,8 @@ fn rocket() -> _ {
     };
     let state = QxState {
         events: vec![
-            RwLock::new(Event { name: "test-event1".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] }),
-            RwLock::new(Event { name: "test-event2".to_string(), api_key: "".to_string(), qe: vec![], oc: vec![] }),
+            RwLock::new(Event { name: "test-event1".to_string(), api_key: "".to_string(), qe: Table::<QERunsRecord>::new(&format!("{data_dir}/test-event1/qeingin")).unwrap(), oc: Table::<OCheckListChangeSet>::new(&format!("{data_dir}/test-event1/occhngin")).unwrap() }),
+            RwLock::new(Event { name: "test-event2".to_string(), api_key: "".to_string(), qe: Table::<QERunsRecord>::new(&format!("{data_dir}/test-event2/qeingin")).unwrap(), oc: Table::<OCheckListChangeSet>::new(&format!("{data_dir}/test-event2/occhngin")).unwrap() }),
         ]
     };
     for s in oc_changes {
