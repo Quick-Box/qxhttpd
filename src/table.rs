@@ -1,21 +1,25 @@
 use std::cmp::min;
 use std::fs::File;
-use std::io;
+use std::{fs, io};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::marker::PhantomData;
+use std::path::{PathBuf};
 use rocket::serde::json::serde_json;
 use serde::{Serialize};
 use serde::de::DeserializeOwned;
 
 #[derive(Debug)]
 pub(crate) struct Table<T: Serialize + DeserializeOwned> {
-    path: String,
+    path: PathBuf,
     index: Vec<usize>,
     _marker: PhantomData<T>,
 }
 impl<T: Serialize + DeserializeOwned> Table<T> {
-    pub fn new(path: &str) -> io::Result<Self> {
-        let mut file = io::BufReader::new(File::open(path)?);
+    pub fn new(path: &PathBuf) -> crate::Result<Self> {
+        if fs::metadata(path).is_err() {
+            File::create_new(path)?;
+        }
+        let mut file = BufReader::new(File::open(path)?);
         let mut line = String::new();
         let mut index = vec![];
         let mut offset = 0_usize;
@@ -32,11 +36,11 @@ impl<T: Serialize + DeserializeOwned> Table<T> {
             }
             offset += n;
         }
-        Ok(Self { path: path.to_string(), index, _marker: Default::default() })
+        Ok(Self { path: path.clone(), index, _marker: Default::default() })
     }
     pub fn add_record(&mut self, rec: &T) -> io::Result<usize> {
         let json = serde_json::to_string(rec)?;
-        let mut file = File::open(&self.path)?;
+        let mut file = File::options().append(true).open(&self.path)?;
         let offset = file.metadata()?.len() as usize;
         self.index.push(offset);
         file.write(json.as_bytes())?;

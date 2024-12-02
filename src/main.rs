@@ -1,6 +1,12 @@
 #[macro_use] extern crate rocket;
 
+use std::fmt::Debug;
+use std::cmp::max;
+use std::collections::BTreeMap;
 use std::fs;
+use std::fs::File;
+use std::path::Path;
+use std::str::FromStr;
 use std::sync::RwLock;
 use home::home_dir;
 use rocket::fs::{FileServer};
@@ -8,8 +14,6 @@ use rocket::{Data, State};
 use rocket_dyn_templates::{Template, context};
 use log::info;
 use rocket::data::ToByteUnit;
-use rocket::http::Status;
-use rocket::response::status::NotFound;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
 use serde::{Deserialize};
@@ -19,12 +23,15 @@ use crate::table::Table;
 mod tests;
 mod table;
 
+// type Error = String;
+type Error = Box<dyn std::error::Error>;
+type Result<T> = std::result::Result<T, Error>;
+
 // In a real application, these would be retrieved dynamically from a config.
 // const HOST: Absolute<'static> = uri!("http://*:8000");
 type RunId = u64;
 type SiId = u64;
 type EventId = usize;
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 enum QEChangeRecord {
     Runs(QERunsRecord),
@@ -42,9 +49,9 @@ struct QERunsRecord {
     comment: String,
 }
 impl TryFrom<&OCheckListChange> for QERunsRecord {
-    type Error = String;
+    type Error = Error;
 
-    fn try_from(oc: &OCheckListChange) -> Result<Self, Self::Error> {
+    fn try_from(oc: &OCheckListChange) -> Result<Self> {
         Ok(QERunsRecord {
             id: RunId::from_str_radix(&oc.Runner.Id, 10).map_err(|e| e.to_string())?,
             siId: oc.Runner.Card,
@@ -61,13 +68,56 @@ struct QERadioRecord {
     time: String,
 }
 
-#[derive(Debug)]
-struct Event {
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct EventInfo {
     name: String,
     api_key: String,
+}
+const EVENT_FILE: &'static str = "event.yaml";
+const OCCHNGIN_FILE: &'static str = "occhgin.json";
+const QECHNGIN_FILE: &'static str = "qechgin.json";
+#[derive(Debug)]
+struct Event {
+    info: EventInfo,
     qe: Table<QERunsRecord>,
     oc: Table<OCheckListChangeSet>,
 }
+impl Event {
+    fn create(data_dir: &str, event_info: EventInfo) -> Result<(EventId, Event)> {
+        let (event_id, max_event_id) = find_event_by_api_key(data_dir, &event_info.api_key)?;
+        let event_id = if let Some(event_id) = event_id { event_id } else { max_event_id + 1 };
+        let event_dir = Path::new(data_dir).join(format!("{data_dir}/{:0>8}", event_id));
+        fs::create_dir_all(&event_dir)?;
+        let event_file = event_dir.join(EVENT_FILE);
+        info!("Creating event file: {:?}", event_file);
+        let f = File::create(event_file)?;
+        serde_yaml::to_writer(f, &event_info)?;
+        Ok((event_id, Self {
+            info: event_info,
+            qe: Table::<QERunsRecord>::new(&event_dir.join(QECHNGIN_FILE))?,
+            oc: Table::<OCheckListChangeSet>::new(&event_dir.join(OCCHNGIN_FILE))?,
+        }))
+    }
+}
+fn find_event_by_api_key(data_dir: &str, api_key: &str) -> Result<(Option<EventId>, EventId)> {
+    let mut max_event_id = 0;
+    let mut event_id = None;
+    if let Ok(dirs) = fs::read_dir(data_dir) {
+        for event_dir in dirs {
+            let event_dir = event_dir.map_err(|e| e.to_string())?;
+            let id = usize::from_str(&event_dir.file_name().to_string_lossy()).map_err(|e| e.to_string())?;
+            max_event_id = max(id, max_event_id);
+            let event_info_fn = event_dir.path().join(EVENT_FILE);
+            let event_info: EventInfo = serde_yaml::from_reader(fs::File::open(event_info_fn).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            if event_info.api_key == api_key {
+                assert!(event_id.is_none());
+                event_id = Some(id);
+            }
+        }
+    }
+    Ok((event_id, max_event_id))
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
 struct OCheckListChangeSet {
@@ -112,11 +162,11 @@ impl Default for AppConfig {
     }
 }
 struct QxState {
-    events: Vec<RwLock<Event>>,
+    events: BTreeMap<EventId, RwLock<Event>>,
 }
 impl QxState {
-    fn add_oc_change_set(&self, event_id: EventId, change_set: OCheckListChangeSet) -> Result<(), String> {
-        let mut event = self.events.get(event_id).ok_or(format!("Invalid event Id: {event_id}"))?
+    fn add_oc_change_set(&self, event_id: EventId, change_set: OCheckListChangeSet) -> Result<()> {
+        let mut event = self.events.get(&event_id).ok_or(format!("Invalid event Id: {event_id}"))?
             .write().unwrap();
         for rec in &change_set.Data {
             let rec = QERunsRecord::try_from(rec).map_err(|e| e.to_string())?;
@@ -140,27 +190,28 @@ fn load_test_oc_data(data_dir: &str) -> Vec<OCheckListChangeSet> {
 
 #[get("/")]
 fn index(state: &State<SharedQxState>) -> Template {
-    let events = state.read().unwrap().events.iter().enumerate().map(|(ix, event)| (ix, event.read().unwrap().name.clone()) ).collect::<Vec<_>>();
+    let events = state.read().unwrap().events.iter()
+        .map(|(event_id, event)| (*event_id, event.read().unwrap().info.clone()) ).collect::<Vec<_>>();
     Template::render("index", context! {
         title: "Quick Event Exchange Server",
         events: events,
     })
 }
 #[get("/event/<event_id>")]
-fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Result<Template, NotFound<String>> {
+fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Template {
     let state = state.read().unwrap();
-    let event = state.events.get(event_id).unwrap().read().unwrap();
-    let event_name = &event.name;
-    Ok(Template::render("event", context! {
+    let event = state.events.get(&event_id).unwrap().read().unwrap();
+    let event_info = &event.info;
+    Template::render("event", context! {
             event_id,
-            event_name,
-        }))
+            event_info,
+        })
 }
 #[get("/event/<event_id>/qe/chng/in")]
 fn get_qe_chng_in(event_id: EventId, state: &State<crate::SharedQxState>) -> Template {
     let state = state.read().unwrap();
-    let event = state.events.get(event_id).unwrap().read().unwrap();
-    let event_name = &event.name;
+    let event = state.events.get(&event_id).unwrap().read().unwrap();
+    let event_name = &event.info.name;
     let change_set = event.qe.get_records(0, None).unwrap();
     Template::render("qe-chng-in", context! {
             event_name,
@@ -170,8 +221,8 @@ fn get_qe_chng_in(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
 #[get("/event/<event_id>/oc")]
 fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Template {
     let state = state.read().unwrap();
-    let event = state.events.get(event_id).unwrap().read().unwrap();
-    let event_name = &event.name;
+    let event = state.events.get(&event_id).unwrap().read().unwrap();
+    let event_name = &event.info.name;
     let change_set = event.oc.get_records(0, None).unwrap();
     Template::render("oc-changes", context! {
             event_name,
@@ -180,18 +231,18 @@ fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
 }
 
 #[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
-fn api_get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Result<Json<Vec<QERunsRecord>>, String> {
+fn api_get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Json<Vec<QERunsRecord>> {
     let state = state.read().unwrap();
-    let event = state.events.get(event_id).unwrap().read().unwrap();
+    let event = state.events.get(&event_id).unwrap().read().unwrap();
     let offset = offset.unwrap_or(0) as usize;
     let lst = event.qe.get_records(offset, limit.map(|l| l as usize)).unwrap();
-    Ok(Json(lst))
+    Json(lst)
 }
 #[post("/event/<event_id>/oc", data = "<data>")]
-async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> Result<(), Status> {
-    let content = data.open(128.kibibytes()).into_string().await.map_err(|_| Status::InternalServerError)?;
+async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> std::result::Result<(), String> {
+    let content = data.open(128.kibibytes()).into_string().await.map_err(|err| err.to_string())?;
     let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
-    state.write().unwrap().add_oc_change_set(event_id, oc).map_err(|_| Status::NotFound)?;
+    state.write().unwrap().add_oc_change_set(event_id, oc).map_err(|err| err.to_string())?;
     Ok(())
 }
 
@@ -219,12 +270,13 @@ fn rocket() -> _ {
             cfg.data_dir = data_dir;
         }
     }
+    const TEST_DATA_DIR: &'static str = "/tmp/qxhttpd/data";
     if cfg.data_dir.starts_with("~/") {
         let home_dir = home_dir().expect("home dir");
         cfg.data_dir = home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path");
     }
     if cfg.data_dir.is_empty() {
-        cfg.data_dir = "/tmp/qxhttpd/data".to_owned();
+        cfg.data_dir = TEST_DATA_DIR.to_owned();
     }
     let data_dir = cfg.data_dir.clone();
     info!("QX data dir: {}", data_dir);
@@ -242,17 +294,40 @@ fn rocket() -> _ {
     } else { 
         Default::default()
     };
+    let mut events = load_events(&data_dir).unwrap();
+    if events.is_empty() && data_dir == TEST_DATA_DIR {
+        let (event_id, event) = Event::create(&data_dir, EventInfo { name: "test-event".to_string(), api_key: "123".to_string() }).unwrap();
+        events = vec![
+            (event_id, event),
+        ];
+    }
+    // let e:BTreeMap< crate::EventId, RwLock< crate::Event >> = BTreeMap::from_iter(events);
     let state = QxState {
-        events: vec![
-            RwLock::new(Event { name: "test-event1".to_string(), api_key: "".to_string(), qe: Table::<QERunsRecord>::new(&format!("{data_dir}/test-event1/qeingin")).unwrap(), oc: Table::<OCheckListChangeSet>::new(&format!("{data_dir}/test-event1/occhngin")).unwrap() }),
-            RwLock::new(Event { name: "test-event2".to_string(), api_key: "".to_string(), qe: Table::<QERunsRecord>::new(&format!("{data_dir}/test-event2/qeingin")).unwrap(), oc: Table::<OCheckListChangeSet>::new(&format!("{data_dir}/test-event2/occhngin")).unwrap() }),
-        ]
+        events: BTreeMap::from_iter(events.into_iter().map(|(event_id, event)| (event_id, RwLock::new(event)))),
     };
     for s in oc_changes {
-        state.add_oc_change_set(0, s.clone()).unwrap();
         state.add_oc_change_set(1, s).unwrap();
     }
     let rocket = rocket.manage(SharedQxState::new(state));
     rocket
+}
+
+fn load_events(data_dir: &str) -> Result<Vec<(EventId, Event)>> {
+    let mut ret = Vec::new();
+    if let Ok(dirs) = fs::read_dir(data_dir) {
+        for event_dir in dirs {
+            let event_dir = event_dir?;
+            let event_id = usize::from_str(&*event_dir.file_name().to_string_lossy())?;
+            let event_dir = event_dir.path();
+            let event_info: EventInfo = serde_yaml::from_reader(fs::File::open(event_dir.join(EVENT_FILE))?)?;
+            let event = Event {
+                info: event_info,
+                qe: Table::<QERunsRecord>::new(&event_dir.join(QECHNGIN_FILE))?,
+                oc: Table::<OCheckListChangeSet>::new(&event_dir.join(OCCHNGIN_FILE))?,
+            };
+            ret.push((event_id, event));
+        }
+    }
+    Ok(ret)
 }
 
