@@ -14,7 +14,7 @@ key = "private/rsa_sha256_key.pem"
 [debug]
 ## only the `json` key from `default` will be overridden; `form` will remain
 # limits = { json = "10MiB" }
-qx_oc_test_data_dir = "tests/oc/data"
+#qx_oc_test_data_dir = "tests/oc/data"
 [default.databases.rusqlite]
 #url = "file:rusqlite?mode=memory&cache=shared"
 url = "file:/tmp/qx.sqlite?cache=shared"

@@ -33,11 +33,6 @@ type RunId = u64;
 type SiId = u64;
 type EventId = usize;
 #[derive(Serialize, Deserialize, Clone, Debug)]
-enum QEChangeRecord {
-    Runs(QERunsRecord),
-    Radio(QERadioRecord),
-}
-#[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
 struct QERunsRecord {
     id: u64,
@@ -73,9 +68,9 @@ struct EventInfo {
     name: String,
     api_key: String,
 }
-const EVENT_FILE: &'static str = "event.yaml";
-const OCCHNGIN_FILE: &'static str = "occhgin.json";
-const QECHNGIN_FILE: &'static str = "qechgin.json";
+const EVENT_FILE: &str = "event.yaml";
+const OCCHNGIN_FILE: &str = "occhgin.json";
+const QECHNGIN_FILE: &str = "qechgin.json";
 #[derive(Debug)]
 struct Event {
     info: EventInfo,
@@ -231,7 +226,7 @@ fn get_oc_changes(event_id: EventId, state: &State<crate::SharedQxState>) -> Tem
 }
 
 #[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
-fn api_get_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Json<Vec<QERunsRecord>> {
+fn api_get_qe_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Json<Vec<QERunsRecord>> {
     let state = state.read().unwrap();
     let event = state.events.get(&event_id).unwrap().read().unwrap();
     let offset = offset.unwrap_or(0) as usize;
@@ -244,6 +239,27 @@ async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<
     let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
     state.write().unwrap().add_oc_change_set(event_id, oc).map_err(|err| err.to_string())?;
     Ok(())
+}
+const DEFAULT_DATA_DIR: &str = "/tmp/qxhttpd/data";
+const TEST_DATA_DIR: &str = "/tmp/test/qxhttpd/data";
+
+fn load_events(data_dir: &str) -> Result<Vec<(EventId, Event)>> {
+    let mut ret = Vec::new();
+    if let Ok(dirs) = fs::read_dir(data_dir) {
+        for event_dir in dirs {
+            let event_dir = event_dir?;
+            let event_id = usize::from_str(&event_dir.file_name().to_string_lossy())?;
+            let event_dir = event_dir.path();
+            let event_info: EventInfo = serde_yaml::from_reader(fs::File::open(event_dir.join(EVENT_FILE))?)?;
+            let event = Event {
+                info: event_info,
+                qe: Table::<QERunsRecord>::new(&event_dir.join(QECHNGIN_FILE))?,
+                oc: Table::<OCheckListChangeSet>::new(&event_dir.join(OCCHNGIN_FILE))?,
+            };
+            ret.push((event_id, event));
+        }
+    }
+    Ok(ret)
 }
 
 #[launch]
@@ -258,44 +274,42 @@ fn rocket() -> _ {
             get_qe_chng_in,
         ])
         .mount("/api/", routes![
-            api_get_in_changes,
+            api_get_qe_in_changes,
             api_add_oc_change_set
         ]);
 
     let figment = rocket.figment();
     let mut cfg = AppConfig::default();
-    let data_dir = figment.extract_inner::<String>("qx_data_dir");
-    if let Ok(data_dir) = data_dir {
-        if !data_dir.is_empty() {
-            cfg.data_dir = data_dir;
+
+    let data_dir = if cfg!(test) {
+        let _ = fs::remove_dir_all(TEST_DATA_DIR);
+        Some(TEST_DATA_DIR.to_string())
+    } else {
+        figment.extract_inner::<String>("qx_data_dir").ok()
+    };
+    let data_dir = if let Some(data_dir) = data_dir {
+        if data_dir.starts_with("~/") {
+            let home_dir = home_dir().expect("home dir");
+            home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path")
+        } else {
+            data_dir
         }
-    }
-    const TEST_DATA_DIR: &'static str = "/tmp/qxhttpd/data";
-    if cfg.data_dir.starts_with("~/") {
-        let home_dir = home_dir().expect("home dir");
-        cfg.data_dir = home_dir.join(&cfg.data_dir[2 ..]).into_os_string().into_string().expect("valid path");
-    }
-    if cfg.data_dir.is_empty() {
-        cfg.data_dir = TEST_DATA_DIR.to_owned();
+    } else { 
+        DEFAULT_DATA_DIR.to_string()
+    };
+    if data_dir.is_empty() {
+        panic!("empty data dir");
+    } else {
+        cfg.data_dir = data_dir;
     }
     let data_dir = cfg.data_dir.clone();
     info!("QX data dir: {}", data_dir);
 
-    let oc_test_data_dir = if cfg!(test) {
-        Some("tests/oc/data".to_string())
-    } else {
-        figment.extract_inner::<String>("qx_oc_test_data_dir").ok()
-    };
-
     let rocket = rocket.manage(cfg);
 
-    let oc_changes = if let Some(oc_test_data_dir) = oc_test_data_dir {
-        load_test_oc_data(&oc_test_data_dir)
-    } else { 
-        Default::default()
-    };
     let mut events = load_events(&data_dir).unwrap();
-    if events.is_empty() && data_dir == TEST_DATA_DIR {
+    let load_sample_data = events.is_empty();
+    if events.is_empty() {
         let (event_id, event) = Event::create(&data_dir, EventInfo { name: "test-event".to_string(), api_key: "123".to_string() }).unwrap();
         events = vec![
             (event_id, event),
@@ -305,29 +319,12 @@ fn rocket() -> _ {
     let state = QxState {
         events: BTreeMap::from_iter(events.into_iter().map(|(event_id, event)| (event_id, RwLock::new(event)))),
     };
-    for s in oc_changes {
-        state.add_oc_change_set(1, s).unwrap();
-    }
-    let rocket = rocket.manage(SharedQxState::new(state));
-    rocket
-}
-
-fn load_events(data_dir: &str) -> Result<Vec<(EventId, Event)>> {
-    let mut ret = Vec::new();
-    if let Ok(dirs) = fs::read_dir(data_dir) {
-        for event_dir in dirs {
-            let event_dir = event_dir?;
-            let event_id = usize::from_str(&*event_dir.file_name().to_string_lossy())?;
-            let event_dir = event_dir.path();
-            let event_info: EventInfo = serde_yaml::from_reader(fs::File::open(event_dir.join(EVENT_FILE))?)?;
-            let event = Event {
-                info: event_info,
-                qe: Table::<QERunsRecord>::new(&event_dir.join(QECHNGIN_FILE))?,
-                oc: Table::<OCheckListChangeSet>::new(&event_dir.join(OCCHNGIN_FILE))?,
-            };
-            ret.push((event_id, event));
+    if load_sample_data {
+        let oc_changes = load_test_oc_data("tests/oc/data");
+        for s in oc_changes {
+            state.add_oc_change_set(1, s).unwrap();
         }
     }
-    Ok(ret)
+    rocket.manage(SharedQxState::new(state))
 }
 

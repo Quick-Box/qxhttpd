@@ -43,8 +43,8 @@ impl<T: Serialize + DeserializeOwned> Table<T> {
         let mut file = File::options().append(true).open(&self.path)?;
         let offset = file.metadata()?.len() as usize;
         self.index.push(offset);
-        file.write(json.as_bytes())?;
-        file.write(&['\n' as u8])?;
+        file.write_all(json.as_bytes())?;
+        file.write_all(b"\n")?;
         Ok(offset)
     }
     pub fn get_records(&self, index: usize, limit: Option<usize>) -> io::Result<Vec<T>> {
@@ -57,7 +57,7 @@ impl<T: Serialize + DeserializeOwned> Table<T> {
         let mut reader = BufReader::new(file);
         let index2 = min(self.index.len(), limit.map(|u| index + u).unwrap_or(self.index.len()));
         for (ix, offset) in self.index[index .. index2].iter().enumerate() {
-            let offset2 = if ix == index2 - 1 {
+            let offset2 = if ix == self.index.len() - 1 {
                 file_size
             } else { 
                 self.index[ix + 1]
@@ -68,6 +68,7 @@ impl<T: Serialize + DeserializeOwned> Table<T> {
             }
             let n = reader.read(&mut buff[..len])?;
             assert_eq!(n, len);
+            // info!("record: {:?}", String::from_utf8_lossy(&buff[..n]));
             let rec = serde_json::from_slice(&buff[..len])?;
             res.push(rec);
         }
