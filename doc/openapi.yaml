@@ -2,8 +2,8 @@ openapi: 3.0.3
 info:
   title: QuickEvent exchange httpd - OpenAPI 3.0
   description: |-
-    This is QuickEvent exchange server based on the OpenAPI 3.0 specification.
-
+    This is QuickEvent exchange server based on the OpenAPI 3.0 specification.  
+    
     Some useful links:
     - [The Quick Event repository](https://github.com/Quick-Event/quickbox)
   version: 0.0.1
@@ -28,18 +28,18 @@ paths:
       summary: Get event info html page
       operationId: eventInfo
       parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventId'
       responses:
         '200':
           description: Success
           content:
             text/json:
               schema:
-                $ref: '#/components/schemas/EventRecord'
+                $ref: '#/components/schemas/EventInfo'
         '404':
           description: Invalid event key
   /api/event/{eventId}:
@@ -49,18 +49,18 @@ paths:
       summary: Get event record
       operationId: get_event
       parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventId'
       responses:
         '200':
           description: Success
           content:
             text/json:
               schema:
-                $ref: '#/components/schemas/EventRecord'
+                $ref: '#/components/schemas/EventInfo'
         '404':
           description: Invalid event ID
   /api/event:
@@ -68,56 +68,46 @@ paths:
       tags:
         - API
       summary: Register event
-      # description: Add a new pet to the store
-      operationId: register_event
+      operationId: api_register_event
       parameters:
-      - name: eventKey
-        in: header
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventKey'
+        - name: registerToken
+          in: header
+          required: true
+          schema:
+            type: string
       requestBody:
-        # description: Create a new pet in the store
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EventRecord'
+              $ref: '#/components/schemas/EventInfo'
         required: true
       responses:
         '200':
-          description: SEvent exists already
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EventId'
-        '201':
           description: Event created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventId'
+                $ref: '#/components/schemas/RegisterEventResponse'
         '400':
-          description: Invalid input
-        '422':
-          description: Validation exception
+          description: Invalid register token
   /api/event/{eventId}/oc:
     post:
       tags:
         - API
       summary: Add new O-Checklist change set
       # description: Add a new pet to the store
-      operationId: addOChecklistChangeSet
+      operationId: add_oc_change_set
       parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-      - name: eventKey
-        in: header
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventKey'
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventId'
+        - name: apiKey
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApiKey'
       requestBody:
         # description: Add new recor set
         content:
@@ -168,10 +158,10 @@ paths:
     #         application/json:
     #           schema:
     #             type: array
-    #             items:
+    #             items: 
     #               $ref: '#/components/schemas/OChecklistChangeSet'
     #     '404':
-    #       description: Invalid event key oe event Id
+    #       description: Invalid event key oe event Id   
   /api/event/{eventId}/qe/chng/in:
     get:
       tags:
@@ -179,23 +169,23 @@ paths:
       summary: Read change set list
       operationId: get_in_changes
       parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-      - in: query
-        name: offset
-        schema:
-          type: integer
-          default: 0
-          minimum: 0
-      - in: query
-        name: limit
-        schema:
-          type: integer
-          default: 100
-          minimum: 0
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventId'
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 100
+            minimum: 0
       responses:
         '200':
           description: Table of changes with index greater or equal offset, may be paginated
@@ -215,12 +205,12 @@ paths:
       # description: Add a new pet to the store
       operationId: get_start_list_iofxml3
       parameters:
-      - name: eventId
-        in: path
-        description: Event key generated by Quick Event
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
+        - name: eventId
+          in: path
+          description: Event key generated by Quick Event
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventId'
       responses:
         '200':
           description: Successful operation
@@ -237,17 +227,17 @@ paths:
       # description: Add a new pet to the store
       operationId: set_start_list_iofxml3
       parameters:
-      - name: eventId
-        in: path
-        description: Event key generated by Quick Event
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventId'
-      - name: eventKey
-        in: header
-        required: true
-        schema:
-          $ref: '#/components/schemas/EventKey'
+        - name: eventId
+          in: path
+          description: Event key generated by Quick Event
+          required: true
+          schema:
+            $ref: '#/components/schemas/EventId'
+        - name: apiKey
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApiKey'
       requestBody:
         content:
           application/xml:
@@ -265,16 +255,22 @@ paths:
           description: Invalid event key or event id
 components:
   schemas:
-    EventRecord:
+    RegisterEventResponse:
       properties:
+        eventId:
+          type: integer
+        apiKey:
+          $ref: '#/components/schemas/ApiKey'
+    EventInfo:
+      properties:
+        dbName:
+          type: string
         name:
           type: string
         date:
           type: string
         place:
           type: string
-      required:
-      - eventId
     SiId:
       type: integer
       format: int64
@@ -288,9 +284,9 @@ components:
     EventId:
       type: string
       description: Event id generated by QX server
-    EventKey:
+    ApiKey:
       type: string
-      description: Unique event key generated by Quick Event
+      description: Unique token to authorize write to event data
     OChecklistRunner:
       properties:
         Id:
@@ -300,9 +296,9 @@ components:
         StartStatus:
           type: string
           enum:
-          - Started OK
-          - Did not start (DNS)
-          - Late start
+            - Started OK
+            - Did not start (DNS)
+            - Late start
         Card:
           $ref: '#/components/schemas/SiId'
         ClassName:
@@ -343,10 +339,10 @@ components:
         table:
           type: string
           enum:
-          - runs # QERunsRecord
-          - radio # QERadioRecord
-
-          # corresponding table record properties follows
+            - runs # QERunsRecord
+            - radio # QERadioRecord
+          
+          # corresponding table record properties follows 
 
     QERunsRecord:
       properties:
