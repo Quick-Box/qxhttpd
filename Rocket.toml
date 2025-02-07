@@ -5,6 +5,7 @@ address = "0.0.0.0"
 port = 8000
 # limits = { form = "64 kB", json = "1 MiB" }
 #qx_data_dir = "~/.qx/data"
+database_url = "sqlite:///tmp/qxdb.sqlite"
 
 [tls]
 certs = "private/rsa_sha256_cert.pem"
@@ -15,13 +16,12 @@ key = "private/rsa_sha256_key.pem"
 ## only the `json` key from `default` will be overridden; `form` will remain
 # limits = { json = "10MiB" }
 #qx_oc_test_data_dir = "tests/oc/data"
-[default.databases.rusqlite]
-#url = "file:rusqlite?mode=memory&cache=shared"
-url = "file:/tmp/qx.sqlite?cache=shared"
 
-## set only when the `nyc` profile is selected
-[nyc]
-# port = 9001
+#[default.databases.qxdb]
+#url = "sqlite:///tmp/qxdb.sqlite"
+
+[demo]
+qx_create_demo_event = true
 
 ## set only when compiled in release mode, i.e, `cargo build --release`
 [release]
