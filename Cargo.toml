@@ -12,9 +12,5 @@ serde = "1.0"
 serde_yaml = "0.9"
 serde_json = "1.0.132"
 log = "0.4.22"
-chrono = "0.4.38"
-sqlx = { version = "0.7", features = ["sqlite", "macros", "migrate"] }
-
-[dependencies.rocket_db_pools]
-version = "0.2.0"
-features = ["sqlx_sqlite"]
+sqlx = { version = "0.8.3", features = ["sqlite", "macros", "migrate", "runtime-tokio", "chrono"] }
+chrono = { version = "0.4", features = ["serde"] }

@@ -1,15 +1,13 @@
 use rocket::http::Status;
-use rocket::{Build, Data, Request, Rocket, State};
-use rocket::data::ToByteUnit;
+use rocket::{Build, Request, Rocket};
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::{Deserialize, Serialize};
-use rocket::serde::json::Json;
-use crate::{EventId, EventInfo, OCheckListChangeSet, QERunsRecord, QxState};
+use crate::{EventId};
 
 pub fn mount(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/api/", routes![
-            api_get_qe_in_changes,
-            api_add_oc_change_set
+            // api_get_qe_in_changes,
+            // api_add_oc_change_set
         ])
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -22,7 +20,7 @@ impl ApiKey {
 }
 
 #[derive(Debug)]
-enum ApiKeyError {
+pub enum ApiKeyError {
     Missing,
     Invalid,
 }
@@ -48,28 +46,28 @@ impl<'r> FromRequest<'r> for ApiKey {
         }
     }
 }
-#[post("/event", data = "<data>")]
-async fn api_register_event(api_key: ApiKey, data: Data<'_>, state: &State<crate::SharedQxState>) -> std::result::Result<Json<RegisterEventResponse>, String> {
-    let mut buffer = String::new();
-    let content = data.open(128.kibibytes()).into_string().await.map_err(|err| err.to_string())?;
-    let event_info: EventInfo = serde_json::from_str(&content).map_err(|e| e.to_string())?;
-    let mut qx_state = state.write().unwrap();
-    let event_id = QxState::create_event(event_info).map_err(|e| e.to_string())?;
-    let api_key = state.read().unwrap().events.get(&event_id).expect("key must exist").read().unwrap().event.api_key.clone();
-    Ok(Json(RegisterEventResponse { eventId: event_id, apiKey: api_key }))
-}
-#[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
-fn api_get_qe_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Json<Vec<QERunsRecord>> {
-    let state = state.read().unwrap();
-    let event = state.events.get(&event_id).unwrap().read().unwrap();
-    let offset = offset.unwrap_or(0) as usize;
-    let lst = event.qe.get_records(offset, limit.map(|l| l as usize)).unwrap();
-    Json(lst)
-}
-#[post("/event/<event_id>/oc", data = "<data>")]
-async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> std::result::Result<(), String> {
-    let content = data.open(128.kibibytes()).into_string().await.map_err(|err| err.to_string())?;
-    let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
-    state.write().unwrap().add_oc_change_set(event_id, oc).map_err(|err| err.to_string())?;
-    Ok(())
-}
+// #[post("/event", data = "<data>")]
+// async fn api_register_event(api_key: ApiKey, data: Data<'_>, state: &State<crate::SharedQxState>) -> std::result::Result<Json<RegisterEventResponse>, String> {
+//     let mut buffer = String::new();
+//     let content = data.open(128.kibibytes()).into_string().await.map_err(|err| err.to_string())?;
+//     let event_info: EventInfo = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+//     let mut qx_state = state.write().unwrap();
+//     let event_id = 0;//QxState::create_event(event_info).map_err(|e| e.to_string())?;
+//     let api_key = state.read().unwrap().events.get(&event_id).expect("key must exist").read().unwrap().event.api_key.clone();
+//     Ok(Json(RegisterEventResponse { eventId: event_id, apiKey: api_key }))
+// }
+// #[get("/event/<event_id>/qe/chng/in?<offset>&<limit>")]
+// fn api_get_qe_in_changes(event_id: EventId, offset: Option<i32>, limit: Option<i32>, state: &State<crate::SharedQxState>) -> Json<Vec<QERunsRecord>> {
+//     let state = state.read().unwrap();
+//     let event = state.events.get(&event_id).unwrap().read().unwrap();
+//     let offset = offset.unwrap_or(0) as usize;
+//     let lst = event.qe.get_records(offset, limit.map(|l| l as usize)).unwrap();
+//     Json(lst)
+// }
+// #[post("/event/<event_id>/oc", data = "<data>")]
+// async fn api_add_oc_change_set(event_id: EventId, data: Data<'_>, state: &State<crate::SharedQxState>) -> std::result::Result<(), String> {
+//     let content = data.open(128.kibibytes()).into_string().await.map_err(|err| err.to_string())?;
+//     let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
+//     state.write().unwrap().add_oc_change_set(event_id, oc).map_err(|err| err.to_string())?;
+//     Ok(())
+// }
