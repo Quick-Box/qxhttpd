@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::sync::RwLock;
 use rocket::fs::{FileServer};
 use rocket::{State};
+use rocket::form::{Contextual, Form};
 use rocket::http::Status;
 use rocket::response::status;
 use rocket_dyn_templates::{Template, context};
@@ -193,6 +194,31 @@ async fn index(db: &State<DbPool>) -> std::result::Result<Template, status::Cust
             events,
         }))
 }
+#[derive(Debug, FromForm)]
+#[allow(dead_code)]
+struct SubmitEvent<'v> {
+    #[field(validate = len(1..))]
+    name: &'v str,
+    #[field(validate = len(1..))]
+    place: &'v str,
+    #[field(validate = len(1..))]
+    date: &'v str,
+}
+// NOTE: We use `Contextual` here because we want to collect all submitted form
+// fields to re-render forms with submitted values on error. If you have no such
+// need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
+#[post("/event", data = "<form>")]
+async fn create_event<'r>(form: Form<Contextual<'r, SubmitEvent<'r>>>, db: &State<DbPool>) -> (Status, Template) {
+    let template = match form.value {
+        Some(ref submission) => {
+            println!("submission: {:#?}", submission);
+            Template::render("success", &form.context)
+        }
+        None => Template::render("index", &form.context),
+    };
+
+    (form.context.status(), template)
+}
 #[get("/event/<event_id>")]
 fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Template {
     let state = state.read().unwrap();
@@ -282,6 +308,7 @@ fn rocket() -> _ {
         .mount("/", FileServer::from("./static"))
         .mount("/", routes![
             index,
+            create_event,
             get_event,
             get_oc_changes,
             get_qe_chng_in,
