@@ -3,6 +3,7 @@ use rocket::{Build, Request, Rocket};
 use rocket::request::{FromRequest, Outcome};
 use rocket::serde::{Deserialize, Serialize};
 use crate::{EventId};
+use rand::Rng;
 
 pub fn mount(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/api/", routes![
@@ -12,10 +13,30 @@ pub fn mount(rocket: Rocket<Build>) -> Rocket<Build> {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ApiKey(String);
+/*
 
+
+fn main() {
+    let charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let random_string = generate_custom_random_string(12, charset);
+    println!("Custom Random String: {}", random_string);
+}
+*/
+pub fn generate_random_string(len: usize) -> String {
+    const WOWELS: &str = "aeiouy";
+    const CONSONANTS: &str = "bcdfghjklmnopqrstvwxz";
+    let mut rng = rand::thread_rng();
+    (0..len)
+        .map(|n| {
+            let charset = if n % 2 == 0 { CONSONANTS } else { WOWELS };
+            let idx = rng.gen_range(0..charset.len());
+            charset.chars().nth(idx).unwrap()
+        })
+        .collect()
+}
 impl ApiKey {
     pub(crate) fn generate() -> Self {
-        Self("42".to_string())
+        Self(generate_random_string(8))
     }
 }
 

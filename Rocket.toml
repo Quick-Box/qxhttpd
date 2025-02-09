@@ -7,6 +7,12 @@ port = 8000
 #qx_data_dir = "~/.qx/data"
 database_url = "sqlite:///tmp/qxdb.sqlite"
 
+[default.oauth.google]
+provider = "Google"
+client_id = "<client-id>"
+client_secret = "<client-secret>"
+redirect_uri = "http://localhost:8000/auth/google"
+
 [tls]
 certs = "private/rsa_sha256_cert.pem"
 key = "private/rsa_sha256_key.pem"

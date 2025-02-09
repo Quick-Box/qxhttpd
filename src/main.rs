@@ -1,23 +1,25 @@
 #[macro_use] extern crate rocket;
 
 use std::fmt::Debug;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
 use rocket::fs::{FileServer};
-use rocket::{State};
+use rocket::{request, State};
 use rocket::form::{Contextual, Form};
-use rocket::http::Status;
+use rocket::http::{CookieJar, Status};
 use rocket::response::status;
 use rocket_dyn_templates::{Template, context};
 use rocket::serde::Serialize;
 use serde::{Deserialize};
 use sqlx::{FromRow};
+use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
 
 #[cfg(test)]
 mod tests;
 mod api;
 mod db;
+mod auth;
 
 // type Error = String;
 type Error = Box<dyn std::error::Error>;
@@ -138,8 +140,28 @@ impl Default for AppConfig {
         AppConfig {  }
     }
 }
+struct QxSession {
+    user_info: UserInfo,
+}
+#[derive(Eq, Hash, PartialEq)]
+struct QxSessionId(String);
+#[rocket::async_trait]
+impl<'r> request::FromRequest<'r> for QxSessionId {
+    type Error = ();
+    async fn from_request(request: &'r request::Request<'_>) -> request::Outcome<QxSessionId, ()> {
+        let cookies = request
+            .guard::<&CookieJar<'_>>()
+            .await
+            .expect("request cookies");
+        if let Some(cookie) = cookies.get_private(QX_SESSION_ID) {
+            return request::Outcome::Success(QxSessionId(cookie.value().to_string()));
+        }
+        request::Outcome::Forward(Status::Unauthorized)
+    }
+}
 struct QxState {
-    events: BTreeMap<EventId, RwLock<EventState>>,
+    // events: BTreeMap<EventId, RwLock<EventState>>,
+    sessions: HashMap<QxSessionId, QxSession>,
 }
 impl QxState {
     // async fn create_event(&mut self, mut db: Connection<Db>, mut event_info: EventInfo) -> Result<EventId> {
@@ -181,22 +203,32 @@ type SharedQxState = RwLock<QxState>;
 //         oc
 //     }).collect()
 // }
-
-#[get("/")]
-async fn index(db: &State<DbPool>) -> std::result::Result<Template, status::Custom<String>> {
+async fn index(session_id: Option<QxSessionId>, db: &State<DbPool>, state: &State<SharedQxState>) -> std::result::Result<Template, status::Custom<String>> {
+    let user_info = session_id.map(|id| {
+        state.read().expect("not poisoned").sessions.get(&id).map(|s| s.user_info.clone())
+    }).flatten();
     let pool = &db.0;
-
     let events: Vec<EventInfo> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
     Ok(Template::render("index", context! {
+            user_info,
             events,
         }))
 }
+
+#[get("/")]
+async fn index_authorized(session_id: QxSessionId, db: &State<DbPool>, state: &State<SharedQxState>) -> std::result::Result<Template, status::Custom<String>> {
+    index(Some(session_id), db, state).await
+}
+#[get("/", rank = 2)]
+async fn index_anonymous(db: &State<DbPool>, state: &State<SharedQxState>) -> std::result::Result<Template, status::Custom<String>> {
+    index(None, db, state).await
+}
 #[derive(Debug, FromForm)]
 #[allow(dead_code)]
-struct SubmitEvent<'v> {
+struct SubmitOEvent<'v> {
     #[field(validate = len(1..))]
     name: &'v str,
     #[field(validate = len(1..))]
@@ -208,7 +240,7 @@ struct SubmitEvent<'v> {
 // fields to re-render forms with submitted values on error. If you have no such
 // need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
 #[post("/event", data = "<form>")]
-async fn create_event<'r>(form: Form<Contextual<'r, SubmitEvent<'r>>>, db: &State<DbPool>) -> (Status, Template) {
+async fn create_event<'r>(form: Form<Contextual<'r, SubmitOEvent<'r>>>, db: &State<DbPool>) -> (Status, Template) {
     let template = match form.value {
         Some(ref submission) => {
             println!("submission: {:#?}", submission);
@@ -219,6 +251,7 @@ async fn create_event<'r>(form: Form<Contextual<'r, SubmitEvent<'r>>>, db: &Stat
 
     (form.context.status(), template)
 }
+/*
 #[get("/event/<event_id>")]
 fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Template {
     let state = state.read().unwrap();
@@ -252,7 +285,7 @@ fn get_oc_changes(event_id: EventId, state: &State<SharedQxState>) -> Template {
             // change_set
         })
 }
-
+*/
 // fn load_event(event_dir: &DirEntry) -> Result<(EventId, Event)> {
 //     let event_id = usize::from_str(&event_dir.file_name().to_string_lossy())?;
 //     let event: Event = serde_yaml::from_reader(fs::File::open(event_dir.path().join(EVENT_FILE))?)?;
@@ -307,13 +340,14 @@ fn rocket() -> _ {
         .attach(DbPoolFairing())
         .mount("/", FileServer::from("./static"))
         .mount("/", routes![
-            index,
+            index_authorized,
+            index_anonymous,
             create_event,
-            get_event,
-            get_oc_changes,
-            get_qe_chng_in,
+            // get_event,
+            // get_oc_changes,
+            // get_qe_chng_in,
         ]);
-    rocket = api::mount(rocket);
+    rocket = auth::mount(rocket);
 
     // let figment = rocket.figment();
     let cfg = AppConfig::default();
@@ -325,7 +359,7 @@ fn rocket() -> _ {
     //let load_sample_data = events.is_empty();
     // let e:BTreeMap< crate::EventId, RwLock< crate::Event >> = BTreeMap::from_iter(events);
     let state = QxState {
-        events: Default::default(),
+        sessions: Default::default(),
     };
     //if create_demo_event {
     //    state.create_event(EventInfo { name: "test-event".to_string(), place: "".to_string(), date: "".to_string() }).unwrap();
