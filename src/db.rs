@@ -2,7 +2,6 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::{Build, Rocket};
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use sqlx::migrate::Migrator;
-use std::env;
 use std::path::Path;
 
 static MIGRATOR: Migrator = sqlx::migrate!("db/migrations"); // Auto-discovers migrations in `migrations/`

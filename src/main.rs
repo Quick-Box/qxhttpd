@@ -1,23 +1,23 @@
 #[macro_use] extern crate rocket;
 
 use std::fmt::Debug;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{HashMap};
 use std::sync::RwLock;
+use anyhow::anyhow;
 use rocket::fs::{FileServer};
 use rocket::{request, State};
 use rocket::form::{Contextual, Form};
 use rocket::http::{CookieJar, Status};
-use rocket::response::status;
+use rocket::response::{status, Redirect};
 use rocket_dyn_templates::{Template, context};
 use rocket::serde::Serialize;
 use serde::{Deserialize};
-use sqlx::{FromRow};
+use sqlx::{query_as, FromRow};
 use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
 
 #[cfg(test)]
 mod tests;
-mod api;
 mod db;
 mod auth;
 
@@ -64,20 +64,14 @@ struct QERadioRecord {
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 struct EventInfo {
     id: EventId,
-    name: Option<String>,
-    place: Option<String>,
-    date: Option<chrono::NaiveDateTime>,
+    name: String,
+    place: String,
+    date: String,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct Event {
     info: EventInfo,
-    api_key: api::ApiKey,
-}
-#[derive(Debug)]
-struct EventState {
-    event: Event,
-}
-impl EventState {
+    api_key: String,
 }
 // fn find_event_by_api_key(data_dir: &str, api_key: &str) -> Result<(Option<EventId>, EventId)> {
 //     let mut max_event_id = 0;
@@ -204,16 +198,16 @@ type SharedQxState = RwLock<QxState>;
 //     }).collect()
 // }
 async fn index(session_id: Option<QxSessionId>, db: &State<DbPool>, state: &State<SharedQxState>) -> std::result::Result<Template, status::Custom<String>> {
-    let user_info = session_id.map(|id| {
+    let user = session_id.map(|id| {
         state.read().expect("not poisoned").sessions.get(&id).map(|s| s.user_info.clone())
-    }).flatten();
+    }).flatten().map(|i| i.email).unwrap_or_default();
     let pool = &db.0;
     let events: Vec<EventInfo> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
     Ok(Template::render("index", context! {
-            user_info,
+            user,
             events,
         }))
 }
@@ -228,7 +222,7 @@ async fn index_anonymous(db: &State<DbPool>, state: &State<SharedQxState>) -> st
 }
 #[derive(Debug, FromForm)]
 #[allow(dead_code)]
-struct SubmitOEvent<'v> {
+struct EventFormValues<'v> {
     #[field(validate = len(1..))]
     name: &'v str,
     #[field(validate = len(1..))]
@@ -240,16 +234,23 @@ struct SubmitOEvent<'v> {
 // fields to re-render forms with submitted values on error. If you have no such
 // need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
 #[post("/event", data = "<form>")]
-async fn create_event<'r>(form: Form<Contextual<'r, SubmitOEvent<'r>>>, db: &State<DbPool>) -> (Status, Template) {
-    let template = match form.value {
-        Some(ref submission) => {
-            println!("submission: {:#?}", submission);
-            Template::render("success", &form.context)
-        }
-        None => Template::render("index", &form.context),
-    };
-
-    (form.context.status(), template)
+async fn create_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &State<DbPool>) -> std::result::Result<Redirect, rocket::response::Debug<anyhow::Error>> {
+    let vals = form.value.as_ref().ok_or(anyhow::anyhow!("Form data invalid"))?;
+    //let mut info = EventInfo {
+    //    id: 0,
+    //    name: vals.name.to_string(),
+    //    place: vals.place.to_string(),
+    //    date: vals.date.to_string(),
+    //};
+    let pool = &db.0;
+    let id: (i64, ) = query_as("INSERT INTO events(name, place, date) VALUES (?, ?, ?);")
+        .bind(vals.name.to_string())
+        .bind(vals.place.to_string())
+        .bind(vals.date.to_string())
+        .fetch_one(pool)
+        .await.map_err(|e| anyhow!("{e}"))?;
+    info!("Event created, id: {}", id.0);
+    Ok(Redirect::to("/"))
 }
 /*
 #[get("/event/<event_id>")]
@@ -347,7 +348,7 @@ fn rocket() -> _ {
             // get_oc_changes,
             // get_qe_chng_in,
         ]);
-    rocket = auth::mount(rocket);
+    rocket = auth::extend(rocket);
 
     // let figment = rocket.figment();
     let cfg = AppConfig::default();
