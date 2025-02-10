@@ -1,7 +1,9 @@
 {{#*inline "page"}}
 
     <h2>Events</h2>
-    <p>user: {{user}}</p>
+    <p>user: {{user.name}}</p>
+    <p>user2: {{stringify user}}</p>
+    <img src="{{user.picture}}" alt="user avatar" class="w3-circle"  width="50" height="50">
     <div class="w3-container w3-light-grey">
         <button onclick="document.getElementById('event-dialog').style.display='block'" class="w3-button w3-green w3-round-large w3-right"><b>add event</b></button>
     </div>

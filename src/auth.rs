@@ -19,16 +19,17 @@ impl TryFrom<&GoogleUserInfo> for UserInfo {
     type Error = anyhow::Error;
 
     fn try_from(info: &GoogleUserInfo) -> Result<Self, Self::Error> {
-        let picture = info.picture.to_string();
-        let email = info.email.to_string();
+        fn to_string(val: &Value) -> String {
+            val.as_str().map(|s| s.to_string()).unwrap_or_default()
+        }
+        let email = to_string(&info.email);
         if email.is_empty() {
             return Err(anyhow!("User email must be set"));
         };
-
         Ok(Self {
-            name: info.name.to_string(),
+            name: to_string(&info.name),
             email,
-            picture,
+            picture: to_string(&info.picture),
         })
     }
 }
@@ -57,7 +58,8 @@ struct GoogleUserInfo {
 }
 #[get("/login")]
 fn login() -> Redirect {
-    Redirect::to("/login/google")
+    // must be the same host as redirect_uri, both have to be localhost or 127.0.0.1
+    Redirect::to("http://localhost:8000/login/google")
 }
 
 #[get("/login/google")]
@@ -68,14 +70,14 @@ fn google_login(oauth2: OAuth2<GoogleUserInfo>, cookies: &CookieJar<'_>) -> Redi
 #[get("/auth/google")]
 async fn google_auth(token: TokenResponse<GoogleUserInfo>, cookies: &CookieJar<'_>, state: &State<SharedQxState>) -> Result<Redirect, Debug<anyhow::Error>> {
     // Use the token to retrieve the user's Google account information.
-    info!("=====> google_callback ==============");
+    debug!("=====> google_callback ==============");
     let rq = reqwest::Client::builder()
         .build()
         .context("failed to build reqwest client")?
         .get("https://www.googleapis.com/oauth2/v2/userinfo")
         // .get("https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses")
         .header(AUTHORIZATION, format!("Bearer {}", token.access_token()));
-    info!("=====> user name: {:?}", rq);
+    debug!("=====> user name: {:?}", rq);
     let response = rq.send()
         .await
         .context("failed to complete request")?;
@@ -89,7 +91,7 @@ async fn google_auth(token: TokenResponse<GoogleUserInfo>, cookies: &CookieJar<'
         generate_random_string(32)
     }
     let session_id = generate_session_id();
-    info!("name: {}, email: {}", user_info.name, user_info.email);
+    info!("User log in, name: {}, email: {}, picture: {}", user_info.name, user_info.email, user_info.picture);
     state.write().expect("not poisoned").sessions.insert(QxSessionId(session_id.clone()), QxSession{ user_info });
     // Set a private cookie with the user's name, and redirect to the home page.
     cookies.add_private(

@@ -9,8 +9,9 @@ use rocket::{request, State};
 use rocket::form::{Contextual, Form};
 use rocket::http::{CookieJar, Status};
 use rocket::response::{status, Redirect};
-use rocket_dyn_templates::{Template, context};
+use rocket_dyn_templates::{Template, context, handlebars};
 use rocket::serde::Serialize;
+use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
 use sqlx::{query_as, FromRow};
 use crate::auth::{UserInfo, QX_SESSION_ID};
@@ -200,7 +201,7 @@ type SharedQxState = RwLock<QxState>;
 async fn index(session_id: Option<QxSessionId>, db: &State<DbPool>, state: &State<SharedQxState>) -> std::result::Result<Template, status::Custom<String>> {
     let user = session_id.map(|id| {
         state.read().expect("not poisoned").sessions.get(&id).map(|s| s.user_info.clone())
-    }).flatten().map(|i| i.email).unwrap_or_default();
+    }).flatten();
     let pool = &db.0;
     let events: Vec<EventInfo> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
@@ -337,7 +338,21 @@ fn get_oc_changes(event_id: EventId, state: &State<SharedQxState>) -> Template {
 #[launch]
 fn rocket() -> _ {
     let mut rocket = rocket::build()
-        .attach(Template::fairing())
+        // .attach(Template::fairing())
+        .attach(Template::custom(|engines| {
+            let handlebars = &mut engines.handlebars;
+
+            // Register a custom Handlebars helper
+            handlebars.register_helper("stringify",
+                                       Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
+                                           let param = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("stringify", 0))?;
+                                           let json = serde_json::to_string(param.value()).unwrap_or_else(|_| "Invalid JSON".to_string());
+                                           // out.write("3rd helper: ")?;
+                                           // out.write(param.value().render().as_ref())?;
+                                           out.write(json.as_ref())?;
+                                           Ok(())
+                                       }));
+        }))
         .attach(DbPoolFairing())
         .mount("/", FileServer::from("./static"))
         .mount("/", routes![
