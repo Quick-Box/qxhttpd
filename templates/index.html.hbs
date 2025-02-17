@@ -1,11 +1,12 @@
 {{#*inline "page"}}
 
     <h2>Events</h2>
-    <p>user: {{user.name}}</p>
-    <p>user2: {{stringify user}}</p>
-    <img src="{{user.picture}}" alt="user avatar" class="w3-circle"  width="50" height="50">
     <div class="w3-container w3-light-grey">
-        <button onclick="document.getElementById('event-dialog').style.display='block'" class="w3-button w3-green w3-round-large w3-right"><b>add event</b></button>
+        {{#if user}}
+            <button onclick="document.getElementById('event-dialog').style.display='block'" class="w3-button w3-green w3-round-large w3-right"><b>add event</b></button>
+        {{else}}
+            <p>NULL</p>
+        {{/if}}
     </div>
 <!--    <button onclick="document.getElementById('id01').style.display='block'" class="w3-button w3-green w3-large">Login</button>-->
 
@@ -32,15 +33,19 @@
     </div>
 
     <table class="w3-table-all w3-hoverable">
-<!--        <tr>-->
-<!--            <th>Name</th>-->
-<!--            <th>Date</th>-->
-<!--        </tr>-->
+<!--        <p>user: {{stringify user}}</p>-->
         {{#each events}}
             <tr>
                 <td><a href="/event/{{ this.id }}">{{this.name}}</a></td>
                 <td>{{this.place}}</td>
                 <td>{{this.date}}</td>
+                <td>
+                {{#if ../user}}
+                    <button class="w3-button w3-round-large w3-border"><i class="fa fa-cog"></i> edit</button>
+                {{else}}
+                    <p>NULL</p>
+                {{/if}}
+                </td>
             </tr>
         {{/each}}
     </table>

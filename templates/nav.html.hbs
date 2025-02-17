@@ -18,9 +18,16 @@
         <i class="fa fa-remove"></i>
     </a>
     <h4 class="w3-bar-item"><b>Quick Exchange</b></h4>
+
     <a class="w3-bar-item w3-button w3-hover-black" href="/">Events</a>
     <a class="w3-bar-item w3-button w3-hover-black" href="/about">About</a>
-    <a class="w3-bar-item w3-button w3-hover-black" href="/login">Login</a>
+    {{#if user}}
+        <div class="w3-bar-item w3-display-bottomleft" style="display: flex;">
+            <p style="flex-grow: 8">{{user.name}}</p><img src="{{user.picture}}" alt="avatar" class="w3-circle w3-right"  width="50" height="50">
+        </div>
+    {{else}}
+        <a class="w3-bar-item w3-button w3-hover-black" href="/login">Login</a>
+    {{/if}}
 </nav>
 
 <!-- Overlay effect when opening sidebar on small screens -->

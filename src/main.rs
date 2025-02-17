@@ -237,14 +237,8 @@ struct EventFormValues<'v> {
 #[post("/event", data = "<form>")]
 async fn create_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &State<DbPool>) -> std::result::Result<Redirect, rocket::response::Debug<anyhow::Error>> {
     let vals = form.value.as_ref().ok_or(anyhow::anyhow!("Form data invalid"))?;
-    //let mut info = EventInfo {
-    //    id: 0,
-    //    name: vals.name.to_string(),
-    //    place: vals.place.to_string(),
-    //    date: vals.date.to_string(),
-    //};
     let pool = &db.0;
-    let id: (i64, ) = query_as("INSERT INTO events(name, place, date) VALUES (?, ?, ?);")
+    let id: (i64, ) = query_as("INSERT INTO events(name, place, date) VALUES (?, ?, ?) RETURNING id")
         .bind(vals.name.to_string())
         .bind(vals.place.to_string())
         .bind(vals.date.to_string())
@@ -253,16 +247,17 @@ async fn create_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &
     info!("Event created, id: {}", id.0);
     Ok(Redirect::to("/"))
 }
-/*
+
 #[get("/event/<event_id>")]
 fn get_event(event_id: EventId, state: &State<SharedQxState>) -> Template {
     let state = state.read().unwrap();
-    let event_info = state.events.get(&event_id).expect("event id must exist").read().unwrap().event.info.clone();
+    // let event_info = state.events.get(&event_id).expect("event id must exist").read().unwrap().event.info.clone();
     Template::render("event", context! {
             event_id,
-            event_info,
+            // event_info,
         })
 }
+/*
 #[get("/event/<event_id>/qe/chng/in")]
 fn get_qe_chng_in(event_id: EventId, state: &State<SharedQxState>) -> Template {
     let state = state.read().unwrap();
