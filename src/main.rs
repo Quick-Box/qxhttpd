@@ -293,6 +293,20 @@ async fn get_event_create(session_id: QxSessionId, state: &State<SharedQxState>,
 async fn get_event_edit(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     event_edit_insert(Some(event_id), session_id, state, db).await
 }
+
+#[get("/event/<event_id>")]
+async fn get_event(event_id: i32, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let pool = &db.0;
+    let event: EventInfo = query_as("SELECT * FROM events WHERE id=?")
+        .bind(event_id)
+        .fetch_one(pool)
+        .await.map_err(|e| Custom(Status::NotFound, e.to_string()))?;
+
+    Ok(Template::render("event", context! {
+        event
+    }))
+}
+
 /*
 #[get("/event/<event_id>/qe/chng/in")]
 fn get_qe_chng_in(event_id: EventId, state: &State<SharedQxState>) -> Template {
@@ -319,35 +333,6 @@ fn get_oc_changes(event_id: EventId, state: &State<SharedQxState>) -> Template {
         })
 }
 */
-// fn load_event(event_dir: &DirEntry) -> Result<(EventId, Event)> {
-//     let event_id = usize::from_str(&event_dir.file_name().to_string_lossy())?;
-//     let event: Event = serde_yaml::from_reader(fs::File::open(event_dir.path().join(EVENT_FILE))?)?;
-//     //let event_state = EventState {
-//     //    event,
-//     //    qe: Table::<QERunsRecord>::new(&event_dir.path().join(QECHNGIN_FILE))?,
-//     //    oc: Table::<OCheckListChangeSet>::new(&event_dir.path().join(OCCHNGIN_FILE))?,
-//     //};
-//     Ok((event_id, event))
-// }
-// fn load_events(state: &mut QxState) -> Result<()> {
-//     if let Ok(dirs) = fs::read_dir(&state.data_dir) {
-//         for event_dir in dirs {
-//             let event_dir = event_dir?;
-//             if let Ok((event_id, event)) = load_event(&event_dir) {
-//                 let event_dir = event_dir.path();
-//                 let event_state = EventState {
-//                     event,
-//                     qe: Table::<QERunsRecord>::new(&event_dir.join(QECHNGIN_FILE))?,
-//                     oc: Table::<OCheckListChangeSet>::new(&event_dir.join(OCCHNGIN_FILE))?,
-//                 };
-//                 state.events.insert(event_id, RwLock::new(event_state));
-//             } else {
-//                 error!("Failed to load event: {:?}", event_dir.file_name());
-//             }
-//         }
-//     }
-//     Ok(())
-// }
 // #[get("/users")]
 // async fn get_users(db: &State<DbPool>) -> String {
 //     let pool = &db.0;
@@ -392,6 +377,7 @@ fn rocket() -> _ {
             get_event_create,
             get_event_edit,
             post_event,
+            get_event,
             // get_oc_changes,
             // get_qe_chng_in,
         ]);
