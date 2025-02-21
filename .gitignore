@@ -2,3 +2,4 @@
 .idea
 Cargo.lock
 Rocket.prod.toml
+Rocket.local.toml

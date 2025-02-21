@@ -1,9 +1,13 @@
 #[macro_use] extern crate rocket;
 
+use ::image::ImageFormat;
 use std::fmt::Debug;
 use std::collections::{HashMap};
+use std::io::Cursor;
 use std::sync::RwLock;
 use anyhow::anyhow;
+use base64::Engine;
+use base64::engine::general_purpose;
 use rocket::fs::{FileServer};
 use rocket::{request, State};
 use rocket::form::{Contextual, Form};
@@ -15,7 +19,7 @@ use rocket::serde::Serialize;
 use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
 use sqlx::{query, query_as, FromRow};
-use crate::auth::{UserInfo, QX_SESSION_ID};
+use crate::auth::{generate_random_string, UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
 
 #[cfg(test)]
@@ -69,12 +73,13 @@ struct EventInfo {
     name: String,
     place: String,
     date: String,
+    api_token: String,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct Event {
-    info: EventInfo,
-    api_key: String,
-}
+// #[derive(Serialize, Deserialize, Clone, Debug)]
+// struct Event {
+//     info: EventInfo,
+//     api_key: String,
+// }
 // fn find_event_by_api_key(data_dir: &str, api_key: &str) -> Result<(Option<EventId>, EventId)> {
 //     let mut max_event_id = 0;
 //     let mut event_id = None;
@@ -223,34 +228,37 @@ async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, st
 #[derive(Debug, FromForm)]
 // #[allow(dead_code)]
 struct EventFormValues<'v> {
-    id: Option<EventId>,
+    id: EventId,
     #[field(validate = len(1..))]
     name: &'v str,
     #[field(validate = len(1..))]
     place: &'v str,
     #[field(validate = len(1..))]
     date: &'v str,
+    api_token: &'v str,
 }
 // NOTE: We use `Contextual` here because we want to collect all submitted form
 // fields to re-render forms with submitted values on error. If you have no such
 // need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
 #[post("/event", data = "<form>")]
-async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &State<DbPool>) -> std::result::Result<Redirect, rocket::response::Debug<anyhow::Error>> {
+async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &State<DbPool>) -> Result<Redirect, rocket::response::Debug<anyhow::Error>> {
     let vals = form.value.as_ref().ok_or(anyhow::anyhow!("Form data invalid"))?;
     let pool = &db.0;
-    if let Some(id) = vals.id {
-        query("UPDATE events SET name=?, place=?, date=? WHERE id=?")
+    if vals.id > 0 {
+        query("UPDATE events SET name=?, place=?, date=?, api_token=? WHERE id=?")
             .bind(vals.name.to_string())
             .bind(vals.place.to_string())
             .bind(vals.date.to_string())
-            .bind(id)
+            .bind(vals.api_token.to_string())
+            .bind(vals.id)
             .execute(pool)
             .await.map_err(|e| anyhow!("{e}"))?;
     } else {
-        let id: (i64, ) = query_as("INSERT INTO events(name, place, date) VALUES (?, ?, ?) RETURNING id")
+        let id: (i64, ) = query_as("INSERT INTO events(name, place, date, api_token) VALUES (?, ?, ?, ?) RETURNING id")
             .bind(vals.name.to_string())
             .bind(vals.place.to_string())
             .bind(vals.date.to_string())
+            .bind(vals.api_token.to_string())
             .fetch_one(pool)
             .await.map_err(|e| anyhow!("{e}"))?;
         info!("Event created, id: {}", id.0);
@@ -276,13 +284,25 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
             name: "".to_string(),
             place: "".to_string(),
             date: format!("{:?}", chrono::offset::Local::now()),
+            api_token: generate_random_string(10),
         }
+    };
+    let api_token_qrc_img_data = {
+        let code = qrcode::QrCode::new(event.api_token.as_bytes()).unwrap();
+        // Render the bits into an image.
+        let image = code.render::<::image::LumaA<u8>>().build();
+        let mut buffer: Vec<u8> = Vec::new();
+        let mut cursor = Cursor::new(&mut buffer);
+        image.write_to(&mut cursor, ImageFormat::Png).unwrap();
+        // Encode the image buffer to base64
+        general_purpose::STANDARD.encode(&buffer)
     };
 
     Ok(Template::render("event-edit", context! {
         event_id,
         user,
-        event
+        event,
+        api_token_qrc_img_data,
     }))
 }
 #[get("/event/create")]
@@ -301,9 +321,8 @@ async fn get_event(event_id: i32, db: &State<DbPool>) -> Result<Template, Custom
         .bind(event_id)
         .fetch_one(pool)
         .await.map_err(|e| Custom(Status::NotFound, e.to_string()))?;
-
     Ok(Template::render("event", context! {
-        event
+        event,
     }))
 }
 
