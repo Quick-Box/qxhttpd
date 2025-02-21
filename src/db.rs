@@ -27,10 +27,11 @@ impl Fairing for DbPoolFairing {
         if database_url.starts_with("sqlite://") {
            let db_path = database_url.trim_start_matches("sqlite://");
            if !Path::new(db_path).exists() {
+               // info!("creating database: {database_url}");
                std::fs::File::create(db_path).expect("Failed to create SQLite database file");
            }
         }
-
+        info!("Opening database: {database_url}");
         // Initialize connection pool
         let pool = match SqlitePoolOptions::new()
             .max_connections(5)

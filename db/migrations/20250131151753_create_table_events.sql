@@ -2,7 +2,7 @@ CREATE TABLE events
 (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
     name  TEXT        NOT NULL,
-    place TEXT UNIQUE NOT NULL,
+    place TEXT        NOT NULL,
     date  DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

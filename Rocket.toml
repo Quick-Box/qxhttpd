@@ -4,7 +4,7 @@
 port = 8000
 # limits = { form = "64 kB", json = "1 MiB" }
 #qx_data_dir = "~/.qx/data"
-database_url = "sqlite:///tmp/qxdb.sqlite"
+database_url = "sqlite://db/qxdb.sqlite"
 
 [default.oauth.google]
 provider = "Google"
