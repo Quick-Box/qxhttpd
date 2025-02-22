@@ -69,6 +69,17 @@ impl<'r> request::FromRequest<'r> for QxSessionId {
         request::Outcome::Forward(Status::Unauthorized)
     }
 }
+struct QxApiToken(String);
+#[rocket::async_trait]
+impl<'r> request::FromRequest<'r> for QxApiToken {
+    type Error = ();
+    async fn from_request(request: &'r request::Request<'_>) -> request::Outcome<QxApiToken, ()> {
+        if let Some(api_token) = request.headers().get_one("qx-api-token") {
+            return request::Outcome::Success(QxApiToken(api_token.to_string()));
+        }
+        request::Outcome::Forward(Status::Unauthorized)
+    }
+}
 struct QxState {
     // events: BTreeMap<EventId, RwLock<EventState>>,
     sessions: HashMap<QxSessionId, QxSession>,
@@ -103,16 +114,7 @@ impl QxState {
     // }
 }
 type SharedQxState = RwLock<QxState>;
-// fn load_test_oc_data(data_dir: &str) -> Vec<OCheckListChangeSet> {
-//     info!("Loading test data from: {data_dir}");
-//     fs::read_dir(data_dir).unwrap().map(|dir| {
-//         let file = dir.unwrap().path();
-//         info!("loading testing data from file: {:?}", file);
-//         let content = fs::read_to_string(file).unwrap();
-//         let oc: OCheckListChangeSet = serde_yaml::from_str(&content).unwrap();
-//         oc
-//     }).collect()
-// }
+
 async fn index(user: Option<UserInfo>, db: &State<DbPool>) -> std::result::Result<Template, status::Custom<String>> {
     let pool = &db.0;
     let events: Vec<EventInfo> = sqlx::query_as("SELECT * FROM events")
@@ -248,40 +250,12 @@ fn get_qe_chng_in(event_id: EventId, state: &State<SharedQxState>) -> Template {
             // change_set
         })
 }
-#[get("/event/<event_id>/oc")]
-fn get_oc_changes(event_id: EventId, state: &State<SharedQxState>) -> Template {
-    let state = state.read().unwrap();
-    let event_state = state.events.get(&event_id).unwrap().read().unwrap();
-    let event_name = &event_state.event.info.name;
-    // let change_set = event_state.oc.get_records(0, None).unwrap();
-    Template::render("oc-changes", context! {
-            event_id,
-            event_name,
-            // change_set
-        })
-}
+
 */
-// #[get("/users")]
-// async fn get_users(db: &State<DbPool>) -> String {
-//     let pool = &db.0;
-//
-//     let users = sqlx::query("SELECT name FROM users")
-//         .fetch_all(pool)
-//         .await;
-//
-//     match users {
-//         Ok(rows) => {
-//             let names: Vec<String> = rows.iter()
-//                 .map(|row| row.get::<String, _>("name"))
-//                 .collect();
-//             format!("Users: {:?}", names)
-//         }
-//         Err(err) => format!("Error fetching users: {:?}", err),
-//     }
-// }
+
 #[launch]
 fn rocket() -> _ {
-    let mut rocket = rocket::build()
+    let rocket = rocket::build()
         // .attach(Template::fairing())
         .attach(Template::custom(|engines| {
             let handlebars = &mut engines.handlebars;
@@ -309,7 +283,8 @@ fn rocket() -> _ {
             // get_oc_changes,
             // get_qe_chng_in,
         ]);
-    rocket = auth::extend(rocket);
+    let rocket = auth::extend(rocket);
+    let rocket = ochecklist::extend(rocket);
 
     // let figment = rocket.figment();
     let cfg = AppConfig::default();

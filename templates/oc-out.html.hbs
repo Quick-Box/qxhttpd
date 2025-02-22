@@ -1,0 +1,35 @@
+{{#*inline "page"}}
+
+    <h1>OCheckList changes</h1>
+    <h2><a href="/event/{{ event_id }}">{{ event_id }}</a></h2>
+
+    <table class="w3-table-all w3-hoverable">
+        <thead>
+        <tr class="w3-theme-l1">
+            <th class="w3-right-align">Run Id</th>
+            <th>Status</th>
+            <th class="w3-right-align">SI</th>
+            <th>Class</th>
+            <th>Name</th>
+            <th>Start</th>
+            <th>Comment</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each records}}
+            <tr>
+                <td class="w3-right-align">{{ this.runner_id }}</td>
+                <td>{{ this.start_status }}</td>
+                <td class="w3-right-align">{{ this.si_id }}</td>
+                <td>{{ this.class_name }}</td>
+                <td>{{ this.runner_name }}</td>
+                <td>{{ this.start_time }}</td>
+                <td>{{ this.comment }}</td>
+            </tr>
+        {{/each}}
+        </tbody>
+    </table>
+
+
+{{/inline}}
+{{> layout}}
