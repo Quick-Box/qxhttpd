@@ -26,46 +26,12 @@ use crate::db::{DbPool, DbPoolFairing};
 mod tests;
 mod db;
 mod auth;
+mod ochecklist;
+mod quickevent;
 
-// type Error = String;
-// type Error = Box<dyn std::error::Error>;
-// type Result<T> = std::result::Result<T, Error>;
-
-// In a real application, these would be retrieved dynamically from a config.
-// const HOST: Absolute<'static> = uri!("http://*:8000");
 type RunId = u64;
 type SiId = u64;
 type EventId = i64;
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[allow(non_snake_case)]
-struct QERunsRecord {
-    id: u64,
-    #[serde(default)]
-    siId: SiId,
-    #[serde(default)]
-    checkTime: String,
-    #[serde(default)]
-    comment: String,
-}
-impl TryFrom<&OCheckListChange> for QERunsRecord {
-    type Error = String;
-
-    fn try_from(oc: &OCheckListChange) -> Result<Self, Self::Error> {
-        Ok(QERunsRecord {
-            id: RunId::from_str_radix(&oc.Runner.Id, 10).map_err(|e| e.to_string())?,
-            siId: oc.Runner.Card,
-            checkTime: oc.Runner.StartTime.clone(),
-            comment: oc.Runner.Comment.clone(),
-        })
-    }
-}
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[allow(non_snake_case)]
-struct QERadioRecord {
-    siId: SiId,
-    #[serde(default)]
-    time: String,
-}
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 struct EventInfo {
@@ -75,64 +41,7 @@ struct EventInfo {
     date: String,
     api_token: String,
 }
-// #[derive(Serialize, Deserialize, Clone, Debug)]
-// struct Event {
-//     info: EventInfo,
-//     api_key: String,
-// }
-// fn find_event_by_api_key(data_dir: &str, api_key: &str) -> Result<(Option<EventId>, EventId)> {
-//     let mut max_event_id = 0;
-//     let mut event_id = None;
-//     if let Ok(dirs) = fs::read_dir(data_dir) {
-//         for event_dir in dirs {
-//             let event_dir = event_dir.map_err(|e| e.to_string())?;
-//             let id = usize::from_str(&event_dir.file_name().to_string_lossy()).map_err(|e| e.to_string())?;
-//             max_event_id = max(id, max_event_id);
-//             let event_info_fn = event_dir.path().join(EVENT_FILE);
-//             let event_info: EventInfo = serde_yaml::from_reader(fs::File::open(event_info_fn).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-//             if event_info.api_key == api_key {
-//                 assert!(event_id.is_none());
-//                 event_id = Some(id);
-//             }
-//         }
-//     }
-//     Ok((event_id, max_event_id))
-// }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[allow(non_snake_case)]
-struct OCheckListChangeSet {
-    Version: String,
-    Creator: String,
-    Created: String,
-    Event: String,
-    Data: Vec<OCheckListChange>,
-}
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[allow(non_snake_case)]
-struct OCheckListChange {
-    Runner: OChecklistRunner,
-    ChangeLog: String,
-}
-#[derive(Serialize, Deserialize, Clone, Debug)]
-enum OChecklistStartStatus {
-    #[serde(rename = "Started OK")]
-    StartedOk,
-    DidNotStart,
-    LateStart,
-}
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[allow(non_snake_case)]
-struct OChecklistRunner {
-    Id: String,
-    StartStatus: OChecklistStartStatus,
-    Card: SiId,
-    ClassName: String,
-    Name: String,
-    StartTime: String,
-    #[serde(default)]
-    Comment: String,
-}
 
 struct AppConfig {
 }
