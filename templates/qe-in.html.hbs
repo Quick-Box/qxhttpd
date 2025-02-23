@@ -1,27 +1,35 @@
 {{#*inline "page"}}
 
-    <h1>QuickEvent changes</h1>
-    <h2><a href="/event/{{ event_id }}">{{ event_name }}</a></h2>
-    <table>
+    <h1>Quick Event changes to import</h1>
+    <h2><a href="/event/{{ event.id }}">{{ event.name }}</a></h2>
+
+    <table class="w3-table-all w3-hoverable">
         <thead>
-        <tr>
-            <th>Id</th>
-            <th>SI</th>
-            <th>Check time</th>
+        <tr class="w3-theme-l1">
+            <th class="w3-right-align">Run Id</th>
+            <th class="w3-right-align">SI</th>
+            <th>Check</th>
+            <th>Start</th>
             <th>Comment</th>
+            <th>Source</th>
+            <th>User ID</th>
         </tr>
         </thead>
         <tbody>
-        {{#each change_set}}
+        {{#each records}}
             <tr>
-                <td>{{ this.id }}</td>
-                <td>{{ this.siId }}</td>
-                <td>{{ this.checkTime }}</td>
+                <td class="w3-right-align">{{ this.run_id }}</td>
+                <td class="w3-right-align">{{ this.si_id }}</td>
+                <td>{{ this.check_time }}</td>
+                <td>{{ this.start_time }}</td>
                 <td>{{ this.comment }}</td>
+                <td>{{ this.source }}</td>
+                <td>{{ this.user_id }}</td>
             </tr>
         {{/each}}
         </tbody>
     </table>
+
 
 {{/inline}}
 {{> layout}}

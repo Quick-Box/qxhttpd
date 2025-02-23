@@ -29,8 +29,8 @@ mod auth;
 mod ochecklist;
 mod quickevent;
 
-type RunId = u64;
-type SiId = u64;
+type RunId = i64;
+type SiId = i64;
 type EventId = i64;
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
@@ -285,6 +285,7 @@ fn rocket() -> _ {
         ]);
     let rocket = auth::extend(rocket);
     let rocket = ochecklist::extend(rocket);
+    let rocket = quickevent::extend(rocket);
 
     // let figment = rocket.figment();
     let cfg = AppConfig::default();

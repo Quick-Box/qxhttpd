@@ -1,3 +1,4 @@
+use crate::quickevent::add_qe_in_change_record;
 use std::fs;
 use rocket::http::Status;
 use rocket::response::{status, Redirect};
@@ -8,7 +9,7 @@ use rocket_dyn_templates::{context, Template};
 use sqlx::{query, FromRow};
 use crate::db::DbPool;
 use crate::{EventId, EventInfo, SiId};
-use crate::quickevent::{add_qe_in_change_record, QERunsChange};
+use crate::quickevent::{QERunChange};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -75,7 +76,7 @@ async fn get_load_test_data(event_id: EventId, db: &State<DbPool>) -> Result<Red
                 .bind(&runner.Comment)
                 .execute(pool)
                 .await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-            let Ok(qerec) = QERunsChange::try_from(chng) else { continue; };
+            let Ok(qerec) = QERunChange::try_from(chng) else { continue; };
             add_qe_in_change_record(event_id, &qerec, &pool).await;
         }
     }
@@ -96,13 +97,18 @@ pub struct OCRecord {
 #[get("/event/<event_id>/oc/out")]
 async fn get_oc_out(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let pool = &db.0;
+    let event: EventInfo = sqlx::query_as("SELECT * FROM events WHERE id=?")
+        .bind(event_id)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
     let records: Vec<OCRecord> = sqlx::query_as("SELECT * FROM ocout WHERE event_id=?")
         .bind(event_id)
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
     Ok(Template::render("oc-out", context! {
-            event_id,
+            event,
             records,
         }))
 }
