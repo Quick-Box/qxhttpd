@@ -6,6 +6,7 @@
     <table class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
+            <th>Created</th>
             <th class="w3-right-align">Run Id</th>
             <th>Status</th>
             <th class="w3-right-align">SI</th>
@@ -18,13 +19,16 @@
         <tbody>
         {{#each records}}
             <tr>
-                <td class="w3-right-align">{{ this.runner_id }}</td>
-                <td>{{ this.start_status }}</td>
-                <td class="w3-right-align">{{ this.si_id }}</td>
-                <td>{{ this.class_name }}</td>
-                <td>{{ this.runner_name }}</td>
-                <td>{{ this.start_time }}</td>
-                <td>{{ this.comment }}</td>
+                <td>{{ this.0 }}</td>
+            {{#with this.1.Runner}}
+                <td class="w3-right-align">{{ Id }}</td>
+                <td>{{ StartStatus }}</td>
+                <td class="w3-right-align">{{ Card }}</td>
+                <td>{{ ClassName }}</td>
+                <td>{{ Name }}</td>
+                <td>{{ StartTime }}</td>
+                <td>{{ Comment }}</td>
+            {{/with}}
             </tr>
         {{/each}}
         </tbody>

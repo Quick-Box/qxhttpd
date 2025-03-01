@@ -6,28 +6,21 @@ CREATE TABLE events
     date  DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE ocout
+create table ocout
 (
-    id           INTEGER PRIMARY KEY,
-    event_id     INTEGER,
-    runner_id    INTEGER,
-    start_status TEXT,
-    si_id        INTEGER,
-    class_name   TEXT,
-    runner_name  TEXT,
-    start_time   TEXT,
-    comment      TEXT,
-    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE
+    id INTEGER primary key,
+    event_id INTEGER references events on delete cascade,
+    change_set      TEXT
 );
 
-CREATE TABLE qein
+create table qein
 (
-    id         INTEGER PRIMARY KEY,
-    event_id   INTEGER,
-    si_id      INTEGER,
-    check_time TEXT,
-    comment    TEXT,
-    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE
+    id INTEGER primary key,
+    event_id INTEGER references events on delete cascade,
+    original   TEXT,
+    change   TEXT,
+    source   TEXT,
+    user_id  TEXT
 );
 
 CREATE TABLE qeout

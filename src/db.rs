@@ -51,13 +51,14 @@ impl Fairing for DbPoolFairing {
         };
 
         // Run migrations
-        match MIGRATOR.run(&pool).await {
-            Ok(_) => info!("Migrations applied successfully!"),
-            Err(err) => {
-                error!("Migration error: {:?}", err);
-                return Err(rocket);
-            }
-        };
+        // TODO: bring migration back
+        // match MIGRATOR.run(&pool).await {
+        //     Ok(_) => info!("Migrations applied successfully!"),
+        //     Err(err) => {
+        //         error!("Migration error: {:?}", err);
+        //         return Err(rocket);
+        //     }
+        // };
 
         Ok(rocket.manage(DbPool(pool)))
     }

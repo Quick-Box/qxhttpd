@@ -28,6 +28,7 @@ mod db;
 mod auth;
 mod ochecklist;
 mod quickevent;
+mod event;
 
 type RunId = i64;
 type SiId = i64;
@@ -85,33 +86,6 @@ struct QxState {
     sessions: HashMap<QxSessionId, QxSession>,
 }
 impl QxState {
-    // async fn create_event(&mut self, mut db: Connection<Db>, mut event_info: EventInfo) -> Result<EventId> {
-    //     // NOTE: sqlx#2543, sqlx#1648 mean we can't use the pithier `fetch_one()`.
-    //     let results = sqlx::query(
-    //         "INSERT INTO events (name, place, date) VALUES (?, ?, ?) RETURNING id"
-    //     )
-    //         .bind(event_info.name)
-    //         .bind(event_info.place)
-    //         .bind(event_info.date)
-    //         .fetch(&mut **db)
-    //         .map_ok(|row| row.get::<u32, _>(0))
-    //         .try_collect::<Vec<_>>()
-    //         .await?;
-    //     let event_id = results.first().expect("returning results");
-    //     info!("Creating event id: {}", event_id);
-    //     Ok(*event_id as usize)
-    // }
-
-    // fn add_oc_change_set(&self, event_id: EventId, change_set: OCheckListChangeSet) -> Result<()> {
-    //     let mut event = self.events.get(&event_id).ok_or(format!("Invalid event Id: {event_id}"))?
-    //         .write().unwrap();
-    //     for rec in &change_set.Data {
-    //         let rec = QERunsRecord::try_from(rec).map_err(|e| e.to_string())?;
-    //         let _ = event.qe.add_record(&rec);
-    //     }
-    //     event.oc.add_record(&change_set).map_err(|err| err.to_string())?;
-    //     Ok(())
-    // }
 }
 type SharedQxState = RwLock<QxState>;
 
@@ -236,22 +210,6 @@ async fn get_event(event_id: i32, db: &State<DbPool>) -> Result<Template, Custom
         event,
     }))
 }
-
-/*
-#[get("/event/<event_id>/qe/chng/in")]
-fn get_qe_chng_in(event_id: EventId, state: &State<SharedQxState>) -> Template {
-    let state = state.read().unwrap();
-    let event_state = state.events.get(&event_id).unwrap().read().unwrap();
-    let event_name = &event_state.event.info.name;
-    // let change_set = event_state.qe.get_records(0, None).unwrap();
-    Template::render("qe-chng-in", context! {
-            event_id,
-            event_name,
-            // change_set
-        })
-}
-
-*/
 
 #[launch]
 fn rocket() -> _ {
