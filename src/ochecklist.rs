@@ -130,7 +130,8 @@ async fn get_oc_out(event_id: EventId, db: &State<DbPool>) -> Result<Template, C
         .fetch_all(pool).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
     let records = records.into_iter()
         .map(|r| { 
-            let created = r.created; r.change_set.Data.into_iter().map(move |d| (created.clone(), d)) 
+            let created = r.created; 
+            r.change_set.Data.into_iter().map(move |d| (created.clone(), d)) 
         }).flatten().collect::<Vec<_>>();
     Ok(Template::render("oc-out", context! {
             event,

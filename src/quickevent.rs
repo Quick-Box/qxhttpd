@@ -37,6 +37,7 @@ pub struct QEInRecord {
     pub source: String,
     #[serde(default)]
     pub user_id: String,
+    pub created: String,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct QERunChange {
