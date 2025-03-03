@@ -3,13 +3,13 @@ use std::fs;
 use std::path::PathBuf;
 use rocket::http::Status;
 use rocket::response::{Redirect};
-use rocket::response::status::{Created, Custom};
+use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, FromRow};
 use crate::db::DbPool;
-use crate::{EventId, SiId};
+use crate::{impl_sqlx_json_text_type_and_decode, EventId, SiId};
 use crate::event::load_event_info;
 use crate::quickevent::{QERunChange};
 
@@ -22,20 +22,9 @@ struct OCheckListChangeSet {
     Event: String,
     Data: Vec<OCheckListChange>,
 }
-impl sqlx::Type<sqlx::Sqlite> for OCheckListChangeSet
-{
-    fn type_info() -> <sqlx::Sqlite as sqlx::Database>::TypeInfo {
-        <&str as sqlx::Type<sqlx::Sqlite>>::type_info()
-    }
-}
-impl<'r, DB: sqlx::Database> sqlx::Decode<'r, DB> for OCheckListChangeSet
-where &'r str: sqlx::Decode<'r, DB>
-{
-    fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let value = <&str as sqlx::Decode<DB>>::decode(value)?;
-        Ok(serde_json::from_str::<OCheckListChangeSet>(value)?)
-    }
-}
+
+impl_sqlx_json_text_type_and_decode!(OCheckListChangeSet);
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
 pub struct OCheckListChange {

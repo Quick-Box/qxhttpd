@@ -5,7 +5,7 @@ use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::query;
-use crate::{EventId, RunId, SiId};
+use crate::{impl_sqlx_json_text_type_and_decode, EventId, RunId, SiId};
 use crate::db::DbPool;
 use crate::event::load_event_info;
 use crate::ochecklist::{OCheckListChange};
@@ -57,20 +57,9 @@ pub struct QERunChange {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
 }
-impl sqlx::Type<sqlx::Sqlite> for QERunChange
-{
-    fn type_info() -> <sqlx::Sqlite as sqlx::Database>::TypeInfo {
-        <&str as sqlx::Type<sqlx::Sqlite>>::type_info()
-    }
-}
-impl<'r, DB: sqlx::Database> sqlx::Decode<'r, DB> for QERunChange
-where &'r str: sqlx::Decode<'r, DB>
-{
-    fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
-        let value = <&str as sqlx::Decode<DB>>::decode(value)?;
-        Ok(serde_json::from_str::<QERunChange>(value)?)
-    }
-}
+
+impl_sqlx_json_text_type_and_decode!(QERunChange);
+
 impl Default for QERunChange {
     fn default() -> Self {
         Self {
