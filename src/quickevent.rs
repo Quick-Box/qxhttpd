@@ -3,11 +3,12 @@ use rocket::response::status;
 use rocket::response::status::Custom;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
+use rocket::serde::json::Json;
 use rocket_dyn_templates::{context, Template};
 use sqlx::query;
-use crate::{impl_sqlx_json_text_type_and_decode, EventId, RunId, SiId};
+use crate::{impl_sqlx_json_text_type_and_decode, QxApiToken};
 use crate::db::DbPool;
-use crate::event::load_event_info;
+use crate::event::{load_event_info, load_event_info2, EventId, RunId, SiId};
 use crate::ochecklist::{OCheckListChange};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -37,7 +38,7 @@ pub struct QEInRecord {
     pub source: String,
     #[serde(default)]
     pub user_id: String,
-    pub created: String,
+    created: chrono::DateTime<chrono::Utc>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct QERunChange {
@@ -92,7 +93,22 @@ pub struct QERadioRecord {
     pub time: String,
 }
 
-pub async fn add_qe_in_change_record(event_id: EventId, source: &str, user_id: Option<&str>, change: &QERunChange, pool: &sqlx::SqlitePool) {
+pub async fn add_qe_out_change_record(event_id: EventId, source: &str, user_id: Option<&str>, change: &QERunChange, db: &State<DbPool>) {
+    let Ok(change) = serde_json::to_string(change) else {
+        error!("Serde error");
+        return
+    };
+    let _ = query("INSERT INTO qeout 
+    (event_id, change, source, user_id)
+    VALUES (?, ?, ?, ?)")
+        .bind(event_id)
+        .bind(change)
+        .bind(source)
+        .bind(user_id)
+        .execute(&db.0)
+        .await.map_err(|e| warn!("Insert QE in record error: {e}"));
+}
+pub async fn add_qe_in_change_record(event_id: EventId, source: &str, user_id: Option<&str>, change: &QERunChange, db: &State<DbPool>) {
     let Ok(change) = serde_json::to_string(change) else {
         error!("Serde error");
         return
@@ -104,10 +120,15 @@ pub async fn add_qe_in_change_record(event_id: EventId, source: &str, user_id: O
         .bind(change)
         .bind(source)
         .bind(user_id)
-        .execute(pool)
+        .execute(&db.0)
         .await.map_err(|e| warn!("Insert QE in record error: {e}"));
 }
-
+#[post("/api/token/qe/out", data = "<change_set>")]
+async fn post_api_token_oc_out(api_token: QxApiToken, change_set: Json<QERunChange>, db: &State<DbPool>) -> Result<(), Custom<String>> {
+    let event = load_event_info2(&api_token, db).await?;
+    add_qe_out_change_record(event.id, "qe", None, &change_set, db).await;
+    Ok(())
+}
 #[get("/event/<event_id>/qe/in")]
 async fn get_qe_in(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
@@ -125,5 +146,6 @@ async fn get_qe_in(event_id: EventId, db: &State<DbPool>) -> Result<Template, Cu
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             get_qe_in,
+            post_api_token_oc_out,
         ])
 }

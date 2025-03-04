@@ -1,25 +1,19 @@
 #[macro_use] extern crate rocket;
 
-use ::image::ImageFormat;
+use crate::event::{user_info, EventInfo};
 use std::fmt::Debug;
 use std::collections::{HashMap};
-use std::io::Cursor;
 use std::sync::RwLock;
-use anyhow::anyhow;
-use base64::Engine;
-use base64::engine::general_purpose;
 use rocket::fs::{FileServer};
 use rocket::{request, State};
-use rocket::form::{Contextual, Form};
 use rocket::http::{CookieJar, Status};
-use rocket::response::{status, Redirect};
+use rocket::response::{status};
 use rocket::response::status::{Custom};
 use rocket_dyn_templates::{Template, context, handlebars};
 use rocket::serde::Serialize;
 use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
-use sqlx::{query, query_as, FromRow};
-use crate::auth::{generate_random_string, UserInfo, QX_SESSION_ID};
+use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
 
 #[cfg(test)]
@@ -29,20 +23,7 @@ mod auth;
 mod ochecklist;
 mod quickevent;
 mod event;
-
-type RunId = i64;
-type SiId = i64;
-type EventId = i64;
-
-#[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
-struct EventInfo {
-    id: EventId,
-    name: String,
-    place: String,
-    date: String,
-    api_token: String,
-}
-
+mod files;
 
 struct AppConfig {
 }
@@ -70,7 +51,10 @@ impl<'r> request::FromRequest<'r> for QxSessionId {
         request::Outcome::Forward(Status::Unauthorized)
     }
 }
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 struct QxApiToken(String);
+impl_sqlx_text_type_and_decode!(QxApiToken);
+
 #[rocket::async_trait]
 impl<'r> request::FromRequest<'r> for QxApiToken {
     type Error = ();
@@ -82,7 +66,6 @@ impl<'r> request::FromRequest<'r> for QxApiToken {
     }
 }
 struct QxState {
-    // events: BTreeMap<EventId, RwLock<EventState>>,
     sessions: HashMap<QxSessionId, QxSession>,
 }
 impl QxState {
@@ -110,107 +93,6 @@ async fn index_authorized(session_id: QxSessionId, state: &State<SharedQxState>,
 async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, status::Custom<String>> {
     index(None, db).await
 }
-#[derive(Debug, FromForm)]
-// #[allow(dead_code)]
-struct EventFormValues<'v> {
-    id: EventId,
-    #[field(validate = len(1..))]
-    name: &'v str,
-    #[field(validate = len(1..))]
-    place: &'v str,
-    #[field(validate = len(1..))]
-    date: &'v str,
-    api_token: &'v str,
-}
-// NOTE: We use `Contextual` here because we want to collect all submitted form
-// fields to re-render forms with submitted values on error. If you have no such
-// need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
-#[post("/event", data = "<form>")]
-async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &State<DbPool>) -> Result<Redirect, rocket::response::Debug<anyhow::Error>> {
-    let vals = form.value.as_ref().ok_or(anyhow::anyhow!("Form data invalid"))?;
-    let pool = &db.0;
-    if vals.id > 0 {
-        query("UPDATE events SET name=?, place=?, date=?, api_token=? WHERE id=?")
-            .bind(vals.name.to_string())
-            .bind(vals.place.to_string())
-            .bind(vals.date.to_string())
-            .bind(vals.api_token.to_string())
-            .bind(vals.id)
-            .execute(pool)
-            .await.map_err(|e| anyhow!("{e}"))?;
-    } else {
-        let id: (i64, ) = query_as("INSERT INTO events(name, place, date, api_token) VALUES (?, ?, ?, ?) RETURNING id")
-            .bind(vals.name.to_string())
-            .bind(vals.place.to_string())
-            .bind(vals.date.to_string())
-            .bind(vals.api_token.to_string())
-            .fetch_one(pool)
-            .await.map_err(|e| anyhow!("{e}"))?;
-        info!("Event created, id: {}", id.0);
-    };
-    Ok(Redirect::to("/"))
-}
-fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, String> {
-    state.read().map_err(|e| e.to_string())?
-        .sessions.get(&session_id).map(|s| s.user_info.clone()).ok_or("Session expired".to_string() )
-}
-async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
-    let event = if let Some(event_id) = event_id {
-        let pool = &db.0;
-        let event_info: EventInfo = query_as("SELECT * FROM events WHERE id=?")
-            .bind(event_id)
-            .fetch_one(pool)
-            .await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-        event_info
-    } else {
-        EventInfo {
-            id: 0,
-            name: "".to_string(),
-            place: "".to_string(),
-            date: format!("{:?}", chrono::offset::Local::now()),
-            api_token: generate_random_string(10),
-        }
-    };
-    let api_token_qrc_img_data = {
-        let code = qrcode::QrCode::new(event.api_token.as_bytes()).unwrap();
-        // Render the bits into an image.
-        let image = code.render::<::image::LumaA<u8>>().build();
-        let mut buffer: Vec<u8> = Vec::new();
-        let mut cursor = Cursor::new(&mut buffer);
-        image.write_to(&mut cursor, ImageFormat::Png).unwrap();
-        // Encode the image buffer to base64
-        general_purpose::STANDARD.encode(&buffer)
-    };
-
-    Ok(Template::render("event-edit", context! {
-        event_id,
-        user,
-        event,
-        api_token_qrc_img_data,
-    }))
-}
-#[get("/event/create")]
-async fn get_event_create(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    event_edit_insert(None, session_id, state, db).await
-}
-#[get("/event/edit/<event_id>")]
-async fn get_event_edit(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    event_edit_insert(Some(event_id), session_id, state, db).await
-}
-
-#[get("/event/<event_id>")]
-async fn get_event(event_id: i32, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let pool = &db.0;
-    let event: EventInfo = query_as("SELECT * FROM events WHERE id=?")
-        .bind(event_id)
-        .fetch_one(pool)
-        .await.map_err(|e| Custom(Status::NotFound, e.to_string()))?;
-    Ok(Template::render("event", context! {
-        event,
-    }))
-}
-
 #[launch]
 fn rocket() -> _ {
     let rocket = rocket::build()
@@ -234,16 +116,12 @@ fn rocket() -> _ {
         .mount("/", routes![
             index_authorized,
             index_anonymous,
-            get_event_create,
-            get_event_edit,
-            post_event,
-            get_event,
-            // get_oc_changes,
-            // get_qe_chng_in,
         ]);
     let rocket = auth::extend(rocket);
+    let rocket = event::extend(rocket);
     let rocket = ochecklist::extend(rocket);
     let rocket = quickevent::extend(rocket);
+    let rocket = files::extend(rocket);
 
     // let figment = rocket.figment();
     let cfg = AppConfig::default();

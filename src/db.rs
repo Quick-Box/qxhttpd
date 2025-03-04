@@ -6,6 +6,27 @@ use std::path::Path;
 use std::str::FromStr;
 
 #[macro_export]
+macro_rules! impl_sqlx_text_type_and_decode {
+    ($type:ident) => {
+        impl<DB: sqlx::Database> sqlx::Type<DB> for $type
+        where str: sqlx::Type<DB>
+        {
+            fn type_info() -> <DB as sqlx::Database>::TypeInfo {
+                <&str as sqlx::Type<DB>>::type_info()
+            }
+        }
+
+        impl<'r, DB: sqlx::Database> sqlx::Decode<'r, DB> for $type
+        where &'r str: sqlx::Decode<'r, DB>
+        {
+            fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+                let value = <&str as sqlx::Decode<DB>>::decode(value)?;
+                Ok(Self(value.to_string()))
+            }
+        }
+    };
+}
+#[macro_export]
 macro_rules! impl_sqlx_json_text_type_and_decode {
     ($type:ident) => {
         impl<DB: sqlx::Database> sqlx::Type<DB> for $type
