@@ -14,7 +14,6 @@ use crate::db::DbPool;
 use crate::{files, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
-use chrono::NaiveDateTime;
 use rocket::serde::{Deserialize, Serialize};
 
 pub type RunId = i64;
@@ -26,7 +25,7 @@ pub struct EventInfo {
     pub id: EventId,
     pub name: String,
     pub place: String,
-    pub start_time: chrono::NaiveDateTime,
+    pub start_time: String,
     pub owner: String,
     api_token: QxApiToken,
 }
@@ -36,7 +35,7 @@ impl EventInfo {
             id: 0,
             name: "".to_string(),
             place: "".to_string(),
-            start_time: chrono::Local::now().naive_local(),
+            start_time: chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string(),
             // time_zone: "Europe/Prague".to_string(),
             owner: "".to_string(),
             api_token: QxApiToken(generate_random_string(10)),
@@ -66,7 +65,7 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
         query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(event.start_time)
+            .bind(event.start_time.clone())
             // .bind(&event.time_zone)
             .bind(event.id)
             .execute(&db.0)
@@ -107,13 +106,11 @@ struct EventFormValues<'v> {
 async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
-    let start_time = NaiveDateTime::parse_from_str(vals.start_time, "%Y-%m-%dT%H:%M:%S")
-        .map_err(|e| Custom(Status::BadRequest, format!("{} parse error: {}", vals.start_time, e.to_string())))?;
     let event = EventInfo {
         id: vals.id,
         name: vals.name.to_string(),
         place: vals.place.to_string(),
-        start_time,
+        start_time: vals.start_time.to_string(),
         owner: user.email,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
@@ -211,7 +208,7 @@ async fn post_api_event_current(api_token: QxApiToken, event: Json<PostedEvent>,
     };
     event_info.name = event.name.clone();
     event_info.place = event.place.clone();
-    event_info.start_time = event.start_time.clone();
+    event_info.start_time = event.start_time.format("%Y-%m-%dT%H:%M:%S").to_string();
     let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
