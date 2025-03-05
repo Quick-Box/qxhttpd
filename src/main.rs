@@ -159,4 +159,28 @@ fn dtstr(iso_date_str: Option<&str>) -> String {
     dt.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
+fn parse_naive_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
+    for &format in &[
+        "%Y-%m-%d %H:%M:%S",       // 2025-03-05 14:32:45
+        "%Y-%m-%d %H:%M",          // 2025-03-05 14:32
+        "%Y-%m-%dT%H:%M:%S",       // 2025-03-05T14:32:45
+        "%Y-%m-%dT%H:%M",          // 2025-03-05T14:32
+        "%d/%m/%Y %H:%M:%S",       // 05/03/2025 14:32:45
+        // "%m/%d/%Y %H:%M:%S",       // 03/05/2025 14:32:45
+        // "%Y/%m/%d %H:%M:%S",       // 2025/03/05 14:32:45
+        // "%Y-%m-%d",                // 2025-03-05
+        // "%m/%d/%Y",                // 03/05/2025
+        "%d/%m/%Y",                // 05/03/2025
+        "%H:%M:%S",                // 14:32:45
+    ] {
+        if let Ok(parsed) = NaiveDateTime::parse_from_str(datetime_str, format) {
+            return Some(parsed);
+        }
+    }
+
+    // Return None if no format matched
+    None
+}
+
+
 

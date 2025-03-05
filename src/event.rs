@@ -11,7 +11,7 @@ use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, query_as, FromRow};
 use crate::db::DbPool;
-use crate::{files, QxApiToken, QxSessionId, SharedQxState};
+use crate::{files, parse_naive_datetime, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{NaiveDateTime, NaiveTime, Timelike};
@@ -26,7 +26,7 @@ pub struct EventInfo {
     pub id: EventId,
     pub name: String,
     pub place: String,
-    pub start_time: String,
+    pub start_time: NaiveDateTime,
     pub owner: String,
     api_token: QxApiToken,
 }
@@ -38,7 +38,7 @@ impl EventInfo {
             id: 0,
             name: "".to_string(),
             place: "".to_string(),
-            start_time: start_time.format("%Y-%m-%dT%H:%M:%S").to_string(),
+            start_time,
             // time_zone: "Europe/Prague".to_string(),
             owner: "".to_string(),
             api_token: QxApiToken(generate_random_string(10)),
@@ -113,7 +113,7 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
         id: vals.id,
         name: vals.name.to_string(),
         place: vals.place.to_string(),
-        start_time: vals.start_time.to_string(),
+        start_time: parse_naive_datetime(vals.start_time).ok_or(Custom(Status::BadRequest, format!("Unrecognized date-time string: {}", vals.start_time)))?,
         owner: user.email,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
@@ -141,7 +141,6 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
         // Encode the image buffer to base64
         general_purpose::STANDARD.encode(&buffer)
     };
-
     Ok(Template::render("event-edit", context! {
         event_id,
         user,
@@ -211,7 +210,7 @@ async fn post_api_event_current(api_token: QxApiToken, event: Json<PostedEvent>,
     };
     event_info.name = event.name.clone();
     event_info.place = event.place.clone();
-    event_info.start_time = event.start_time.format("%Y-%m-%dT%H:%M:%S").to_string();
+    event_info.start_time = event.start_time;
     let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
