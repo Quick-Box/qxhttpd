@@ -14,6 +14,7 @@ use crate::db::DbPool;
 use crate::{files, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
+use chrono::{NaiveDateTime, NaiveTime, Timelike};
 use rocket::serde::{Deserialize, Serialize};
 
 pub type RunId = i64;
@@ -31,11 +32,13 @@ pub struct EventInfo {
 }
 impl EventInfo {
     pub fn new() -> Self {
+        let dt = chrono::Local::now().naive_local();
+        let start_time = NaiveDateTime::new(dt.date(), NaiveTime::from_hms_opt(dt.hour(), dt.minute(), 0).expect("valid DT"));
         Self {
             id: 0,
             name: "".to_string(),
             place: "".to_string(),
-            start_time: chrono::Local::now().format("%Y-%m-%dT%H:%M:%S").to_string(),
+            start_time: start_time.format("%Y-%m-%dT%H:%M:%S").to_string(),
             // time_zone: "Europe/Prague".to_string(),
             owner: "".to_string(),
             api_token: QxApiToken(generate_random_string(10)),

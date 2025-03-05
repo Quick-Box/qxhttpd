@@ -15,7 +15,7 @@
                 <td><a href="/event/{{ this.id }}">{{this.name}}</a></td>
 <!--                <td>{{stringify this}}</td>-->
                 <td>{{this.place}}</td>
-                <td>{{this.start_time}}</td>
+                <td>{{dtstr this.start_time}}</td>
                 {{#if ../user}}
                 <td><a href="/event/{{this.id}}/edit" class="w3-button w3-round-large w3-border"><i class="fa fa-cog"></i> edit</a></td>
                 {{/if}}

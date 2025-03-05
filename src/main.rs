@@ -4,6 +4,7 @@ use crate::event::{user_info, EventInfo};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::RwLock;
+use chrono::NaiveDateTime;
 use rocket::fs::{FileServer};
 use rocket::{request, State};
 use rocket::http::{CookieJar, Status};
@@ -115,6 +116,13 @@ fn rocket() -> _ {
                                            out.write(json.as_ref())?;
                                            Ok(())
                                        }));
+            handlebars.register_helper("dtstr",
+                                       Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
+                                           let val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("dtstr", 0))?.value();
+                                           let s = dtstr(val.as_str());
+                                           out.write(&s)?;
+                                           Ok(())
+                                       }));
         }))
         .attach(DbPoolFairing())
         .mount("/", FileServer::from("./static"))
@@ -139,6 +147,16 @@ fn rocket() -> _ {
     };
 
     rocket.manage(SharedQxState::new(state))
+}
+
+fn dtstr(iso_date_str: Option<&str>) -> String {
+    let Some(s) = iso_date_str else { 
+        return "--/--/--".to_string() 
+    };
+    let Ok(dt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") else {
+        return s.to_string()
+    };
+    dt.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
 
