@@ -40,7 +40,7 @@ pub struct QEInRecord {
     pub user_id: String,
     created: chrono::DateTime<chrono::Utc>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct QERunChange {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -61,17 +61,6 @@ pub struct QERunChange {
 
 impl_sqlx_json_text_type_and_decode!(QERunChange);
 
-impl Default for QERunChange {
-    fn default() -> Self {
-        Self {
-            run_id: None,
-            si_id: None,
-            check_time: None,
-            start_time: None,
-            comment: None,
-        }
-    }
-}
 impl TryFrom<&OCheckListChange> for QERunChange {
     type Error = String;
 

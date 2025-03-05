@@ -60,24 +60,24 @@ fn load_oc_file(file: &PathBuf) -> anyhow::Result<OCheckListChangeSet> {
 }
 pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChangeSet>> {
     info!("Loading test data from: {data_dir}");
-    let ocs = fs::read_dir(data_dir)?.map(|dir| {
-        match dir {
-            Ok(dir) => {
-                match load_oc_file(&dir.path()) {
-                    Ok(oc) => { Some(oc) }
-                    Err(e) => {
-                        error!("Cannot read OC file: {} - {}", dir.path().to_string_lossy(), e.to_string());
-                        None
+    let ocs = fs::read_dir(data_dir)?
+        .filter_map(|dir| {
+            match dir {
+                Ok(dir) => {
+                    match load_oc_file(&dir.path()) {
+                        Ok(oc) => { Some(oc) }
+                        Err(e) => {
+                            error!("Cannot read OC file: {} - {}", dir.path().to_string_lossy(), e.to_string());
+                            None
+                        }
                     }
                 }
+                Err(e) => {
+                    error!("Cannot read OC dir: {} - {}", data_dir, e.to_string());
+                    None
+                }
             }
-            Err(e) => {
-                error!("Cannot read OC dir: {} - {}", data_dir, e.to_string());
-                None
-            }
-        }
-    })
-        .filter_map(|oc| oc)
+        })
         .collect();
     Ok(ocs)
 }
@@ -119,10 +119,10 @@ async fn get_oc_out(event_id: EventId, db: &State<DbPool>) -> Result<Template, C
         .bind(event_id)
         .fetch_all(pool).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
     let records = records.into_iter()
-        .map(|r| { 
+        .flat_map(|r| { 
             let created = r.created; 
-            r.change_set.Data.into_iter().map(move |d| (created.clone(), d)) 
-        }).flatten().collect::<Vec<_>>();
+            r.change_set.Data.into_iter().map(move |d| (created, d)) 
+        }).collect::<Vec<_>>();
     Ok(Template::render("oc-out", context! {
             event,
             records,

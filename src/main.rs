@@ -26,12 +26,8 @@ mod quickevent;
 mod event;
 mod files;
 
+#[derive(Default)]
 struct AppConfig {
-}
-impl Default for AppConfig {
-    fn default() -> Self {
-        AppConfig {  }
-    }
 }
 struct QxSession {
     user_info: UserInfo,
@@ -52,13 +48,8 @@ impl<'r> request::FromRequest<'r> for QxSessionId {
         request::Outcome::Forward(Status::Unauthorized)
     }
 }
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Default, Clone, Debug)]
 struct QxApiToken(String);
-impl Default for QxApiToken {
-    fn default() -> Self {
-        Self(String::new())
-    }
-}
 impl_sqlx_text_type_and_decode!(QxApiToken);
 
 #[rocket::async_trait]
