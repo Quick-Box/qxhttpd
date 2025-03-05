@@ -198,7 +198,7 @@ async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Res
     let event = load_event_info2(&api_token, db).await?;
     Ok(Json(event))
 }
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PostedEvent {
     pub name: String,
     pub place: String,

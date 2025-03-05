@@ -1,6 +1,8 @@
+use std::str::FromStr;
+use chrono::NaiveDateTime;
 use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
-use crate::event::{EventInfo};
+use crate::event::{EventInfo, PostedEvent};
 
 #[test]
 fn create_demo_event() {
@@ -8,6 +10,7 @@ fn create_demo_event() {
     let resp = client.get("/event/create-demo").dispatch();
     // println!("body: {:?}", resp.body());
     assert_eq!(resp.status(), Status::SeeOther);
+    
     let resp = client.get("/api/event/current")
         .header(Header::new("qx-api-token", "plelababamak"))
         .dispatch();
@@ -15,6 +18,28 @@ fn create_demo_event() {
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
     let event = resp.into_json::<EventInfo>().unwrap();
     assert_eq!(event.id, 1);
+    
+    let dt = NaiveDateTime::from_str("2025-03-04T10:20:00").unwrap();
+    let post_event = PostedEvent {
+        name: "Foo".to_string(),
+        place: "Bar".to_string(),
+        start_time: dt,
+    };
+    let resp = client.post("/api/event/current")
+        .header(Header::new("qx-api-token", "plelababamak"))
+        .json(&post_event)
+        .dispatch();
+    assert_eq!(resp.status(), Status::Ok);
+
+    let resp = client.get("/api/event/current")
+        .header(Header::new("qx-api-token", "plelababamak"))
+        .dispatch();
+    assert_eq!(resp.status(), Status::Ok);
+    assert_eq!(resp.content_type(), Some(ContentType::JSON));
+    let event = resp.into_json::<EventInfo>().unwrap();
+    assert_eq!(event.name, post_event.name);
+    assert_eq!(event.place, post_event.place);
+    assert_eq!(event.start_time, post_event.start_time);
 }
 
 // #[test]
