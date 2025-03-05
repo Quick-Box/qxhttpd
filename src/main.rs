@@ -53,6 +53,11 @@ impl<'r> request::FromRequest<'r> for QxSessionId {
 }
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 struct QxApiToken(String);
+impl Default for QxApiToken {
+    fn default() -> Self {
+        Self(String::new())
+    }
+}
 impl_sqlx_text_type_and_decode!(QxApiToken);
 
 #[rocket::async_trait]

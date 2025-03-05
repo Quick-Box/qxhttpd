@@ -23,13 +23,26 @@ pub type EventId = i64;
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct EventInfo {
+    #[serde(default)]
     pub id: EventId,
     pub name: String,
     pub place: String,
     pub start_time: chrono::NaiveDateTime,
-    pub stage: u8,
     // pub time_zone: String,
+    #[serde(default)]
     api_token: QxApiToken,
+}
+impl EventInfo {
+    pub fn new() -> Self {
+        Self {
+            id: 0,
+            name: "".to_string(),
+            place: "".to_string(),
+            start_time: chrono::Local::now().naive_local(),
+            // time_zone: "Europe/Prague".to_string(),
+            api_token: QxApiToken(generate_random_string(10)),
+        }
+    }
 }
 pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<EventInfo, Custom<String>> {
     let pool = &db.0;
@@ -51,7 +64,7 @@ pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> 
 }
 async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
     let id = if event.id > 0 {
-        query("UPDATE events SET name=?, place=?, start_time=?, time_zone=? WHERE id=?")
+        query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
             .bind(event.start_time)
@@ -61,7 +74,7 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
             .await.map_err(|e| anyhow!("{e}"))?;
         event.id
     } else {
-        let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, time_zone, api_token) VALUES (?, ?, ?, ?, ?) RETURNING id")
+        let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token) VALUES (?, ?, ?, ?) RETURNING id")
             .bind(&event.name)
             .bind(&event.place)
             .bind(&event.start_time)
@@ -83,8 +96,6 @@ struct EventFormValues<'v> {
     place: &'v str,
     #[field(validate = len(1..))]
     start_time: &'v str,
-    #[field(validate = range(1..))]
-    stage: i32,
     // #[field(validate = len(1..))]
     // time_zone: &'v str,
     #[field(validate = len(10..))]
@@ -103,7 +114,6 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &St
         name: vals.name.to_string(),
         place: vals.place.to_string(),
         start_time,
-        stage: vals.stage as u8,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
     save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
@@ -123,15 +133,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
             .await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
         event_info
     } else {
-        EventInfo {
-            id: 0,
-            name: "".to_string(),
-            place: "".to_string(),
-            start_time: chrono::Local::now().naive_local(),
-            // time_zone: "Europe/Prague".to_string(),
-            stage: 1,
-            api_token: QxApiToken(generate_random_string(10)),
-        }
+        EventInfo::new()
     };
     let api_token_qrc_img_data = {
         let code = qrcode::QrCode::new(event.api_token.0.as_bytes()).unwrap();
@@ -177,13 +179,14 @@ async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Res
 }
 #[post("/api/event/current", data = "<event>")]
 async fn post_api_event_current(api_token: QxApiToken, event: Json<EventInfo>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
-    let orig_event = load_event_info2(&api_token, db).await?;
-    assert_eq!(&orig_event.api_token, &api_token);
-    if orig_event.id != event.id {
-        // double check that event data is not accidentally overridden
-        return Err(Custom(Status::BadRequest, String::from("Event ID mismatch")));
-    }
-    let event_id = save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
+    // let new_event = event.into_inner();
+    let Ok( mut event_info) = load_event_info2(&api_token, db).await else {
+        return Err(Custom(Status::BadRequest, String::from("Event not found")));
+    };
+    event_info.name = event.name.clone();
+    event_info.place = event.place.clone();
+    event_info.start_time = event.start_time.clone();
+    let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
 }
