@@ -63,18 +63,24 @@ impl Fairing for DbPoolFairing {
     }
 
     async fn on_ignite(&self, rocket: Rocket<Build>) -> rocket::fairing::Result {
+        
         // let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let figment = rocket.figment();
-        let database_url = figment.extract_inner::<String>("database_url").expect("database_url");
+        let database_url = if cfg!(test) {
+            "sqlite::memory:".to_string()
+        } else {
+            let figment = rocket.figment();
+            let database_url = figment.extract_inner::<String>("database_url").expect("database_url");
+            if database_url.starts_with("sqlite://") {
+                let db_path = database_url.trim_start_matches("sqlite://");
+                if !Path::new(db_path).exists() {
+                    // info!("creating database: {database_url}");
+                    std::fs::File::create(db_path).expect("Failed to create SQLite database file");
+                }
+            }
+            database_url
+        };
 
         // Ensure database file exists
-        if database_url.starts_with("sqlite://") {
-           let db_path = database_url.trim_start_matches("sqlite://");
-           if !Path::new(db_path).exists() {
-               // info!("creating database: {database_url}");
-               std::fs::File::create(db_path).expect("Failed to create SQLite database file");
-           }
-        }
         info!("Opening database: {database_url}");
         // Initialize connection pool
         let opts = SqliteConnectOptions::from_str(&database_url).expect("valid sqlite url")
@@ -94,14 +100,13 @@ impl Fairing for DbPoolFairing {
         };
 
         // Run migrations
-        // TODO: bring migration back
-        //match MIGRATOR.run(&pool).await {
-        //    Ok(_) => info!("Migrations applied successfully!"),
-        //    Err(err) => {
-        //        error!("Migration error: {:?}", err);
-        //        return Err(rocket);
-        //    }
-        //};
+        match MIGRATOR.run(&pool).await {
+            Ok(_) => info!("Migrations applied successfully!"),
+            Err(err) => {
+                error!("Migration error: {:?}", err);
+                return Err(rocket);
+            }
+        };
 
         Ok(rocket.manage(DbPool(pool)))
     }

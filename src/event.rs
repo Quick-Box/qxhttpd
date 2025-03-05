@@ -192,6 +192,7 @@ async fn get_event(event_id: EventId, db: &State<DbPool>) -> Result<Template, Cu
     }))
 }
 
+
 #[get("/api/event/current")]
 async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
@@ -201,7 +202,7 @@ async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Res
 pub struct PostedEvent {
     pub name: String,
     pub place: String,
-    pub start_time: chrono::NaiveDateTime,
+    pub start_time: NaiveDateTime,
 }
 #[post("/api/event/current", data = "<event>")]
 async fn post_api_event_current(api_token: QxApiToken, event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
