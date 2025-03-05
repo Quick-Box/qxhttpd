@@ -27,6 +27,7 @@ pub struct EventInfo {
     pub name: String,
     pub place: String,
     pub start_time: chrono::NaiveDateTime,
+    pub stage: u8,
     // pub time_zone: String,
     api_token: QxApiToken,
 }
@@ -82,6 +83,8 @@ struct EventFormValues<'v> {
     place: &'v str,
     #[field(validate = len(1..))]
     start_time: &'v str,
+    #[field(validate = range(1..))]
+    stage: i32,
     // #[field(validate = len(1..))]
     // time_zone: &'v str,
     #[field(validate = len(10..))]
@@ -100,6 +103,7 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &St
         name: vals.name.to_string(),
         place: vals.place.to_string(),
         start_time,
+        stage: vals.stage as u8,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
     save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
@@ -125,6 +129,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
             place: "".to_string(),
             start_time: chrono::Local::now().naive_local(),
             // time_zone: "Europe/Prague".to_string(),
+            stage: 1,
             api_token: QxApiToken(generate_random_string(10)),
         }
     };
