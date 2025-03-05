@@ -3,8 +3,11 @@
 use crate::event::{user_info, EventInfo};
 use std::fmt::Debug;
 use std::collections::{HashMap};
+use std::io::Read;
 use std::sync::RwLock;
 use chrono::NaiveDateTime;
+use flate2::bufread::{ZlibEncoder};
+use flate2::Compression;
 use rocket::fs::{FileServer};
 use rocket::{request, State};
 use rocket::http::{CookieJar, Status};
@@ -173,5 +176,30 @@ fn parse_naive_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
     None
 }
 
+fn unzip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
+    let mut z = flate2::read::ZlibDecoder::new(bytes);
+    let mut s = Vec::new();
+    z.read_to_end(&mut s).map_err(|e| { e.to_string() })?;
+    Ok(s)
+}
 
+fn zip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
+    let mut ret_vec = Vec::new();
+    let mut deflater = ZlibEncoder::new(bytes, Compression::fast());
+    deflater.read_to_end(&mut ret_vec).map_err(|e| e.to_string())?;
+    Ok(ret_vec)
+}
+
+#[cfg(test)]
+mod test_main {
+    use crate::{unzip_data, zip_data};
+
+    #[test]
+    fn test_zip() {
+        let data = b"foo bar baz";
+        let zdata = zip_data(data).unwrap();
+        let udata = unzip_data(&zdata).unwrap();
+        assert_eq!(udata, data);
+    }
+}
 

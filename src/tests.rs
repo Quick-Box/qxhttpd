@@ -3,6 +3,7 @@ use chrono::NaiveDateTime;
 use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
 use crate::event::{EventInfo, PostedEvent};
+use crate::zip_data;
 
 #[test]
 fn create_demo_event() {
@@ -40,6 +41,17 @@ fn create_demo_event() {
     assert_eq!(event.name, post_event.name);
     assert_eq!(event.place, post_event.place);
     assert_eq!(event.start_time, post_event.start_time);
+    
+    // send file
+    let orig = b"foo-bar-baz";
+    let compressed = zip_data(orig).unwrap();
+    let resp = client.post("/api/event/current/files/a.txt")
+        .header(Header::new("qx-api-token", "plelababamak"))
+        .header(ContentType::ZIP)
+        .body(compressed)
+        .dispatch();
+    println!("{:?}", resp);
+    assert_eq!(resp.status(), Status::Ok);
 }
 
 // #[test]
