@@ -1,11 +1,11 @@
 {{#*inline "page"}}
 
-<h1>{{ event.name }}</h1>
+<h2>{{ event.name }}</h2>
 <ul>
     <li><a href="/event/{{ event.id }}/oc/out">OCheckList changes</a></li>
     <li><a href="/event/{{ event.id }}/qe/in">QuickEvent in-changes</a></li>
 </ul>
-<h2>Files</h2>
+<h3>Files</h3>
 <ul>
     {{#each records}}
         <li><a href="/event/{{ event.id }}/files/{{ this.file_name }}">{{ this.file_name }}</a> size: {{ this.file_size }}</li>
