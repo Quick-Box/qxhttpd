@@ -90,12 +90,12 @@ async fn index(user: Option<UserInfo>, db: &State<DbPool>) -> std::result::Resul
 }
 
 #[get("/")]
-async fn index_authorized(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> std::result::Result<Template, status::Custom<String>> {
+async fn index_authorized(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
     index(Some(user), db).await
 }
 #[get("/", rank = 2)]
-async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, status::Custom<String>> {
+async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
     index(None, db).await
 }
 #[launch]
@@ -128,30 +128,16 @@ fn rocket() -> _ {
     let rocket = quickevent::extend(rocket);
     let rocket = files::extend(rocket);
 
-    // let figment = rocket.figment();
     let cfg = AppConfig::default();
-
+    // let figment = rocket.figment();
     // let create_demo_event = figment.extract_inner::<bool>("qx_create_demo_event").ok().unwrap_or(false);
 
     let rocket = rocket.manage(cfg);
 
-    //let load_sample_data = events.is_empty();
-    // let e:BTreeMap< crate::EventId, RwLock< crate::Event >> = BTreeMap::from_iter(events);
     let state = QxState {
         sessions: Default::default(),
     };
-    //if create_demo_event {
-    //    state.create_event(EventInfo { name: "test-event".to_string(), place: "".to_string(), date: "".to_string() }).unwrap();
-    //}
-    //else {
-    //    load_events(&mut state).unwrap();
-    //}
-    // if create_demo_event {
-    //     let oc_changes = load_test_oc_data("tests/oc/data");
-    //     for s in oc_changes {
-    //         state.add_oc_change_set(1, s).unwrap();
-    //     }
-    // }
+
     rocket.manage(SharedQxState::new(state))
 }
 

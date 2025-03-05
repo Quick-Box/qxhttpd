@@ -23,13 +23,11 @@ pub type EventId = i64;
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct EventInfo {
-    #[serde(default)]
     pub id: EventId,
     pub name: String,
     pub place: String,
     pub start_time: chrono::NaiveDateTime,
-    // pub time_zone: String,
-    #[serde(default)]
+    pub owner: String,
     api_token: QxApiToken,
 }
 impl EventInfo {
@@ -40,6 +38,7 @@ impl EventInfo {
             place: "".to_string(),
             start_time: chrono::Local::now().naive_local(),
             // time_zone: "Europe/Prague".to_string(),
+            owner: "".to_string(),
             api_token: QxApiToken(generate_random_string(10)),
         }
     }
@@ -74,12 +73,12 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
             .await.map_err(|e| anyhow!("{e}"))?;
         event.id
     } else {
-        let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token) VALUES (?, ?, ?, ?) RETURNING id")
+        let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token, owner) VALUES (?, ?, ?, ?, ?) RETURNING id")
             .bind(&event.name)
             .bind(&event.place)
             .bind(&event.start_time)
-            // .bind(&event.time_zone)
             .bind(&event.api_token.0)
+            .bind(&event.owner)
             .fetch_one(&db.0)
             .await.map_err(|e| anyhow!("{e}"))?;
         info!("Event created, id: {}", id.0);
@@ -105,7 +104,8 @@ struct EventFormValues<'v> {
 // fields to re-render forms with submitted values on error. If you have no such
 // need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
 #[post("/event", data = "<form>")]
-async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
     let start_time = NaiveDateTime::parse_from_str(vals.start_time, "%Y-%m-%dT%H:%M:%S")
         .map_err(|e| Custom(Status::BadRequest, format!("{} parse error: {}", vals.start_time, e.to_string())))?;
@@ -114,6 +114,7 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, db: &St
         name: vals.name.to_string(),
         place: vals.place.to_string(),
         start_time,
+        owner: user.email,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
     save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
@@ -126,12 +127,7 @@ pub fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Resul
 async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
     let event = if let Some(event_id) = event_id {
-        let pool = &db.0;
-        let event_info: EventInfo = query_as("SELECT * FROM events WHERE id=?")
-            .bind(event_id)
-            .fetch_one(pool)
-            .await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-        event_info
+        load_event_info(event_id, db).await?
     } else {
         EventInfo::new()
     };
@@ -153,13 +149,38 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
         api_token_qrc_img_data,
     }))
 }
+async fn event_drop(event_id: EventId, db: &State<DbPool>) -> Result<(), anyhow::Error> {
+    // Start a transaction
+    let txn = db.0.begin().await?;
+    for tbl in &["files", "ocout", "qein", "qeout", ] {
+        sqlx::query(&format!("DELETE FROM {tbl} WHERE event_id=?"))
+            .bind(event_id)
+            .execute(&db.0).await?;
+    }
+    sqlx::query("DELETE FROM events WHERE id=?")
+        .bind(event_id)
+        .execute(&db.0).await?;
+    txn.commit().await?;
+    Ok(())
+}
 #[get("/event/create")]
 async fn get_event_create(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     event_edit_insert(None, session_id, state, db).await
 }
-#[get("/event/edit/<event_id>")]
+#[get("/event/<event_id>/edit")]
 async fn get_event_edit(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     event_edit_insert(Some(event_id), session_id, state, db).await
+}
+#[get("/event/<event_id>/delete")]
+async fn get_event_delete(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    let event = load_event_info(event_id, db).await?;
+    if event.owner == user.email {
+        event_drop(event_id, db).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
+        Ok(Redirect::to("/"))
+    } else {
+        Err(Custom(Status::Unauthorized, String::from("Event owner email mismatch!")))
+    }
 }
 
 #[get("/event/<event_id>")]
@@ -177,9 +198,14 @@ async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Res
     let event = load_event_info2(&api_token, db).await?;
     Ok(Json(event))
 }
+#[derive(Deserialize, Clone, Debug)]
+pub struct PostedEvent {
+    pub name: String,
+    pub place: String,
+    pub start_time: chrono::NaiveDateTime,
+}
 #[post("/api/event/current", data = "<event>")]
-async fn post_api_event_current(api_token: QxApiToken, event: Json<EventInfo>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
-    // let new_event = event.into_inner();
+async fn post_api_event_current(api_token: QxApiToken, event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
     let Ok( mut event_info) = load_event_info2(&api_token, db).await else {
         return Err(Custom(Status::BadRequest, String::from("Event not found")));
     };
@@ -190,11 +216,28 @@ async fn post_api_event_current(api_token: QxApiToken, event: Json<EventInfo>, d
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
 }
+#[get("/event/create-demo")]
+async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+    let mut event_info = EventInfo::new();
+    event_info.name = String::from("Demo event");
+    event_info.place = String::from("Deep forest 42");
+    event_info.owner = String::from("fanda.vacek@gmail.com");
+    event_info.api_token = QxApiToken(String::from("plelababamak"));
+    let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
 
+    let data = crate::ochecklist::load_oc_dir("tests/oc/data")
+        .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
+    for chngset in &data {
+        crate::ochecklist::add_oc_change_set(event_id, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
+    }
+    Ok(Redirect::to(format!("/event/{event_id}")))
+}
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
+            get_event_create_demo,
             get_event_create,
             get_event_edit,
+            get_event_delete,
             post_event,
             get_event,
             get_api_event_current,

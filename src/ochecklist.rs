@@ -2,7 +2,6 @@ use crate::quickevent::add_qe_in_change_record;
 use std::fs;
 use std::path::PathBuf;
 use rocket::http::Status;
-use rocket::response::{Redirect};
 use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
@@ -15,7 +14,7 @@ use crate::quickevent::{QERunChange};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
-struct OCheckListChangeSet {
+pub struct OCheckListChangeSet {
     Version: String,
     Creator: String,
     Created: String,
@@ -59,7 +58,7 @@ fn load_oc_file(file: &PathBuf) -> anyhow::Result<OCheckListChangeSet> {
     let content = fs::read_to_string(file)?;
     load_oc_change_set(&content)
 }
-fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChangeSet>> {
+pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChangeSet>> {
     info!("Loading test data from: {data_dir}");
     let ocs = fs::read_dir(data_dir)?.map(|dir| {
         match dir {
@@ -82,7 +81,7 @@ fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChangeSet>> {
         .collect();
     Ok(ocs)
 }
-async fn add_oc_change_set(event_id: EventId, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
+pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
     query("INSERT INTO ocout
                 (event_id, change_set)
                 VALUES (?, ?)")
@@ -96,15 +95,7 @@ async fn add_oc_change_set(event_id: EventId, change_set: &OCheckListChangeSet, 
     }
     Ok(())
 }
-#[get("/api/event/<event_id>/oc/test/load-data")]
-async fn get_load_test_data(event_id: EventId, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let data = load_oc_dir("tests/oc/data")
-        .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-    for chngset in &data {
-        add_oc_change_set(event_id, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
-    }
-    Ok(Redirect::to(format!("/event/{event_id}")))
-}
+
 #[post("/api/token/oc/out", data = "<change_set_yaml>")]
 async fn post_api_token_oc_out(api_token: QxApiToken, change_set_yaml: &str, db: &State<DbPool>) -> Result<(), Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
@@ -140,7 +131,6 @@ async fn get_oc_out(event_id: EventId, db: &State<DbPool>) -> Result<Template, C
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             get_oc_out,
-            get_load_test_data,
             post_api_token_oc_out,
         ])
 }

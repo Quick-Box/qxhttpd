@@ -2,6 +2,7 @@
 
     <h2>Events</h2>
     <div class="w3-container w3-light-grey">
+        <a href="/event/create-demo" class="w3-button w3-round-large"><b>create demo event</b></a>
         {{#if user}}
             <a href="/event/create" class="w3-button w3-green w3-round-large w3-right"><b>create event</b></a>
         {{/if}}
@@ -14,9 +15,9 @@
                 <td><a href="/event/{{ this.id }}">{{this.name}}</a></td>
 <!--                <td>{{stringify this}}</td>-->
                 <td>{{this.place}}</td>
-                <td>{{this.date}}</td>
+                <td>{{this.start_time}}</td>
                 {{#if ../user}}
-                <td><a href="/event/edit/{{this.id}}" class="w3-button w3-round-large w3-border"><i class="fa fa-cog"></i> edit</a></td>
+                <td><a href="/event/{{this.id}}/edit" class="w3-button w3-round-large w3-border"><i class="fa fa-cog"></i> edit</a></td>
                 {{/if}}
             </tr>
         {{/each}}

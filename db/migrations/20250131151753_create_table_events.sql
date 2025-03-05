@@ -1,36 +1,52 @@
-CREATE TABLE events
+create table events
 (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    name  TEXT        NOT NULL,
-    place TEXT        NOT NULL,
-    date  DATETIME DEFAULT CURRENT_TIMESTAMP
+    id INTEGER primary key autoincrement,
+    name       TEXT not null,
+    place      TEXT not null,
+    start_time TEXT default CURRENT_TIMESTAMP,
+    api_token  TEXT,
+    user_id    TEXT
 );
+
+create unique index events_api_token_uindex on events (api_token);
+
+create table files
+(
+    id INTEGER primary key,
+    event_id INTEGER references events on delete cascade,
+    file_name TEXT not null,
+    data      BLOB not null,
+    created   TEXT default CURRENT_TIMESTAMP
+);
+
+create unique index files_file_name_index on files (event_id, file_name);
 
 create table ocout
 (
     id INTEGER primary key,
     event_id INTEGER references events on delete cascade,
-    change_set      TEXT
+    change_set TEXT,
+    created    TEXT default CURRENT_TIMESTAMP
 );
 
 create table qein
 (
     id INTEGER primary key,
     event_id INTEGER references events on delete cascade,
-    original   TEXT,
+    original TEXT,
     change   TEXT,
     source   TEXT,
-    user_id  TEXT
+    user_id  TEXT,
+    created  TEXT default CURRENT_TIMESTAMP
 );
 
-CREATE TABLE qeout
+create table qeout
 (
-    id          INTEGER PRIMARY KEY,
-    event_id    INTEGER,
-    run_id      INTEGER,
-    si_id       INTEGER,
-    start_time  TEXT,
-    finish_time TEXT,
-    comment     TEXT,
-    FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE
+    id INTEGER primary key,
+    event_id INTEGER references events on delete cascade,
+    change   TEXT,
+    source   TEXT,
+    user_id  TEXT,
+    created  TEXT default CURRENT_TIMESTAMP
 );
+
