@@ -5,13 +5,13 @@ use base64::engine::general_purpose;
 use image::ImageFormat;
 use rocket::form::{Contextual, Form};
 use rocket::http::Status;
-use rocket::response::{status, Redirect};
+use rocket::response::{Redirect};
 use rocket::response::status::Custom;
 use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, query_as, FromRow};
 use crate::db::DbPool;
-use crate::{files, parse_naive_datetime, QxApiToken, QxSessionId, SharedQxState};
+use crate::{files, parse_naive_datetime, sqlx_error, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{NaiveDateTime, NaiveTime, Timelike};
@@ -51,7 +51,7 @@ pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<Ev
         .bind(event_id)
         .fetch_one(pool)
         .await
-        .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
+        .map_err(sqlx_error)?;
     Ok(event)
 }
 pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventInfo, Custom<String>> {
@@ -185,7 +185,7 @@ async fn get_event_delete(event_id: EventId, session_id: QxSessionId, state: &St
 #[get("/event/<event_id>")]
 async fn get_event(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
-    let files = files::list_files(event_id, db).await;
+    let files = files::list_files(event_id, db).await?;
     Ok(Template::render("event", context! {
         event,
         files,

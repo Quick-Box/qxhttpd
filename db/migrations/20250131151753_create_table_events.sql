@@ -19,13 +19,13 @@ create table files
     event_id  INTEGER
         references events
             on delete cascade,
-    file_name TEXT not null,
+    name TEXT not null,
     data      BLOB not null,
     created   TEXT default CURRENT_TIMESTAMP
 );
 
 create unique index files_file_name_index
-    on files (event_id, file_name);
+    on files (event_id, name);
 
 create table ocout
 (

@@ -203,3 +203,6 @@ mod test_main {
     }
 }
 
+fn sqlx_error(err: sqlx::Error) -> Custom<String> {
+    Custom(Status::InternalServerError, format!("SQLx error: {}", err.to_string()))
+}
