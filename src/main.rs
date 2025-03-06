@@ -144,8 +144,8 @@ fn rocket() -> _ {
 }
 
 fn dtstr(iso_date_str: Option<&str>) -> String {
-    let Some(s) = iso_date_str else { 
-        return "--/--/--".to_string() 
+    let Some(s) = iso_date_str else {
+        return "--/--/--".to_string()
     };
     let Ok(dt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") else {
         return s.to_string()
