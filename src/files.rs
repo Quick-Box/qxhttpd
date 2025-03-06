@@ -11,6 +11,7 @@ use crate::{sqlx_error, unzip_data, QxApiToken};
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct FileInfo {
+    pub id: i64,
     pub name: String,
     pub size: i64,
     pub created: chrono::DateTime<chrono::Utc>,
@@ -36,6 +37,15 @@ async fn get_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Result
         .fetch_one(&db.0).await;
     files.map(|d| d.0 ).map_err(sqlx_error)
 }
+#[get("/event/<event_id>/file/<file_name>")]
+async fn get_file_by_name(event_id: EventId, file_name: &str, db: &State<DbPool>) -> Result<Vec<u8>, Custom<String>> {
+    let files = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
+        .bind(event_id)
+        .bind(file_name)
+        .fetch_one(&db.0).await;
+    files.map(|d| d.0 ).map_err(sqlx_error)
+}
+
 #[delete("/api/event/<event_id>/file/<file_id>")]
 async fn delete_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Result<(), Custom<String>> {
     let res = sqlx::query("DELETE FROM files WHERE event_id=? AND id=?")
@@ -69,6 +79,7 @@ async fn post_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             get_files,
+            get_file_by_name,
             get_file,
             post_file,
             delete_file,

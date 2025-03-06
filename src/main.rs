@@ -6,8 +6,6 @@ use std::collections::{HashMap};
 use std::io::Read;
 use std::sync::RwLock;
 use chrono::NaiveDateTime;
-use flate2::bufread::{ZlibEncoder};
-use flate2::Compression;
 use rocket::fs::{FileServer};
 use rocket::{request, State};
 use rocket::http::{CookieJar, Status};
@@ -183,16 +181,20 @@ fn unzip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
     Ok(s)
 }
 
-fn zip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let mut ret_vec = Vec::new();
-    let mut deflater = ZlibEncoder::new(bytes, Compression::fast());
-    deflater.read_to_end(&mut ret_vec).map_err(|e| e.to_string())?;
-    Ok(ret_vec)
-}
-
 #[cfg(test)]
 mod test_main {
-    use crate::{unzip_data, zip_data};
+    use std::io::Read;
+    use flate2::bufread::ZlibEncoder;
+    use flate2::Compression;
+    use crate::{unzip_data};
+
+    pub(crate) fn zip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
+        let mut ret_vec = Vec::new();
+        let mut deflater = ZlibEncoder::new(bytes, Compression::fast());
+        deflater.read_to_end(&mut ret_vec).map_err(|e| e.to_string())?;
+        Ok(ret_vec)
+    }
+
 
     #[test]
     fn test_zip() {
@@ -204,5 +206,5 @@ mod test_main {
 }
 
 fn sqlx_error(err: sqlx::Error) -> Custom<String> {
-    Custom(Status::InternalServerError, format!("SQLx error: {}", err.to_string()))
+    Custom(Status::InternalServerError, format!("SQLx error: {}", err))
 }

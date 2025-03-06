@@ -7,8 +7,8 @@
 </ul>
 <h3>Files</h3>
 <ul>
-    {{#each records}}
-        <li><a href="/event/{{ event.id }}/files/{{ this.file_name }}">{{ this.file_name }}</a> size: {{ this.file_size }}</li>
+    {{#each files}}
+        <li><a href="/event/{{ ../event.id }}/file/{{ this.name }}" >{{ this.name }}</a> size: {{ this.size }}</li>
     {{/each}}
 </ul>
 
