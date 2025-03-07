@@ -26,6 +26,7 @@ mod event;
 mod files;
 mod util;
 mod iofxml3;
+mod qe;
 
 #[derive(Default)]
 struct AppConfig {

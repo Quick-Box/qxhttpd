@@ -69,10 +69,15 @@ pub(crate) mod test {
 }
 
 pub(crate) fn status_sqlx_error(err: sqlx::Error) -> Custom<String> {
+    warn!("SQL Error: {}", err);
     Custom(Status::InternalServerError, format!("SQLx error: {}", err))
 }
-pub(crate) fn tee_sqlx_error(err: sqlx::Error) -> anyhow::Error {
+pub(crate) fn status_any_error(err: anyhow::Error) -> Custom<String> {
     warn!("Error: {}", err);
+    Custom(Status::InternalServerError, format!("Error: {}", err))
+}
+pub(crate) fn tee_sqlx_error(err: sqlx::Error) -> anyhow::Error {
+    warn!("SQL Error: {}", err);
     anyhow!("SQL error: {}", err)
 }
 pub(crate) fn tee_any_error(err: anyhow::Error) -> anyhow::Error {

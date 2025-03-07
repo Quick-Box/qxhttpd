@@ -2,7 +2,7 @@ use crate::iofxml3::structs::StartList;
 use quick_xml::de::from_reader;
 
 // thanks to https://github.com/Thomblin/xml_schema_generator
-pub fn parse_startlist_xml_data(data: &[u8]) -> anyhow::Result<StartList> {
+pub fn parse_startlist(data: &[u8]) -> anyhow::Result<StartList> {
     let startlist: StartList = from_reader(data)?;
     Ok(startlist)
 }

@@ -1,2 +1,4 @@
 pub mod parser;
-mod structs;
+pub mod structs;
+
+
