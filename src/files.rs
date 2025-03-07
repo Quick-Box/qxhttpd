@@ -6,10 +6,10 @@ use rocket::response::status::{Custom};
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
 use crate::db::DbPool;
-use crate::event::{load_event_info2, parse_startlist_xml, EventId, START_LIST_IOFXML3_FILE};
+use crate::event::{load_event_info2, EventId, START_LIST_IOFXML3_FILE};
 use crate::{QxApiToken};
-use crate::qe::parse_startlist_event;
-use crate::util::{status_any_error, status_sqlx_error, tee_any_error, unzip_data};
+use crate::qe::import_startlist;
+use crate::util::{status_any_error, status_sqlx_error, unzip_data};
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct FileInfo {
@@ -82,7 +82,7 @@ async fn post_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content
 async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info2(&qx_api_token, db).await?;
     let file_id = post_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
-    parse_startlist_event(event_info.id, db).await.map_err(status_any_error)?;
+    import_startlist(event_info.id, db).await.map_err(status_any_error)?;
     Ok(format!("{}", file_id))
 }
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {

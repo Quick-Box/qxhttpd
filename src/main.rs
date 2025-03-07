@@ -20,8 +20,7 @@ use crate::db::{DbPool, DbPoolFairing};
 mod tests;
 mod db;
 mod auth;
-mod ochecklist;
-mod quickevent;
+mod oc;
 mod event;
 mod files;
 mod util;
@@ -125,8 +124,8 @@ fn rocket() -> _ {
         ]);
     let rocket = auth::extend(rocket);
     let rocket = event::extend(rocket);
-    let rocket = ochecklist::extend(rocket);
-    let rocket = quickevent::extend(rocket);
+    let rocket = oc::extend(rocket);
+    let rocket = qe::extend(rocket);
     let rocket = files::extend(rocket);
 
     let cfg = AppConfig::default();

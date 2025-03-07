@@ -16,8 +16,9 @@ use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{NaiveDateTime, NaiveTime, Timelike};
 use rocket::serde::{Deserialize, Serialize};
-use crate::qe::parse_startlist_xml_data;
-use crate::util::{parse_naive_datetime, status_sqlx_error, tee_sqlx_error};
+use crate::qe::classes::ClassesRecord;
+use crate::qe::runs::RunsRecord;
+use crate::util::{try_parse_naive_datetime, status_sqlx_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 
@@ -118,7 +119,7 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
         id: vals.id,
         name: vals.name.to_string(),
         place: vals.place.to_string(),
-        start_time: parse_naive_datetime(vals.start_time).ok_or(Custom(Status::BadRequest, format!("Unrecognized date-time string: {}", vals.start_time)))?,
+        start_time: try_parse_naive_datetime(vals.start_time).ok_or(Custom(Status::BadRequest, format!("Unrecognized date-time string: {}", vals.start_time)))?,
         owner: user.email,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
@@ -230,12 +231,45 @@ async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<St
     event_info.api_token = QxApiToken(String::from("plelababamak"));
     let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
 
-    let data = crate::ochecklist::load_oc_dir("tests/oc/data")
+    let data = crate::oc::load_oc_dir("tests/oc/data")
         .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
     for chngset in &data {
-        crate::ochecklist::add_oc_change_set(event_id, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
+        crate::oc::add_oc_change_set(event_id, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
     }
     Ok(Redirect::to(format!("/event/{event_id}")))
+}
+#[get("/event/<event_id>/startlist?<class_name>")]
+async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let event = load_event_info(event_id, db).await?;
+    let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes WHERE event_id=?")
+        .bind(event_id)
+        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+    let class_name = if let Some(name) = class_name {
+        name.to_string()
+    } else {
+        if let Some(classrec) = classes.first() {
+            classrec.name.clone()
+        } else {
+            return Err(Custom(Status::BadRequest, String::from("Classes not found")));
+        }
+    };
+    let classrec = {
+        let Some(classrec) = classes.iter().find(|c| c.name == class_name) else {
+            return Err(Custom(Status::BadRequest, format!("Class {class_name} not found")));
+        };
+        classrec.clone()
+    };
+    let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=? ORDER BY start_time")
+        .bind(event_id)
+        .bind(class_name)
+        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+    Ok(Template::render("startlist", context! {
+        event,
+        classrec,
+        classes,
+        runs,
+    }))
+
 }
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
@@ -245,6 +279,7 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_event_delete,
             post_event,
             get_event,
+            get_event_start_list,
             get_api_event_current,
             post_api_event_current,
         ])

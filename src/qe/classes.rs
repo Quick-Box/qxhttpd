@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-#[derive(Serialize, Deserialize, FromRow, Debug)]
-struct ClassesRecord {
-    id: i64,
-    event_id: i64,
-    name: String,
+#[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
+pub struct ClassesRecord {
+    pub id: i64,
+    pub event_id: i64,
+    pub name: String,
     #[serde(default)]
-    length: i64,
+    pub length: i64,
     #[serde(default)]
-    climb: i64,
+    pub climb: i64,
     #[serde(default)]
-    control_count: i64,
+    pub control_count: i64,
 }

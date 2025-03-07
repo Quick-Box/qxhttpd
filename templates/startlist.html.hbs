@@ -1,0 +1,40 @@
+{{#*inline "page"}}
+
+    <h2>Start list</h2>
+    <h3><a href="/event/{{ event.id }}">{{ event.name }}</a></h3>
+
+    <div>
+    {{#each classes}}
+        <a class="w3-button" href="/event/{{ ../event.id }}/startlist?class_name={{this.name}}">{{ this.name }}</a>
+    {{/each}}
+    </div>
+
+    <div class="w3-bar w3-theme-l2">
+        <span class="w3-bar-item"><b>{{classrec.name}}</b></span>
+        <span class="w3-bar-item w3-right">controls: {{classrec.control_count}}</span>
+        <span class="w3-bar-item w3-right">climb: {{classrec.climb}}</span>
+        <span class="w3-bar-item w3-right">length: {{classrec.length}}</span>
+    </div>
+
+    <table class="w3-table-all w3-hoverable">
+        <thead>
+        <tr class="w3-theme-l1">
+            <th>Start</th>
+            <th>Name</th>
+            <th>Registration</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each runs}}
+            <tr>
+                <td class="w3-right-align">{{ this.start_time }}</td>
+                <td>{{ this.runner_name }}</td>
+                <td>{{ this.registration }}</td>
+            </tr>
+        {{/each}}
+        </tbody>
+    </table>
+
+
+{{/inline}}
+{{> layout}}

@@ -2,6 +2,8 @@ use crate::iofxml3::structs::StartList;
 use quick_xml::de::from_reader;
 
 // thanks to https://github.com/Thomblin/xml_schema_generator
+// xml_schema_generator --derive "Serialize, Deserialize, Debug" ~/p/qxhttpd/tests/startlist-iof3.xml > ~/p/qxhttpd/src/iofxml3/structs.rs 
+
 pub fn parse_startlist(data: &[u8]) -> anyhow::Result<StartList> {
     let startlist: StartList = from_reader(data)?;
     Ok(startlist)
@@ -22,5 +24,6 @@ mod test {
         let startlist: StartList = from_reader(reader).unwrap();
         assert_eq!(&startlist.event.name, "Mistrovství oblasti na krátké trati");
         assert!(!startlist.class_start.is_empty());
+        assert!(!startlist.class_start.first().unwrap().person_start.is_empty());
     }
 }

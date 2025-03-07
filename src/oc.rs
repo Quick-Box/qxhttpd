@@ -1,4 +1,3 @@
-use crate::quickevent::add_qe_in_change_record;
 use std::fs;
 use std::path::PathBuf;
 use rocket::http::Status;
@@ -10,7 +9,7 @@ use sqlx::{query, FromRow};
 use crate::db::DbPool;
 use crate::{impl_sqlx_json_text_type_and_decode, QxApiToken};
 use crate::event::{load_event_info, load_event_info2, EventId, SiId};
-use crate::quickevent::{QERunChange};
+use crate::qe::{add_qe_in_change_record, QERunChange};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]

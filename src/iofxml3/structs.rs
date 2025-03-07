@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct StartList {
     #[serde(rename = "@createTime")]
     pub create_time: String,
@@ -18,7 +18,7 @@ pub struct StartList {
     pub class_start: Vec<ClassStart>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Event {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -32,7 +32,7 @@ pub struct Event {
     pub official: Vec<Official>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EventId {
     #[serde(rename = "@type")]
     pub id_type: String,
@@ -40,7 +40,7 @@ pub struct EventId {
     pub text: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EventStartTime {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -50,7 +50,7 @@ pub struct EventStartTime {
     pub time: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Official {
     #[serde(rename = "@type")]
     pub official_type: String,
@@ -60,7 +60,7 @@ pub struct Official {
     pub person: OfficialPerson,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct OfficialPerson {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -68,7 +68,7 @@ pub struct OfficialPerson {
     pub name: OfficialPersonName,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct OfficialPersonName {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -78,7 +78,7 @@ pub struct OfficialPersonName {
     pub given: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ClassStart {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -92,7 +92,7 @@ pub struct ClassStart {
     pub person_start: Vec<PersonStart>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Class {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -102,7 +102,7 @@ pub struct Class {
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Course {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -114,7 +114,7 @@ pub struct Course {
     pub number_of_controls: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PersonStart {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -126,7 +126,7 @@ pub struct PersonStart {
     pub start: Start,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PersonStartPerson {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -136,7 +136,7 @@ pub struct PersonStartPerson {
     pub name: PersonStartPersonName,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PersonId {
     #[serde(rename = "@type")]
     pub id_type: String,
@@ -144,7 +144,7 @@ pub struct PersonId {
     pub text: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PersonStartPersonName {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -154,7 +154,7 @@ pub struct PersonStartPersonName {
     pub given: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Organisation {
     #[serde(rename = "$text")]
     pub text: Option<String>,
@@ -164,7 +164,7 @@ pub struct Organisation {
     pub short_name: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Start {
     #[serde(rename = "$text")]
     pub text: Option<String>,
