@@ -4,6 +4,11 @@ use chrono::{NaiveDateTime};
 use rocket::http::Status;
 use rocket::response::status::Custom;
 
+pub(crate) fn obtime(sec_since_midnight: i64) -> String {
+    let sec = sec_since_midnight % 60;
+    let min = sec_since_midnight / 60;
+    format!("{min}:{sec:0>2}")
+}
 pub(crate) fn dtstr(iso_date_str: Option<&str>) -> String {
     let Some(s) = iso_date_str else {
         return "--/--/--".to_string()

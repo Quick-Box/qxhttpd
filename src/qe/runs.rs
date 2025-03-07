@@ -18,6 +18,8 @@ pub struct RunsRecord {
     #[serde(default)]
     pub start_time: NaiveDateTime,
     #[serde(default)]
+    pub start_time_sec: i64,
+    #[serde(default)]
     pub check_time: String,
     #[serde(default)]
     pub finish_time: String,
@@ -35,6 +37,7 @@ impl Default for RunsRecord {
             si_id: 0,
             registration: "".to_string(),
             start_time: Default::default(),
+            start_time_sec: 0,
             check_time: "".to_string(),
             finish_time: "".to_string(),
             status: "".to_string(),

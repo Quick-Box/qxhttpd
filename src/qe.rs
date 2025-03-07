@@ -23,7 +23,7 @@ pub mod classes;
 fn start00(stlist: &StartList) -> Option<NaiveDateTime> {
     let d = stlist.event.start_time.date.as_str();
     let t = stlist.event.start_time.time.as_str();
-    try_parse_naive_datetime(&format!("{d}T{t}"))    
+    try_parse_naive_datetime(&format!("{d}T{t}"))
 }
 pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
@@ -31,8 +31,9 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
         .bind(START_LIST_IOFXML3_FILE)
         .fetch_one(&db.0)
         .await.map_err(tee_sqlx_error)?.0;
-    let (start00, classes, runs) = parse_startlist_xml_data(event_id, data).await?;
     
+    let (start00, classes, runs) = parse_startlist_xml_data(event_id, data).await?;
+
     let txn = db.0.begin().await?;
     sqlx::query("UPDATE events SET start_time=? WHERE id=?")
         .bind(start00)
@@ -49,15 +50,15 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
     }
     for run in runs {
         sqlx::query("INSERT OR REPLACE INTO runs (
-                             event_id, 
-                             run_id, 
-                             si_id, 
-                             runner_name, 
+                             event_id,
+                             run_id,
+                             si_id,
+                             runner_name,
                              registration,
-                             class_name, 
-                             start_time, 
-                             check_time, 
-                             finish_time, 
+                             class_name,
+                             start_time,
+                             check_time,
+                             finish_time,
                              status
                              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .bind(event_id)
@@ -70,10 +71,10 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
             .bind(run.check_time)
             .bind(run.finish_time)
             .bind(run.status)
-            .execute(&db.0).await.map_err(tee_sqlx_error)?;    
+            .execute(&db.0).await.map_err(tee_sqlx_error)?;
     }
     txn.commit().await?;
-    
+
     Ok(())
 }
 pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyhow::Result<(NaiveDateTime, Vec<ClassesRecord>, Vec<RunsRecord>)> {
@@ -201,7 +202,7 @@ pub async fn add_qe_out_change_record(event_id: EventId, source: &str, user_id: 
         error!("Serde error");
         return
     };
-    let _ = query("INSERT INTO qeout 
+    let _ = query("INSERT INTO qeout
     (event_id, change, source, user_id)
     VALUES (?, ?, ?, ?)")
         .bind(event_id)
@@ -216,7 +217,7 @@ pub async fn add_qe_in_change_record(event_id: EventId, source: &str, user_id: O
         error!("Serde error");
         return
     };
-    let _ = query("INSERT INTO qein 
+    let _ = query("INSERT INTO qein
     (event_id, change, source, user_id)
     VALUES (?, ?, ?, ?)")
         .bind(event_id)

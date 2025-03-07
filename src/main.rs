@@ -115,6 +115,17 @@ fn rocket() -> _ {
                                            out.write(&s)?;
                                            Ok(())
                                        }));
+            handlebars.register_helper("obtime",
+                                       Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
+                                           let val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("obtime", 0))?.value();
+                                           if let Some(sec) = val.as_i64() {
+                                              let s = util::obtime(sec);
+                                              out.write(&s)?;
+                                           } else {
+                                              out.write("--:--:--")?;
+                                           }
+                                           Ok(())
+                                       }));
         }))
         .attach(DbPoolFairing())
         .mount("/", FileServer::from("./static"))

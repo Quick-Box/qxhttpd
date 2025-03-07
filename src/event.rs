@@ -259,7 +259,9 @@ async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &
         };
         classrec.clone()
     };
-    let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=? ORDER BY start_time")
+    let runs = sqlx::query_as::<_, RunsRecord>(&format!(
+        "SELECT *, unixepoch(start_time) - {} as start_time_sec   
+         FROM runs WHERE event_id=? AND class_name=? ORDER BY start_time", event.start_time.and_utc().timestamp()))
         .bind(event_id)
         .bind(class_name)
         .fetch_all(&db.0).await.map_err(status_sqlx_error)?;

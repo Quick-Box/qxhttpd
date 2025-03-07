@@ -27,7 +27,7 @@
         <tbody>
         {{#each runs}}
             <tr>
-                <td class="w3-right-align">{{ this.start_time }}</td>
+                <td class="w3-right-align">{{obtime this.start_time_sec }}</td>
                 <td>{{ this.runner_name }}</td>
                 <td>{{ this.registration }}</td>
             </tr>
