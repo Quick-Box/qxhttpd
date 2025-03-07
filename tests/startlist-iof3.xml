@@ -1,0 +1,6804 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<StartList createTime="2025-03-07T11:24:26" creator="QuickEvent 3.2.2" iofVersion="3.0" xmlns="http://www.orienteering.org/datastandard/3.0">
+	<Event>
+		<Id type="ORIS">8245</Id>
+		<Name>Mistrovství oblasti na krátké trati</Name>
+		<StartTime>
+			<Date>2024-05-04</Date>
+			<Time>10:30:00.000</Time>
+		</StartTime>
+		<Official type="Director">
+			<Person>
+				<Name>
+					<Family>Krejsa</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+		</Official>
+		<Official type="MainReferee">
+			<Person>
+				<Name>
+					<Family>Hledík</Family>
+					<Given>Jakub</Given>
+				</Name>
+			</Person>
+		</Official>
+	</Event>
+	<ClassStart>
+		<Class>
+			<Id>183750</Id>
+			<Name>D10</Name>
+		</Class>
+		<Course>
+			<Length>2400</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>7</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1650</Id>
+				<Id type="QuickEvent">252</Id>
+				<Name>
+					<Family>Prošková</Family>
+					<Given>Andrea</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:35:00Z</StartTime>
+				<ControlCard>8063078</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM1551</Id>
+				<Id type="QuickEvent">118</Id>
+				<Name>
+					<Family>Hübnerová</Family>
+					<Given>Johana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:39:00Z</StartTime>
+				<ControlCard>2082923</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1551</Id>
+				<Id type="QuickEvent">241</Id>
+				<Name>
+					<Family>Jirků</Family>
+					<Given>Tereza</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:43:00Z</StartTime>
+				<ControlCard>8520831</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1550</Id>
+				<Id type="QuickEvent">53</Id>
+				<Name>
+					<Family>Kubáková</Family>
+					<Given>Laura</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:47:00Z</StartTime>
+				<ControlCard>9201757</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1550</Id>
+				<Id type="QuickEvent">84</Id>
+				<Name>
+					<Family>Boučková</Family>
+					<Given>Alžběta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:51:00Z</StartTime>
+				<ControlCard>888644</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1652</Id>
+				<Id type="QuickEvent">335</Id>
+				<Name>
+					<Family>Dvořáková</Family>
+					<Given>Lucie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2419856</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1451</Id>
+				<Id type="QuickEvent">338</Id>
+				<Name>
+					<Family>Matrasová</Family>
+					<Given>Marie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8510260</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183751</Id>
+			<Name>D10F</Name>
+		</Class>
+		<Course>
+			<Length>2490</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>8</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA1553</Id>
+				<Id type="QuickEvent">282</Id>
+				<Name>
+					<Family>Dokoupilová</Family>
+					<Given>Eliška</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:36:00Z</StartTime>
+				<ControlCard>2001918</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1651</Id>
+				<Id type="QuickEvent">100</Id>
+				<Name>
+					<Family>Sadílková</Family>
+					<Given>Kateřina</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:44:00Z</StartTime>
+				<ControlCard>4680</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1550</Id>
+				<Id type="QuickEvent">269</Id>
+				<Name>
+					<Family>Makovská</Family>
+					<Given>Terezie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:48:00Z</StartTime>
+				<ControlCard>52138</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1551</Id>
+				<Id type="QuickEvent">230</Id>
+				<Name>
+					<Family>Forstová</Family>
+					<Given>Viola</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:52:00Z</StartTime>
+				<ControlCard>7210889</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA1551</Id>
+				<Id type="QuickEvent">275</Id>
+				<Name>
+					<Family>Doleželová</Family>
+					<Given>Leona</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:00:00Z</StartTime>
+				<ControlCard>2001962</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1652</Id>
+				<Id type="QuickEvent">138</Id>
+				<Name>
+					<Family>Matějková</Family>
+					<Given>Stella</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:04:00Z</StartTime>
+				<ControlCard>2161295</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183752</Id>
+			<Name>D12</Name>
+		</Class>
+		<Course>
+			<Length>2500</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>9</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1252</Id>
+				<Id type="QuickEvent">276</Id>
+				<Name>
+					<Family>Hudečková</Family>
+					<Given>Mariana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:27:00Z</StartTime>
+				<ControlCard>2161671</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1351</Id>
+				<Id type="QuickEvent">99</Id>
+				<Name>
+					<Family>Krejsová</Family>
+					<Given>Markéta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:30:00Z</StartTime>
+				<ControlCard>8012871</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1251</Id>
+				<Id type="QuickEvent">63</Id>
+				<Name>
+					<Family>Kubešová</Family>
+					<Given>Klára</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:33:00Z</StartTime>
+				<ControlCard>2125340</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1260</Id>
+				<Id type="QuickEvent">265</Id>
+				<Name>
+					<Family>Voráčková</Family>
+					<Given>Anežka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:36:00Z</StartTime>
+				<ControlCard>8621390</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1350</Id>
+				<Id type="QuickEvent">91</Id>
+				<Name>
+					<Family>Polednová</Family>
+					<Given>Dominika</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:39:00Z</StartTime>
+				<ControlCard>8063043</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1352</Id>
+				<Id type="QuickEvent">184</Id>
+				<Name>
+					<Family>Olišarová</Family>
+					<Given>Anna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:45:00Z</StartTime>
+				<ControlCard>2217331</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1250</Id>
+				<Id type="QuickEvent">92</Id>
+				<Name>
+					<Family>Polednová</Family>
+					<Given>Helena</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:48:00Z</StartTime>
+				<ControlCard>8022621</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1253</Id>
+				<Id type="QuickEvent">103</Id>
+				<Name>
+					<Family>Karbašová</Family>
+					<Given>Kristýna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:51:00Z</StartTime>
+				<ControlCard>8522947</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH1351</Id>
+				<Id type="QuickEvent">159</Id>
+				<Name>
+					<Family>Komárková</Family>
+					<Given>Ondřejka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:54:00Z</StartTime>
+				<ControlCard>8662283</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM1372</Id>
+				<Id type="QuickEvent">23</Id>
+				<Name>
+					<Family>Ptáčková</Family>
+					<Given>Lucie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:57:00Z</StartTime>
+				<ControlCard>8001372</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183753</Id>
+			<Name>D14</Name>
+		</Class>
+		<Course>
+			<Length>2680</Length>
+			<Climb>60</Climb>
+			<NumberOfControls>12</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH1151</Id>
+				<Id type="QuickEvent">154</Id>
+				<Name>
+					<Family>Komárková</Family>
+					<Given>Radka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:36:00Z</StartTime>
+				<ControlCard>8003655</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1053</Id>
+				<Id type="QuickEvent">219</Id>
+				<Name>
+					<Family>Vítková</Family>
+					<Given>Eva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:39:00Z</StartTime>
+				<ControlCard>8047244</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1050</Id>
+				<Id type="QuickEvent">64</Id>
+				<Name>
+					<Family>Kubešová</Family>
+					<Given>Kristýna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:42:00Z</StartTime>
+				<ControlCard>361944</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1051</Id>
+				<Id type="QuickEvent">240</Id>
+				<Name>
+					<Family>Nováková</Family>
+					<Given>Šárka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:45:00Z</StartTime>
+				<ControlCard>2161672</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA1151</Id>
+				<Id type="QuickEvent">281</Id>
+				<Name>
+					<Family>Doleželová</Family>
+					<Given>Jolana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:48:00Z</StartTime>
+				<ControlCard>8482093</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1054</Id>
+				<Id type="QuickEvent">105</Id>
+				<Name>
+					<Family>Korecká</Family>
+					<Given>Eva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:54:00Z</StartTime>
+				<ControlCard>8482073</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1152</Id>
+				<Id type="QuickEvent">8</Id>
+				<Name>
+					<Family>Klusáčková</Family>
+					<Given>Dorota</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:57:00Z</StartTime>
+				<ControlCard>8042140</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1153</Id>
+				<Id type="QuickEvent">221</Id>
+				<Name>
+					<Family>Havlíčková</Family>
+					<Given>Hana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:00:00Z</StartTime>
+				<ControlCard>8502709</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1153</Id>
+				<Id type="QuickEvent">9</Id>
+				<Name>
+					<Family>Klusáčková</Family>
+					<Given>Johana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:03:00Z</StartTime>
+				<ControlCard>8012875</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA1152</Id>
+				<Id type="QuickEvent">280</Id>
+				<Name>
+					<Family>Lubasová</Family>
+					<Given>Nela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:06:00Z</StartTime>
+				<ControlCard>8116807</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH1152</Id>
+				<Id type="QuickEvent">157</Id>
+				<Name>
+					<Family>Svitáková</Family>
+					<Given>Ludmila</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:12:00Z</StartTime>
+				<ControlCard>8047163</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1050</Id>
+				<Id type="QuickEvent">288</Id>
+				<Name>
+					<Family>Dvořáčková</Family>
+					<Given>Eva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:15:00Z</StartTime>
+				<ControlCard>8302010</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1151</Id>
+				<Id type="QuickEvent">58</Id>
+				<Name>
+					<Family>Rychnovská</Family>
+					<Given>Eliška</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:18:00Z</StartTime>
+				<ControlCard>8409865</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1150</Id>
+				<Id type="QuickEvent">262</Id>
+				<Name>
+					<Family>Benešová</Family>
+					<Given>Aneta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:21:00Z</StartTime>
+				<ControlCard>8654887</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1052</Id>
+				<Id type="QuickEvent">123</Id>
+				<Name>
+					<Family>Petříčková</Family>
+					<Given>Zita</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:24:00Z</StartTime>
+				<ControlCard>8500058</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183754</Id>
+			<Name>D16</Name>
+		</Class>
+		<Course>
+			<Length>2810</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>14</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM0888</Id>
+				<Id type="QuickEvent">299</Id>
+				<Name>
+					<Family>Čechová</Family>
+					<Given>Johana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:35:00Z</StartTime>
+				<ControlCard>8180908</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA0954</Id>
+				<Id type="QuickEvent">284</Id>
+				<Name>
+					<Family>Šimotová</Family>
+					<Given>Elen</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:39:00Z</StartTime>
+				<ControlCard>8047297</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH0957</Id>
+				<Id type="QuickEvent">165</Id>
+				<Name>
+					<Family>Těthalová</Family>
+					<Given>Anežka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:43:00Z</StartTime>
+				<ControlCard>8501399</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN0990</Id>
+				<Id type="QuickEvent">97</Id>
+				<Name>
+					<Family>Drápová</Family>
+					<Given>Justýna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:47:00Z</StartTime>
+				<ControlCard>8119491</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0951</Id>
+				<Id type="QuickEvent">130</Id>
+				<Name>
+					<Family>Nováková</Family>
+					<Given>Anna Marie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:51:00Z</StartTime>
+				<ControlCard>8648583</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0851</Id>
+				<Id type="QuickEvent">74</Id>
+				<Name>
+					<Family>Jelínková</Family>
+					<Given>Michaela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:59:00Z</StartTime>
+				<ControlCard>2121764</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR0852</Id>
+				<Id type="QuickEvent">304</Id>
+				<Name>
+					<Family>Nešporová</Family>
+					<Given>Terezie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:03:00Z</StartTime>
+				<ControlCard>49689</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT0951</Id>
+				<Id type="QuickEvent">193</Id>
+				<Name>
+					<Family>Slavíková</Family>
+					<Given>Bára</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:07:00Z</StartTime>
+				<ControlCard>2120993</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0953</Id>
+				<Id type="QuickEvent">36</Id>
+				<Name>
+					<Family>Novotná</Family>
+					<Given>Nicol Dominika</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:11:00Z</StartTime>
+				<ControlCard>8709</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0853</Id>
+				<Id type="QuickEvent">70</Id>
+				<Name>
+					<Family>Zvolánková</Family>
+					<Given>Alžběta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:15:00Z</StartTime>
+				<ControlCard>2039124</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PGP0858</Id>
+				<Id type="QuickEvent">42</Id>
+				<Name>
+					<Family>Honzáková</Family>
+					<Given>Nela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Praga</Name>
+				<ShortName>PGP</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:23:00Z</StartTime>
+				<ControlCard>8514482</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA0952</Id>
+				<Id type="QuickEvent">258</Id>
+				<Name>
+					<Family>Čápová</Family>
+					<Given>Denisa</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:27:00Z</StartTime>
+				<ControlCard>8680427</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM0980</Id>
+				<Id type="QuickEvent">22</Id>
+				<Name>
+					<Family>Ptáčková</Family>
+					<Given>Julie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:31:00Z</StartTime>
+				<ControlCard>8077877</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183755</Id>
+			<Name>D18</Name>
+		</Class>
+		<Course>
+			<Length>3300</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>15</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0754</Id>
+				<Id type="QuickEvent">60</Id>
+				<Name>
+					<Family>Bukáčková</Family>
+					<Given>Šárka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:53:00Z</StartTime>
+				<ControlCard>8482641</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN0777</Id>
+				<Id type="QuickEvent">214</Id>
+				<Name>
+					<Family>Janíčková</Family>
+					<Given>Jolana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:57:00Z</StartTime>
+				<ControlCard>8004350</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH0651</Id>
+				<Id type="QuickEvent">144</Id>
+				<Name>
+					<Family>Benešová</Family>
+					<Given>Michaela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:01:00Z</StartTime>
+				<ControlCard>8005147</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0753</Id>
+				<Id type="QuickEvent">187</Id>
+				<Name>
+					<Family>Paulová</Family>
+					<Given>Barbora</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:05:00Z</StartTime>
+				<ControlCard>8003665</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ0650</Id>
+				<Id type="QuickEvent">320</Id>
+				<Name>
+					<Family>Hofhanzlová</Family>
+					<Given>Štěpánka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:09:00Z</StartTime>
+				<ControlCard>8116689</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR0752</Id>
+				<Id type="QuickEvent">170</Id>
+				<Name>
+					<Family>Baďurová</Family>
+					<Given>Eliška</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:17:00Z</StartTime>
+				<ControlCard>8033281</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183756</Id>
+			<Name>D21C</Name>
+		</Class>
+		<Course>
+			<Length>3910</Length>
+			<Climb>100</Climb>
+			<NumberOfControls>18</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0550</Id>
+				<Id type="QuickEvent">301</Id>
+				<Name>
+					<Family>Plachá</Family>
+					<Given>Zita</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:42:00Z</StartTime>
+				<ControlCard>8116810</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0551</Id>
+				<Id type="QuickEvent">188</Id>
+				<Name>
+					<Family>Paulová</Family>
+					<Given>Pavlína</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:45:00Z</StartTime>
+				<ControlCard>8003591</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">JHB0551</Id>
+				<Id type="QuickEvent">41</Id>
+				<Name>
+					<Family>Honzáková</Family>
+					<Given>Lenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Jiskra Havlíčkův Brod</Name>
+				<ShortName>JHB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:48:00Z</StartTime>
+				<ControlCard>7210814</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">KAM9852</Id>
+				<Id type="QuickEvent">77</Id>
+				<Id type="IOF">22097</Id>
+				<Name>
+					<Family>Čechová</Family>
+					<Given>Tereza</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Kamenice</Name>
+				<ShortName>KAM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:51:00Z</StartTime>
+				<ControlCard>8656609</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM0055</Id>
+				<Id type="QuickEvent">208</Id>
+				<Id type="IOF">34091</Id>
+				<Name>
+					<Family>Nechanická</Family>
+					<Given>Klára</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:54:00Z</StartTime>
+				<ControlCard>8302000</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0751</Id>
+				<Id type="QuickEvent">216</Id>
+				<Name>
+					<Family>Oranyová</Family>
+					<Given>Sylva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:00:00Z</StartTime>
+				<ControlCard>8410786</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">ZBM0455</Id>
+				<Id type="QuickEvent">79</Id>
+				<Name>
+					<Family>Rotková</Family>
+					<Given>Markéta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Brno Žabovřesky</Name>
+				<ShortName>ZBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:03:00Z</StartTime>
+				<ControlCard>8660409</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0752</Id>
+				<Id type="QuickEvent">192</Id>
+				<Name>
+					<Family>Běloušková</Family>
+					<Given>Kateřina</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:06:00Z</StartTime>
+				<ControlCard>8003607</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">ZBM9250</Id>
+				<Id type="QuickEvent">249</Id>
+				<Name>
+					<Family>Podešvová</Family>
+					<Given>Vlasta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Brno Žabovřesky</Name>
+				<ShortName>ZBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:09:00Z</StartTime>
+				<ControlCard>8482559</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">JJN9350</Id>
+				<Id type="QuickEvent">172</Id>
+				<Name>
+					<Family>Strachotová</Family>
+					<Given>Pavlína</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>Team Jizerky</Name>
+				<ShortName>JJN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:12:00Z</StartTime>
+				<ControlCard>8005131</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN9452</Id>
+				<Id type="QuickEvent">196</Id>
+				<Id type="IOF">23400</Id>
+				<Name>
+					<Family>Klusáčková</Family>
+					<Given>Magdaléna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:18:00Z</StartTime>
+				<ControlCard>8660440</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI9851</Id>
+				<Id type="QuickEvent">178</Id>
+				<Name>
+					<Family>Petráčková</Family>
+					<Given>Kristýna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:21:00Z</StartTime>
+				<ControlCard>8044606</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PBM8951</Id>
+				<Id type="QuickEvent">315</Id>
+				<Id type="IOF">4050</Id>
+				<Name>
+					<Family>Mádlová</Family>
+					<Given>Věra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Spartak 1. brněnská</Name>
+				<ShortName>PBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:24:00Z</StartTime>
+				<ControlCard>8001707</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PBM0352</Id>
+				<Id type="QuickEvent">353</Id>
+				<Name>
+					<Family>Bídová</Family>
+					<Given>Markéta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Spartak 1. brněnská</Name>
+				<ShortName>PBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:27:00Z</StartTime>
+				<ControlCard>8660531</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8251</Id>
+				<Id type="QuickEvent">341</Id>
+				<Name>
+					<Family>Matrasová</Family>
+					<Given>Vendula</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8514472</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183757</Id>
+			<Name>D21D</Name>
+		</Class>
+		<Course>
+			<Length>2960</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>13</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ8450</Id>
+				<Id type="QuickEvent">264</Id>
+				<Name>
+					<Family>Benešová</Family>
+					<Given>Aneta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:37:00Z</StartTime>
+				<ControlCard>2087716</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8350</Id>
+				<Id type="QuickEvent">34</Id>
+				<Name>
+					<Family>Izdná</Family>
+					<Given>Petra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:41:00Z</StartTime>
+				<ControlCard>8516414</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STE9572</Id>
+				<Id type="QuickEvent">256</Id>
+				<Id type="IOF">25044</Id>
+				<Name>
+					<Family>Vlachová</Family>
+					<Given>Eliška</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK SKI-OB Šternberk</Name>
+				<ShortName>STE</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:45:00Z</StartTime>
+				<ControlCard>2120659</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI9854</Id>
+				<Id type="QuickEvent">115</Id>
+				<Name>
+					<Family>Vacková</Family>
+					<Given>Anna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:49:00Z</StartTime>
+				<ControlCard>8285934</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183758</Id>
+			<Name>D35</Name>
+		</Class>
+		<Course>
+			<Length>3240</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>15</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB8152</Id>
+				<Id type="QuickEvent">73</Id>
+				<Name>
+					<Family>Jelínková</Family>
+					<Given>Hana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:40:00Z</StartTime>
+				<ControlCard>899173</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8751</Id>
+				<Id type="QuickEvent">89</Id>
+				<Name>
+					<Family>Kaňáková</Family>
+					<Given>Petra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:43:00Z</StartTime>
+				<ControlCard>7003047</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">JHB7753</Id>
+				<Id type="QuickEvent">40</Id>
+				<Name>
+					<Family>Honzáková</Family>
+					<Given>Jana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Jiskra Havlíčkův Brod</Name>
+				<ShortName>JHB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:46:00Z</StartTime>
+				<ControlCard>7207340</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR8181</Id>
+				<Id type="QuickEvent">231</Id>
+				<Name>
+					<Family>Forstová</Family>
+					<Given>Veronika</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:49:00Z</StartTime>
+				<ControlCard>8119527</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB8051</Id>
+				<Id type="QuickEvent">7</Id>
+				<Name>
+					<Family>Klusáčková</Family>
+					<Given>Lenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:52:00Z</StartTime>
+				<ControlCard>232874</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN8555</Id>
+				<Id type="QuickEvent">261</Id>
+				<Id type="IOF">33827</Id>
+				<Name>
+					<Family>Voráčková</Family>
+					<Given>Lenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:55:00Z</StartTime>
+				<ControlCard>8620778</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB8053</Id>
+				<Id type="QuickEvent">189</Id>
+				<Name>
+					<Family>Běloušková</Family>
+					<Given>Ilona</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:58:00Z</StartTime>
+				<ControlCard>436415</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8151</Id>
+				<Id type="QuickEvent">251</Id>
+				<Name>
+					<Family>Bartáková</Family>
+					<Given>Petra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:01:00Z</StartTime>
+				<ControlCard>8076038</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7851</Id>
+				<Id type="QuickEvent">185</Id>
+				<Name>
+					<Family>Paulová</Family>
+					<Given>Hana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:04:00Z</StartTime>
+				<ControlCard>2039078</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RBK8151</Id>
+				<Id type="QuickEvent">180</Id>
+				<Name>
+					<Family>Kozumplíková</Family>
+					<Given>Alice</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Radioklub Blansko</Name>
+				<ShortName>RBK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:07:00Z</StartTime>
+				<ControlCard>8116776</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ8151</Id>
+				<Id type="QuickEvent">61</Id>
+				<Name>
+					<Family>Kubešová</Family>
+					<Given>Eva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:10:00Z</StartTime>
+				<ControlCard>2146034</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8057</Id>
+				<Id type="QuickEvent">306</Id>
+				<Id type="IOF">4462</Id>
+				<Name>
+					<Family>Paulíčková</Family>
+					<Given>Renata</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:13:00Z</StartTime>
+				<ControlCard>8660557</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH8051</Id>
+				<Id type="QuickEvent">150</Id>
+				<Name>
+					<Family>Kinštová</Family>
+					<Given>Dominika</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:16:00Z</StartTime>
+				<ControlCard>8505199</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8053</Id>
+				<Id type="QuickEvent">325</Id>
+				<Name>
+					<Family>Korecká</Family>
+					<Given>Lenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:19:00Z</StartTime>
+				<ControlCard>8047133</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ8051</Id>
+				<Id type="QuickEvent">90</Id>
+				<Name>
+					<Family>Polednová</Family>
+					<Given>Hana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:22:00Z</StartTime>
+				<ControlCard>8013844</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN8454</Id>
+				<Id type="QuickEvent">30</Id>
+				<Name>
+					<Family>Kutalová</Family>
+					<Given>Lenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:28:00Z</StartTime>
+				<ControlCard>53158</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM7374</Id>
+				<Id type="QuickEvent">21</Id>
+				<Name>
+					<Family>Ptáčková</Family>
+					<Given>Veronika</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:31:00Z</StartTime>
+				<ControlCard>8077374</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8755</Id>
+				<Id type="QuickEvent">340</Id>
+				<Name>
+					<Family>Pásková</Family>
+					<Given>Pavla</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>682374</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183759</Id>
+			<Name>D45</Name>
+		</Class>
+		<Course>
+			<Length>2950</Length>
+			<Climb>75</Climb>
+			<NumberOfControls>14</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ7951</Id>
+				<Id type="QuickEvent">324</Id>
+				<Name>
+					<Family>Hofhanzlová</Family>
+					<Given>Hana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:14:00Z</StartTime>
+				<ControlCard>2801046</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR7352</Id>
+				<Id type="QuickEvent">207</Id>
+				<Name>
+					<Family>Suková</Family>
+					<Given>Renata</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:17:00Z</StartTime>
+				<ControlCard>53196</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7150</Id>
+				<Id type="QuickEvent">235</Id>
+				<Name>
+					<Family>Rachůnková</Family>
+					<Given>Markéta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:20:00Z</StartTime>
+				<ControlCard>2102817</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM7659</Id>
+				<Id type="QuickEvent">300</Id>
+				<Name>
+					<Family>Čechová</Family>
+					<Given>Marcela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:23:00Z</StartTime>
+				<ControlCard>8007659</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7853</Id>
+				<Id type="QuickEvent">161</Id>
+				<Name>
+					<Family>Gregorová</Family>
+					<Given>Lenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:26:00Z</StartTime>
+				<ControlCard>2096216</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN7356</Id>
+				<Id type="QuickEvent">213</Id>
+				<Id type="IOF">2518</Id>
+				<Name>
+					<Family>Janíčková</Family>
+					<Given>Jitka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:29:00Z</StartTime>
+				<ControlCard>8680294</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7051</Id>
+				<Id type="QuickEvent">145</Id>
+				<Name>
+					<Family>Benešová</Family>
+					<Given>Iva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:32:00Z</StartTime>
+				<ControlCard>8660392</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA7551</Id>
+				<Id type="QuickEvent">303</Id>
+				<Name>
+					<Family>Plachá</Family>
+					<Given>Radka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:35:00Z</StartTime>
+				<ControlCard>2116452</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7751</Id>
+				<Id type="QuickEvent">122</Id>
+				<Name>
+					<Family>Petříčková</Family>
+					<Given>Lenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:38:00Z</StartTime>
+				<ControlCard>2039098</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN7373</Id>
+				<Id type="QuickEvent">277</Id>
+				<Name>
+					<Family>Hudečková</Family>
+					<Given>Kateřina</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:41:00Z</StartTime>
+				<ControlCard>8009</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT7351</Id>
+				<Id type="QuickEvent">169</Id>
+				<Name>
+					<Family>Ďoubalíková</Family>
+					<Given>Veronika</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:44:00Z</StartTime>
+				<ControlCard>9361</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR7951</Id>
+				<Id type="QuickEvent">222</Id>
+				<Name>
+					<Family>Pařízková</Family>
+					<Given>Kateřina</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:47:00Z</StartTime>
+				<ControlCard>2134287</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7750</Id>
+				<Id type="QuickEvent">28</Id>
+				<Name>
+					<Family>Jirků</Family>
+					<Given>Olga</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:50:00Z</StartTime>
+				<ControlCard>2039188</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM7079</Id>
+				<Id type="QuickEvent">51</Id>
+				<Name>
+					<Family>Hiršová</Family>
+					<Given>Marcela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:53:00Z</StartTime>
+				<ControlCard>8648605</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR7452</Id>
+				<Id type="QuickEvent">197</Id>
+				<Name>
+					<Family>Cíchová</Family>
+					<Given>Pavlína</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:56:00Z</StartTime>
+				<ControlCard>2092365</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN7557</Id>
+				<Id type="QuickEvent">210</Id>
+				<Name>
+					<Family>Nechanická</Family>
+					<Given>Daniela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:59:00Z</StartTime>
+				<ControlCard>8656600</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR7251</Id>
+				<Id type="QuickEvent">293</Id>
+				<Name>
+					<Family>Nešporová</Family>
+					<Given>Marie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:02:00Z</StartTime>
+				<ControlCard>8009530</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7854</Id>
+				<Id type="QuickEvent">3</Id>
+				<Name>
+					<Family>Mazzarese</Family>
+					<Given>Jana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:05:00Z</StartTime>
+				<ControlCard>8523552</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7852</Id>
+				<Id type="QuickEvent">156</Id>
+				<Name>
+					<Family>Svitáková</Family>
+					<Given>Eva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:08:00Z</StartTime>
+				<ControlCard>2096234</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183760</Id>
+			<Name>D55</Name>
+		</Class>
+		<Course>
+			<Length>2410</Length>
+			<Climb>50</Climb>
+			<NumberOfControls>13</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR6151</Id>
+				<Id type="QuickEvent">296</Id>
+				<Name>
+					<Family>Syslová</Family>
+					<Given>Iva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:09:00Z</StartTime>
+				<ControlCard>8511761</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">BZR6951</Id>
+				<Id type="QuickEvent">93</Id>
+				<Name>
+					<Family>Čechová</Family>
+					<Given>Zuzana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>Bratrstvo Ždárských vrchů</Name>
+				<ShortName>BZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:13:00Z</StartTime>
+				<ControlCard>8149884</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR6969</Id>
+				<Id type="QuickEvent">141</Id>
+				<Id type="IOF">30355</Id>
+				<Name>
+					<Family>Nechutová</Family>
+					<Given>Alena</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:17:00Z</StartTime>
+				<ControlCard>8022352</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">VBM6155</Id>
+				<Id type="QuickEvent">59</Id>
+				<Name>
+					<Family>Bravená</Family>
+					<Given>Alexandra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>VSK Mendelu Brno</Name>
+				<ShortName>VBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:21:00Z</StartTime>
+				<ControlCard>8063076</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">BBM6550</Id>
+				<Id type="QuickEvent">227</Id>
+				<Id type="IOF">30310</Id>
+				<Name>
+					<Family>Peřinková</Family>
+					<Given>Irena</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>BETA URSUS Rosice</Name>
+				<ShortName>BBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:25:00Z</StartTime>
+				<ControlCard>331257</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH6451</Id>
+				<Id type="QuickEvent">152</Id>
+				<Name>
+					<Family>Tichá</Family>
+					<Given>Jana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:33:00Z</StartTime>
+				<ControlCard>8482089</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">JHB6553</Id>
+				<Id type="QuickEvent">108</Id>
+				<Name>
+					<Family>Fencíková</Family>
+					<Given>Vladislava</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Jiskra Havlíčkův Brod</Name>
+				<ShortName>JHB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:37:00Z</StartTime>
+				<ControlCard>8013883</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">LPU6152</Id>
+				<Id type="QuickEvent">201</Id>
+				<Name>
+					<Family>Léharová</Family>
+					<Given>Iva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Lokomotiva Pardubice</Name>
+				<ShortName>LPU</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:41:00Z</StartTime>
+				<ControlCard>8514488</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB6851</Id>
+				<Id type="QuickEvent">50</Id>
+				<Name>
+					<Family>Voborníková</Family>
+					<Given>Eva</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:45:00Z</StartTime>
+				<ControlCard>8003667</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT6460</Id>
+				<Id type="QuickEvent">354</Id>
+				<Name>
+					<Family>Kučerová</Family>
+					<Given>Vladimíra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:48:00Z</StartTime>
+				<ControlCard>8063094</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183761</Id>
+			<Name>D65</Name>
+		</Class>
+		<Course>
+			<Length>2060</Length>
+			<Climb>30</Climb>
+			<NumberOfControls>10</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">VBM5655</Id>
+				<Id type="QuickEvent">126</Id>
+				<Name>
+					<Family>Potěšilová</Family>
+					<Given>Vladimíra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>VSK Mendelu Brno</Name>
+				<ShortName>VBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:08:00Z</StartTime>
+				<ControlCard>53238</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>186929</Id>
+			<Name>D70</Name>
+		</Class>
+		<Course>
+			<Length>1820</Length>
+			<Climb>30</Climb>
+			<NumberOfControls>9</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SBK5251</Id>
+				<Id type="QuickEvent">279</Id>
+				<Name>
+					<Family>Kolaříková</Family>
+					<Given>Věra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOB START Blansko</Name>
+				<ShortName>SBK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:36:00Z</StartTime>
+				<ControlCard>49685</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR5051</Id>
+				<Id type="QuickEvent">95</Id>
+				<Id type="IOF">35513</Id>
+				<Name>
+					<Family>Křížová</Family>
+					<Given>Zdenka</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:40:00Z</StartTime>
+				<ControlCard>301209</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM5451</Id>
+				<Id type="QuickEvent">307</Id>
+				<Id type="IOF">30258</Id>
+				<Name>
+					<Family>Eremiášová</Family>
+					<Given>Jana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:44:00Z</StartTime>
+				<ControlCard>52361</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RBK5454</Id>
+				<Id type="QuickEvent">175</Id>
+				<Name>
+					<Family>Henková</Family>
+					<Given>Svatava</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Radioklub Blansko</Name>
+				<ShortName>RBK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:48:00Z</StartTime>
+				<ControlCard>52092</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>187010</Id>
+			<Name>DH12X</Name>
+		</Class>
+		<Course>
+			<Length>2490</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>8</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1301</Id>
+				<Id type="QuickEvent">263</Id>
+				<Name>
+					<Family>Beneš</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8654884</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1350</Id>
+				<Id type="QuickEvent">39</Id>
+				<Name>
+					<Family>Cipryánová</Family>
+					<Given>Viktorie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2113489</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1353</Id>
+				<Id type="QuickEvent">334</Id>
+				<Name>
+					<Family>Dvořáková</Family>
+					<Given>Tereza</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2419852</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1353</Id>
+				<Id type="QuickEvent">268</Id>
+				<Name>
+					<Family>Čejková</Family>
+					<Given>Linda</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2217344</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183762</Id>
+			<Name>H10</Name>
+		</Class>
+		<Course>
+			<Length>2510</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>8</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1501</Id>
+				<Id type="QuickEvent">98</Id>
+				<Name>
+					<Family>Krejsa</Family>
+					<Given>Josef</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:15:00Z</StartTime>
+				<ControlCard>8004592</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1400</Id>
+				<Id type="QuickEvent">46</Id>
+				<Name>
+					<Family>Jakoubek</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:19:00Z</StartTime>
+				<ControlCard>1409095</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1403</Id>
+				<Id type="QuickEvent">17</Id>
+				<Name>
+					<Family>Kosina</Family>
+					<Given>Vít</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:23:00Z</StartTime>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1502</Id>
+				<Id type="QuickEvent">4</Id>
+				<Name>
+					<Family>Mazzarese</Family>
+					<Given>Aiden</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:27:00Z</StartTime>
+				<ControlCard>8500458</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1502</Id>
+				<Id type="QuickEvent">67</Id>
+				<Name>
+					<Family>Martinec</Family>
+					<Given>Otakar</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:31:00Z</StartTime>
+				<ControlCard>2221501</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1401</Id>
+				<Id type="QuickEvent">250</Id>
+				<Name>
+					<Family>Prošek</Family>
+					<Given>Filip</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:39:00Z</StartTime>
+				<ControlCard>8409897</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1402</Id>
+				<Id type="QuickEvent">337</Id>
+				<Name>
+					<Family>Matras</Family>
+					<Given>Štěpán</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8511657</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183763</Id>
+			<Name>H10F</Name>
+		</Class>
+		<Course>
+			<Length>2490</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>8</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1600</Id>
+				<Id type="QuickEvent">48</Id>
+				<Name>
+					<Family>Jakoubek</Family>
+					<Given>Štěpán</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:24:00Z</StartTime>
+				<ControlCard>7500846</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH1602</Id>
+				<Id type="QuickEvent">160</Id>
+				<Name>
+					<Family>Komárek</Family>
+					<Given>Štěpán</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:28:00Z</StartTime>
+				<ControlCard>2025364</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1601</Id>
+				<Id type="QuickEvent">80</Id>
+				<Name>
+					<Family>Ježek</Family>
+					<Given>Jáchym</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:32:00Z</StartTime>
+				<ControlCard>2156622</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1616</Id>
+				<Id type="QuickEvent">183</Id>
+				<Name>
+					<Family>Olišar</Family>
+					<Given>Mikuláš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:36:00Z</StartTime>
+				<ControlCard>2420044</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1701</Id>
+				<Id type="QuickEvent">106</Id>
+				<Name>
+					<Family>Korecký</Family>
+					<Given>Marek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:40:00Z</StartTime>
+				<ControlCard>8033277</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1701</Id>
+				<Id type="QuickEvent">266</Id>
+				<Name>
+					<Family>Voráček</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:48:00Z</StartTime>
+				<ControlCard>51972</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1600</Id>
+				<Id type="QuickEvent">102</Id>
+				<Name>
+					<Family>Gregor</Family>
+					<Given>Šimon</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:52:00Z</StartTime>
+				<ControlCard>2088726</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183764</Id>
+			<Name>H12</Name>
+		</Class>
+		<Course>
+			<Length>2720</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>10</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1202</Id>
+				<Id type="QuickEvent">191</Id>
+				<Name>
+					<Family>Běloušek</Family>
+					<Given>Matěj</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:32:00Z</StartTime>
+				<ControlCard>8004049</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1300</Id>
+				<Id type="QuickEvent">271</Id>
+				<Name>
+					<Family>Makovský</Family>
+					<Given>Josef</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:35:00Z</StartTime>
+				<ControlCard>52000</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1301</Id>
+				<Id type="QuickEvent">224</Id>
+				<Name>
+					<Family>Šťastný</Family>
+					<Given>Vilém</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:38:00Z</StartTime>
+				<ControlCard>8136477</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1202</Id>
+				<Id type="QuickEvent">66</Id>
+				<Name>
+					<Family>Martinec</Family>
+					<Given>Eduard</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:41:00Z</StartTime>
+				<ControlCard>2102866</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1200</Id>
+				<Id type="QuickEvent">232</Id>
+				<Name>
+					<Family>Kocmánek</Family>
+					<Given>Lukáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:44:00Z</StartTime>
+				<ControlCard>8522458</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1200</Id>
+				<Id type="QuickEvent">272</Id>
+				<Name>
+					<Family>Pospíchal</Family>
+					<Given>Michael</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:50:00Z</StartTime>
+				<ControlCard>51969</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1202</Id>
+				<Id type="QuickEvent">318</Id>
+				<Name>
+					<Family>Kasal</Family>
+					<Given>Johan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:53:00Z</StartTime>
+				<ControlCard>8523436</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1203</Id>
+				<Id type="QuickEvent">104</Id>
+				<Name>
+					<Family>Kysela</Family>
+					<Given>Vojtěch</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:56:00Z</StartTime>
+				<ControlCard>2118475</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1313</Id>
+				<Id type="QuickEvent">135</Id>
+				<Name>
+					<Family>Glier</Family>
+					<Given>Matyáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:59:00Z</StartTime>
+				<ControlCard>8183127</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1103</Id>
+				<Id type="QuickEvent">204</Id>
+				<Name>
+					<Family>Košťál</Family>
+					<Given>Ondřej</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:02:00Z</StartTime>
+				<ControlCard>2145637</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1200</Id>
+				<Id type="QuickEvent">177</Id>
+				<Name>
+					<Family>Fikar</Family>
+					<Given>Michal</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:08:00Z</StartTime>
+				<ControlCard>2082924</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1201</Id>
+				<Id type="QuickEvent">114</Id>
+				<Name>
+					<Family>Uchytil</Family>
+					<Given>Ivo</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:11:00Z</StartTime>
+				<ControlCard>8520940</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1401</Id>
+				<Id type="QuickEvent">107</Id>
+				<Name>
+					<Family>Korecký</Family>
+					<Given>Radan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:14:00Z</StartTime>
+				<ControlCard>8003626</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183765</Id>
+			<Name>H14</Name>
+		</Class>
+		<Course>
+			<Length>2800</Length>
+			<Climb>60</Climb>
+			<NumberOfControls>13</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1100</Id>
+				<Id type="QuickEvent">229</Id>
+				<Name>
+					<Family>Forst</Family>
+					<Given>Matouš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:35:00Z</StartTime>
+				<ControlCard>8680414</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1103</Id>
+				<Id type="QuickEvent">131</Id>
+				<Name>
+					<Family>Novák</Family>
+					<Given>Tobiáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:38:00Z</StartTime>
+				<ControlCard>8003661</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR1111</Id>
+				<Id type="QuickEvent">56</Id>
+				<Name>
+					<Family>Věžník</Family>
+					<Given>Roman</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:41:00Z</StartTime>
+				<ControlCard>8509385</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH1001</Id>
+				<Id type="QuickEvent">148</Id>
+				<Name>
+					<Family>Míchal</Family>
+					<Given>Jakub</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:44:00Z</StartTime>
+				<ControlCard>8022661</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1004</Id>
+				<Id type="QuickEvent">317</Id>
+				<Name>
+					<Family>Kasal</Family>
+					<Given>Albert</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:47:00Z</StartTime>
+				<ControlCard>2147511</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH1003</Id>
+				<Id type="QuickEvent">155</Id>
+				<Name>
+					<Family>Blažek</Family>
+					<Given>Vojtěch</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:50:00Z</StartTime>
+				<ControlCard>8014562</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM1112</Id>
+				<Id type="QuickEvent">117</Id>
+				<Name>
+					<Family>Hübner</Family>
+					<Given>Václav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:53:00Z</StartTime>
+				<ControlCard>2118463</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1002</Id>
+				<Id type="QuickEvent">257</Id>
+				<Name>
+					<Family>Buršík</Family>
+					<Given>Matěj</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:56:00Z</StartTime>
+				<ControlCard>2141936</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR1101</Id>
+				<Id type="QuickEvent">206</Id>
+				<Name>
+					<Family>Doležal</Family>
+					<Given>Vojtěch Lubomír</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:59:00Z</StartTime>
+				<ControlCard>2158532</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183766</Id>
+			<Name>H16</Name>
+		</Class>
+		<Course>
+			<Length>3300</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>15</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0904</Id>
+				<Id type="QuickEvent">26</Id>
+				<Name>
+					<Family>Jirků</Family>
+					<Given>Ondřej</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:58:00Z</StartTime>
+				<ControlCard>8144117</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT0902</Id>
+				<Id type="QuickEvent">110</Id>
+				<Name>
+					<Family>Češík</Family>
+					<Given>František</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:01:00Z</StartTime>
+				<ControlCard>2260133</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ0902</Id>
+				<Id type="QuickEvent">321</Id>
+				<Name>
+					<Family>Hofhanzl</Family>
+					<Given>Antonín</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:04:00Z</StartTime>
+				<ControlCard>8116806</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0905</Id>
+				<Id type="QuickEvent">253</Id>
+				<Name>
+					<Family>Černý</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:07:00Z</StartTime>
+				<ControlCard>8505208</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT0901</Id>
+				<Id type="QuickEvent">247</Id>
+				<Name>
+					<Family>Škapa</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:10:00Z</StartTime>
+				<ControlCard>2115711</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR0800</Id>
+				<Id type="QuickEvent">332</Id>
+				<Name>
+					<Family>Šimon</Family>
+					<Given>Eduard</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:16:00Z</StartTime>
+				<ControlCard>8501056</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0901</Id>
+				<Id type="QuickEvent">13</Id>
+				<Name>
+					<Family>Prášil</Family>
+					<Given>Adam</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:19:00Z</StartTime>
+				<ControlCard>8033299</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0902</Id>
+				<Id type="QuickEvent">6</Id>
+				<Name>
+					<Family>Klusáček</Family>
+					<Given>Mikuláš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:22:00Z</StartTime>
+				<ControlCard>8003597</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH0803</Id>
+				<Id type="QuickEvent">146</Id>
+				<Name>
+					<Family>Parkan</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:25:00Z</StartTime>
+				<ControlCard>8663132</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0801</Id>
+				<Id type="QuickEvent">31</Id>
+				<Name>
+					<Family>Venhoda</Family>
+					<Given>Lukáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:28:00Z</StartTime>
+				<ControlCard>8015319</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH0805</Id>
+				<Id type="QuickEvent">162</Id>
+				<Name>
+					<Family>Těthal</Family>
+					<Given>Josef</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:34:00Z</StartTime>
+				<ControlCard>8107773</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR0901</Id>
+				<Id type="QuickEvent">65</Id>
+				<Name>
+					<Family>Prášil</Family>
+					<Given>Šimon</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:37:00Z</StartTime>
+				<ControlCard>8107762</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183767</Id>
+			<Name>H18</Name>
+		</Class>
+		<Course>
+			<Length>3810</Length>
+			<Climb>90</Climb>
+			<NumberOfControls>17</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0704</Id>
+				<Id type="QuickEvent">255</Id>
+				<Name>
+					<Family>Růžička</Family>
+					<Given>Vojtěch</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:36:00Z</StartTime>
+				<ControlCard>8183195</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH0701</Id>
+				<Id type="QuickEvent">151</Id>
+				<Name>
+					<Family>Blažek</Family>
+					<Given>Cyril</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:39:00Z</StartTime>
+				<ControlCard>8662336</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0600</Id>
+				<Id type="QuickEvent">25</Id>
+				<Name>
+					<Family>Jirků</Family>
+					<Given>František</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:42:00Z</StartTime>
+				<ControlCard>8066725</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB0601</Id>
+				<Id type="QuickEvent">129</Id>
+				<Name>
+					<Family>Novák</Family>
+					<Given>Matyáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:45:00Z</StartTime>
+				<ControlCard>8226396</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0702</Id>
+				<Id type="QuickEvent">12</Id>
+				<Name>
+					<Family>Prášil</Family>
+					<Given>Jakub</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:48:00Z</StartTime>
+				<ControlCard>8014531</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR0701</Id>
+				<Id type="QuickEvent">132</Id>
+				<Name>
+					<Family>Knap</Family>
+					<Given>Jakub</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:54:00Z</StartTime>
+				<ControlCard>8024756</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183768</Id>
+			<Name>H21C</Name>
+		</Class>
+		<Course>
+			<Length>5080</Length>
+			<Climb>125</Climb>
+			<NumberOfControls>22</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SHK8901</Id>
+				<Id type="QuickEvent">343</Id>
+				<Name>
+					<Family>Jirásek</Family>
+					<Given>Michal</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Slavia Hradec Králové</Name>
+				<ShortName>SHK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:32:00Z</StartTime>
+				<ControlCard>8656557</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">ZBM9104</Id>
+				<Id type="QuickEvent">248</Id>
+				<Id type="IOF">11622</Id>
+				<Name>
+					<Family>Kazda</Family>
+					<Given>Adam</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Brno Žabovřesky</Name>
+				<ShortName>ZBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:35:00Z</StartTime>
+				<ControlCard>8660406</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN9301</Id>
+				<Id type="QuickEvent">195</Id>
+				<Id type="IOF">19808</Id>
+				<Name>
+					<Family>Klusáček</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:38:00Z</StartTime>
+				<ControlCard>8410777</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM8833</Id>
+				<Id type="QuickEvent">333</Id>
+				<Id type="IOF">19799</Id>
+				<Name>
+					<Family>Bořil</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:41:00Z</StartTime>
+				<ControlCard>8008833</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR8903</Id>
+				<Id type="QuickEvent">133</Id>
+				<Name>
+					<Family>Novohradský</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:44:00Z</StartTime>
+				<ControlCard>53700</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PBM0505</Id>
+				<Id type="QuickEvent">328</Id>
+				<Name>
+					<Family>Zřídkaveselý</Family>
+					<Given>Adam</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Spartak 1. brněnská</Name>
+				<ShortName>PBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:47:00Z</StartTime>
+				<ControlCard>8660411</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7001</Id>
+				<Id type="QuickEvent">128</Id>
+				<Id type="IOF">24676</Id>
+				<Name>
+					<Family>Novák</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:50:00Z</StartTime>
+				<ControlCard>8648548</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI9501</Id>
+				<Id type="QuickEvent">47</Id>
+				<Name>
+					<Family>Koumar</Family>
+					<Given>František</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:53:00Z</StartTime>
+				<ControlCard>682090</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ9900</Id>
+				<Id type="QuickEvent">125</Id>
+				<Name>
+					<Family>Kahoun</Family>
+					<Given>Lukáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:59:00Z</StartTime>
+				<ControlCard>8501544</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR0502</Id>
+				<Id type="QuickEvent">294</Id>
+				<Name>
+					<Family>Nešpor</Family>
+					<Given>Jiří</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:08:00Z</StartTime>
+				<ControlCard>8663162</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0002</Id>
+				<Id type="QuickEvent">142</Id>
+				<Name>
+					<Family>Jeřábek</Family>
+					<Given>Jaromír</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:11:00Z</StartTime>
+				<ControlCard>2075680</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM0200</Id>
+				<Id type="QuickEvent">218</Id>
+				<Name>
+					<Family>Nechanický</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:14:00Z</StartTime>
+				<ControlCard>8000321</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7702</Id>
+				<Id type="QuickEvent">72</Id>
+				<Name>
+					<Family>Jelínek</Family>
+					<Given>Jaromír</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:17:00Z</StartTime>
+				<ControlCard>899166</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR0401</Id>
+				<Id type="QuickEvent">200</Id>
+				<Name>
+					<Family>Cícha</Family>
+					<Given>Václav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:20:00Z</StartTime>
+				<ControlCard>8522843</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7415</Id>
+				<Id type="QuickEvent">11</Id>
+				<Id type="IOF">15153</Id>
+				<Name>
+					<Family>Prášil</Family>
+					<Given>Aleš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:23:00Z</StartTime>
+				<ControlCard>8015316</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR8814</Id>
+				<Id type="QuickEvent">54</Id>
+				<Name>
+					<Family>Hladílek</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:26:00Z</StartTime>
+				<ControlCard>8016309</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN0303</Id>
+				<Id type="QuickEvent">289</Id>
+				<Name>
+					<Family>Dvořáček</Family>
+					<Given>Jakub</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:29:00Z</StartTime>
+				<ControlCard>8648630</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI9203</Id>
+				<Id type="QuickEvent">49</Id>
+				<Name>
+					<Family>Škrabánek</Family>
+					<Given>Matěj</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:32:00Z</StartTime>
+				<ControlCard>8026655</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR0102</Id>
+				<Id type="QuickEvent">199</Id>
+				<Name>
+					<Family>Cícha</Family>
+					<Given>Matěj</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:35:00Z</StartTime>
+				<ControlCard>8109391</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">ZBM9503</Id>
+				<Id type="QuickEvent">78</Id>
+				<Id type="IOF">41415</Id>
+				<Name>
+					<Family>Jordanov</Family>
+					<Given>Alexandr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Brno Žabovřesky</Name>
+				<ShortName>ZBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:38:00Z</StartTime>
+				<ControlCard>8660419</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI0001</Id>
+				<Id type="QuickEvent">86</Id>
+				<Id type="IOF">42425</Id>
+				<Name>
+					<Family>Čech</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:41:00Z</StartTime>
+				<ControlCard>8656540</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7902</Id>
+				<Id type="QuickEvent">116</Id>
+				<Id type="IOF">10956</Id>
+				<Name>
+					<Family>Hübner</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:44:00Z</StartTime>
+				<ControlCard>8200032</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">LPU9114</Id>
+				<Id type="QuickEvent">194</Id>
+				<Name>
+					<Family>Léhar</Family>
+					<Given>Adam</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Lokomotiva Pardubice</Name>
+				<ShortName>LPU</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:47:00Z</StartTime>
+				<ControlCard>8022693</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8306</Id>
+				<Id type="QuickEvent">238</Id>
+				<Id type="IOF">22914</Id>
+				<Name>
+					<Family>Kadlec</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:50:00Z</StartTime>
+				<ControlCard>8028807</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN0505</Id>
+				<Id type="QuickEvent">290</Id>
+				<Name>
+					<Family>Dvořáček</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:53:00Z</StartTime>
+				<ControlCard>8302005</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR0501</Id>
+				<Id type="QuickEvent">71</Id>
+				<Name>
+					<Family>Prášil</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:56:00Z</StartTime>
+				<ControlCard>8666871</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RBK8605</Id>
+				<Id type="QuickEvent">179</Id>
+				<Id type="IOF">19969</Id>
+				<Name>
+					<Family>Henek</Family>
+					<Given>Michal</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Radioklub Blansko</Name>
+				<ShortName>RBK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:59:00Z</StartTime>
+				<ControlCard>8116695</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7313</Id>
+				<Id type="QuickEvent">82</Id>
+				<Id type="IOF">15210</Id>
+				<Name>
+					<Family>Prášil</Family>
+					<Given>Marek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:02:00Z</StartTime>
+				<ControlCard>8116817</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM6116</Id>
+				<Id type="QuickEvent">313</Id>
+				<Name>
+					<Family>Hlaváč</Family>
+					<Given>Jiří</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:05:00Z</StartTime>
+				<ControlCard>2059757</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">KVS9801</Id>
+				<Id type="QuickEvent">242</Id>
+				<Name>
+					<Family>Rohlík</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SKOB Kobra Vsetín</Name>
+				<ShortName>KVS</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:08:00Z</StartTime>
+				<ControlCard>53672</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PBM8509</Id>
+				<Id type="QuickEvent">316</Id>
+				<Id type="IOF">44658</Id>
+				<Name>
+					<Family>Pauschek</Family>
+					<Given>Karel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Spartak 1. brněnská</Name>
+				<ShortName>PBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:14:00Z</StartTime>
+				<ControlCard>8660430</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM7120</Id>
+				<Id type="QuickEvent">24</Id>
+				<Name>
+					<Family>Ptáček</Family>
+					<Given>Ondřej</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:17:00Z</StartTime>
+				<ControlCard>8207120</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">DKP9301</Id>
+				<Id type="QuickEvent">237</Id>
+				<Id type="IOF">11801</Id>
+				<Name>
+					<Family>Klaška</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>Oddíl OB Kotlářka</Name>
+				<ShortName>DKP</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:20:00Z</StartTime>
+				<ControlCard>8080832</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183769</Id>
+			<Name>H21D</Name>
+		</Class>
+		<Course>
+			<Length>3840</Length>
+			<Climb>80</Climb>
+			<NumberOfControls>14</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ8100</Id>
+				<Id type="QuickEvent">270</Id>
+				<Name>
+					<Family>Bloudíček</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:35:00Z</StartTime>
+				<ControlCard>2092371</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8100</Id>
+				<Id type="QuickEvent">254</Id>
+				<Name>
+					<Family>Černý</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:38:00Z</StartTime>
+				<ControlCard>2127647</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR9502</Id>
+				<Id type="QuickEvent">76</Id>
+				<Name>
+					<Family>Skryja</Family>
+					<Given>Ondřej</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:41:00Z</StartTime>
+				<ControlCard>232483</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7900</Id>
+				<Id type="QuickEvent">27</Id>
+				<Name>
+					<Family>Jirků</Family>
+					<Given>František</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:44:00Z</StartTime>
+				<ControlCard>2039175</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN9200</Id>
+				<Id type="QuickEvent">311</Id>
+				<Name>
+					<Family>Černík</Family>
+					<Given>Václav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:47:00Z</StartTime>
+				<ControlCard>7500842</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI9902</Id>
+				<Id type="QuickEvent">287</Id>
+				<Name>
+					<Family>Šenkýř</Family>
+					<Given>Matěj</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:53:00Z</StartTime>
+				<ControlCard>8109368</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">0010002</Id>
+				<Id type="QuickEvent">310</Id>
+				<Name>
+					<Family>Podivínský</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name></Name>
+				<ShortName>001</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:56:00Z</StartTime>
+				<ControlCard>8109331</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183770</Id>
+			<Name>H35</Name>
+		</Class>
+		<Course>
+			<Length>4250</Length>
+			<Climb>80</Climb>
+			<NumberOfControls>17</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7702</Id>
+				<Id type="QuickEvent">149</Id>
+				<Name>
+					<Family>Komárek</Family>
+					<Given>Arnošt</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:11:00Z</StartTime>
+				<ControlCard>8014444</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">JJN8700</Id>
+				<Id type="QuickEvent">171</Id>
+				<Name>
+					<Family>Strachota</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>Team Jizerky</Name>
+				<ShortName>JJN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:17:00Z</StartTime>
+				<ControlCard>8655376</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ7500</Id>
+				<Id type="QuickEvent">101</Id>
+				<Name>
+					<Family>Gregor</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:20:00Z</StartTime>
+				<ControlCard>8648570</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA8201</Id>
+				<Id type="QuickEvent">283</Id>
+				<Name>
+					<Family>Dokoupil</Family>
+					<Given>Ivan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:23:00Z</StartTime>
+				<ControlCard>2134335</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8604</Id>
+				<Id type="QuickEvent">69</Id>
+				<Name>
+					<Family>Naňka</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:29:00Z</StartTime>
+				<ControlCard>2260148</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7311</Id>
+				<Id type="QuickEvent">215</Id>
+				<Name>
+					<Family>Orany</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:32:00Z</StartTime>
+				<ControlCard>8006309</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7803</Id>
+				<Id type="QuickEvent">5</Id>
+				<Name>
+					<Family>Klusáček</Family>
+					<Given>Luděk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:35:00Z</StartTime>
+				<ControlCard>232875</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA7701</Id>
+				<Id type="QuickEvent">273</Id>
+				<Name>
+					<Family>Doležel</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:38:00Z</StartTime>
+				<ControlCard>5297</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">VBM8206</Id>
+				<Id type="QuickEvent">239</Id>
+				<Name>
+					<Family>Dokoupil</Family>
+					<Given>Zbyněk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>VSK Mendelu Brno</Name>
+				<ShortName>VBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:41:00Z</StartTime>
+				<ControlCard>8501076</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">VBM6501</Id>
+				<Id type="QuickEvent">217</Id>
+				<Name>
+					<Family>Jordanov</Family>
+					<Given>Nikolaj</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>VSK Mendelu Brno</Name>
+				<ShortName>VBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:47:00Z</StartTime>
+				<ControlCard>8680303</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ8001</Id>
+				<Id type="QuickEvent">209</Id>
+				<Name>
+					<Family>Poledna</Family>
+					<Given>Miroslav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:50:00Z</StartTime>
+				<ControlCard>7208083</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7602</Id>
+				<Id type="QuickEvent">190</Id>
+				<Name>
+					<Family>Běloušek</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:53:00Z</StartTime>
+				<ControlCard>2118480</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH8003</Id>
+				<Id type="QuickEvent">163</Id>
+				<Name>
+					<Family>Duba</Family>
+					<Given>Vojtěch</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:56:00Z</StartTime>
+				<ControlCard>8013940</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN8000</Id>
+				<Id type="QuickEvent">260</Id>
+				<Id type="IOF">17868</Id>
+				<Name>
+					<Family>Voráček</Family>
+					<Given>Michal</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:59:00Z</StartTime>
+				<ControlCard>8620015</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7901</Id>
+				<Id type="QuickEvent">225</Id>
+				<Name>
+					<Family>Šťastný</Family>
+					<Given>Karel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:05:00Z</StartTime>
+				<ControlCard>8162828</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN6901</Id>
+				<Id type="QuickEvent">120</Id>
+				<Name>
+					<Family>Sláma</Family>
+					<Given>Jaroslav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:08:00Z</StartTime>
+				<ControlCard>8501511</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7601</Id>
+				<Id type="QuickEvent">158</Id>
+				<Name>
+					<Family>Blažek</Family>
+					<Given>Zdeněk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:11:00Z</StartTime>
+				<ControlCard>8003631</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">VBM8105</Id>
+				<Id type="QuickEvent">212</Id>
+				<Name>
+					<Family>Hašek</Family>
+					<Given>Zdeněk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>VSK Mendelu Brno</Name>
+				<ShortName>VBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:14:00Z</StartTime>
+				<ControlCard>8506945</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT7901</Id>
+				<Id type="QuickEvent">326</Id>
+				<Name>
+					<Family>Korecký</Family>
+					<Given>Miroslav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:17:00Z</StartTime>
+				<ControlCard>8226364</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN8601</Id>
+				<Id type="QuickEvent">29</Id>
+				<Name>
+					<Family>Kutal</Family>
+					<Given>Jiří</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:20:00Z</StartTime>
+				<ControlCard>9285</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8502</Id>
+				<Id type="QuickEvent">355</Id>
+				<Name>
+					<Family>Martinec</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>52168</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8001</Id>
+				<Id type="QuickEvent">339</Id>
+				<Name>
+					<Family>Matras</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8047209</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183771</Id>
+			<Name>H45</Name>
+		</Class>
+		<Course>
+			<Length>3620</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>16</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7601</Id>
+				<Id type="QuickEvent">186</Id>
+				<Name>
+					<Family>Paul</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:08:00Z</StartTime>
+				<ControlCard>2039076</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ7200</Id>
+				<Id type="QuickEvent">121</Id>
+				<Name>
+					<Family>Komín</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:10:00Z</StartTime>
+				<ControlCard>2800299</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA7802</Id>
+				<Id type="QuickEvent">274</Id>
+				<Name>
+					<Family>Lubas</Family>
+					<Given>Miroslav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:12:00Z</StartTime>
+				<ControlCard>8482112</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7504</Id>
+				<Id type="QuickEvent">168</Id>
+				<Name>
+					<Family>Šteflíček</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:14:00Z</StartTime>
+				<ControlCard>8505214</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7702</Id>
+				<Id type="QuickEvent">57</Id>
+				<Name>
+					<Family>Rychnovský</Family>
+					<Given>Radek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:16:00Z</StartTime>
+				<ControlCard>2771362</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7001</Id>
+				<Id type="QuickEvent">167</Id>
+				<Name>
+					<Family>Beneš</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:20:00Z</StartTime>
+				<ControlCard>8651725</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">BBM7500</Id>
+				<Id type="QuickEvent">309</Id>
+				<Name>
+					<Family>Široký</Family>
+					<Given>Roman</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>BETA URSUS Rosice</Name>
+				<ShortName>BBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:22:00Z</StartTime>
+				<ControlCard>1409088</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT7503</Id>
+				<Id type="QuickEvent">109</Id>
+				<Name>
+					<Family>Češík</Family>
+					<Given>Libor</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:24:00Z</StartTime>
+				<ControlCard>2260140</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7903</Id>
+				<Id type="QuickEvent">15</Id>
+				<Name>
+					<Family>Dostálek</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:26:00Z</StartTime>
+				<ControlCard>2039079</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7302</Id>
+				<Id type="QuickEvent">113</Id>
+				<Name>
+					<Family>Vala</Family>
+					<Given>Ferdinand</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:28:00Z</StartTime>
+				<ControlCard>8076611</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM7228</Id>
+				<Id type="QuickEvent">202</Id>
+				<Id type="IOF">16784</Id>
+				<Name>
+					<Family>Strejček</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:32:00Z</StartTime>
+				<ControlCard>8515529</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB6601</Id>
+				<Id type="QuickEvent">143</Id>
+				<Id type="IOF">32797</Id>
+				<Name>
+					<Family>Voborník</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:34:00Z</StartTime>
+				<ControlCard>8414102</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM7835</Id>
+				<Id type="QuickEvent">298</Id>
+				<Id type="IOF">8255</Id>
+				<Name>
+					<Family>Čech</Family>
+					<Given>Radovan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:38:00Z</StartTime>
+				<ControlCard>8044545</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR7701</Id>
+				<Id type="QuickEvent">223</Id>
+				<Name>
+					<Family>Pařízek</Family>
+					<Given>Miloš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:40:00Z</StartTime>
+				<ControlCard>2144083</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PBM7207</Id>
+				<Id type="QuickEvent">327</Id>
+				<Id type="IOF">18478</Id>
+				<Name>
+					<Family>Zřídkaveselý</Family>
+					<Given>Libor</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Spartak 1. brněnská</Name>
+				<ShortName>PBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:44:00Z</StartTime>
+				<ControlCard>8660433</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA7101</Id>
+				<Id type="QuickEvent">302</Id>
+				<Name>
+					<Family>Plachý</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:46:00Z</StartTime>
+				<ControlCard>2116453</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH7707</Id>
+				<Id type="QuickEvent">164</Id>
+				<Name>
+					<Family>Těthal</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:48:00Z</StartTime>
+				<ControlCard>8522842</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR7503</Id>
+				<Id type="QuickEvent">198</Id>
+				<Name>
+					<Family>Cícha</Family>
+					<Given>Radek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:50:00Z</StartTime>
+				<ControlCard>2092381</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ7600</Id>
+				<Id type="QuickEvent">112</Id>
+				<Name>
+					<Family>Nevrkla</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:52:00Z</StartTime>
+				<ControlCard>8014557</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN7209</Id>
+				<Id type="QuickEvent">211</Id>
+				<Id type="IOF">27338</Id>
+				<Name>
+					<Family>Nechanický</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:56:00Z</StartTime>
+				<ControlCard>8656601</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR7007</Id>
+				<Id type="QuickEvent">140</Id>
+				<Id type="IOF">30356</Id>
+				<Name>
+					<Family>Nechuta</Family>
+					<Given>Milan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:58:00Z</StartTime>
+				<ControlCard>8022374</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ7300</Id>
+				<Id type="QuickEvent">323</Id>
+				<Name>
+					<Family>Hofhanzl</Family>
+					<Given>Abrahám</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:00:00Z</StartTime>
+				<ControlCard>8654910</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN7701</Id>
+				<Id type="QuickEvent">134</Id>
+				<Name>
+					<Family>Glier</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:02:00Z</StartTime>
+				<ControlCard>8107719</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7104</Id>
+				<Id type="QuickEvent">96</Id>
+				<Id type="IOF">17712</Id>
+				<Name>
+					<Family>Venhoda</Family>
+					<Given>Milan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:04:00Z</StartTime>
+				<ControlCard>8028816</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CET7701</Id>
+				<Id type="QuickEvent">19</Id>
+				<Name>
+					<Family>Vacek</Family>
+					<Given>Jiří</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Loko Česká Třebová</Name>
+				<ShortName>CET</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:08:00Z</StartTime>
+				<ControlCard>8144130</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR7701</Id>
+				<Id type="QuickEvent">32</Id>
+				<Name>
+					<Family>Dvořáček</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:10:00Z</StartTime>
+				<ControlCard>8514682</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH6401</Id>
+				<Id type="QuickEvent">153</Id>
+				<Name>
+					<Family>Tichý</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:12:00Z</StartTime>
+				<ControlCard>8514718</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">STA7301</Id>
+				<Id type="QuickEvent">259</Id>
+				<Name>
+					<Family>Čáp</Family>
+					<Given>Radim</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Střelka</Name>
+				<ShortName>STA</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:14:00Z</StartTime>
+				<ControlCard>8522885</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR7901</Id>
+				<Id type="QuickEvent">55</Id>
+				<Name>
+					<Family>Věžník</Family>
+					<Given>Roman</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:16:00Z</StartTime>
+				<ControlCard>8014510</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SCP7201</Id>
+				<Id type="QuickEvent">2</Id>
+				<Name>
+					<Family>Podivínský</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Sparta Praha</Name>
+				<ShortName>SCP</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:20:00Z</StartTime>
+				<ControlCard>8663133</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI7613</Id>
+				<Id type="QuickEvent">35</Id>
+				<Id type="IOF">11080</Id>
+				<Name>
+					<Family>Izdný</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:22:00Z</StartTime>
+				<ControlCard>8149899</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183772</Id>
+			<Name>H55</Name>
+		</Class>
+		<Course>
+			<Length>3240</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>15</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI6301</Id>
+				<Id type="QuickEvent">10</Id>
+				<Name>
+					<Family>Petráček</Family>
+					<Given>Aleš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:34:00Z</StartTime>
+				<ControlCard>53631</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR6106</Id>
+				<Id type="QuickEvent">75</Id>
+				<Name>
+					<Family>Skryja</Family>
+					<Given>Bořivoj</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:37:00Z</StartTime>
+				<ControlCard>232492</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH6501</Id>
+				<Id type="QuickEvent">297</Id>
+				<Name>
+					<Family>Nouza</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:40:00Z</StartTime>
+				<ControlCard>8003622</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI6801</Id>
+				<Id type="QuickEvent">234</Id>
+				<Name>
+					<Family>Rachůnek</Family>
+					<Given>Stanislav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:43:00Z</StartTime>
+				<ControlCard>219258</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH6801</Id>
+				<Id type="QuickEvent">147</Id>
+				<Name>
+					<Family>Parkan</Family>
+					<Given>Jiří</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:46:00Z</StartTime>
+				<ControlCard>8656643</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR6701</Id>
+				<Id type="QuickEvent">295</Id>
+				<Name>
+					<Family>Drábek</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:49:00Z</StartTime>
+				<ControlCard>2801047</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI6901</Id>
+				<Id type="QuickEvent">44</Id>
+				<Name>
+					<Family>Vacek</Family>
+					<Given>Milan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:52:00Z</StartTime>
+				<ControlCard>8420959</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PBM5303</Id>
+				<Id type="QuickEvent">329</Id>
+				<Id type="IOF">30266</Id>
+				<Name>
+					<Family>Robotka</Family>
+					<Given>Libor</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Spartak 1. brněnská</Name>
+				<ShortName>PBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:55:00Z</StartTime>
+				<ControlCard>8719038</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM6733</Id>
+				<Id type="QuickEvent">52</Id>
+				<Name>
+					<Family>Florian</Family>
+					<Given>Michal</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:58:00Z</StartTime>
+				<ControlCard>8410774</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI6000</Id>
+				<Id type="QuickEvent">124</Id>
+				<Name>
+					<Family>Šenkýř</Family>
+					<Given>Vladimír</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:01:00Z</StartTime>
+				<ControlCard>2044881</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN6025</Id>
+				<Id type="QuickEvent">220</Id>
+				<Name>
+					<Family>Černík</Family>
+					<Given>Zdeněk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:04:00Z</StartTime>
+				<ControlCard>8620899</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM5003</Id>
+				<Id type="QuickEvent">137</Id>
+				<Id type="IOF">25224</Id>
+				<Name>
+					<Family>Zabloudil</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:07:00Z</StartTime>
+				<ControlCard>8050030</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI6002</Id>
+				<Id type="QuickEvent">14</Id>
+				<Name>
+					<Family>Kopecký</Family>
+					<Given>Zdeněk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:10:00Z</StartTime>
+				<ControlCard>52360</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">VBM4732</Id>
+				<Id type="QuickEvent">87</Id>
+				<Id type="IOF">30274</Id>
+				<Name>
+					<Family>Chmelík</Family>
+					<Given>Aleš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>VSK Mendelu Brno</Name>
+				<ShortName>VBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:13:00Z</StartTime>
+				<ControlCard>8014465</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR6701</Id>
+				<Id type="QuickEvent">205</Id>
+				<Name>
+					<Family>Suk</Family>
+					<Given>Marek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:16:00Z</StartTime>
+				<ControlCard>410394</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI6115</Id>
+				<Id type="QuickEvent">88</Id>
+				<Name>
+					<Family>Kaňák</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:19:00Z</StartTime>
+				<ControlCard>8149879</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR6101</Id>
+				<Id type="QuickEvent">291</Id>
+				<Name>
+					<Family>Nešpor</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:22:00Z</StartTime>
+				<ControlCard>8009526</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">KVS6402</Id>
+				<Id type="QuickEvent">244</Id>
+				<Name>
+					<Family>Rohlík</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SKOB Kobra Vsetín</Name>
+				<ShortName>KVS</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:25:00Z</StartTime>
+				<ControlCard>426339</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI5901</Id>
+				<Id type="QuickEvent">43</Id>
+				<Id type="IOF">30650</Id>
+				<Name>
+					<Family>Zeman</Family>
+					<Given>Jaroslav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:28:00Z</StartTime>
+				<ControlCard>8648620</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN6600</Id>
+				<Id type="QuickEvent">45</Id>
+				<Name>
+					<Family>Kovačič</Family>
+					<Given>Marek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:31:00Z</StartTime>
+				<ControlCard>8670817</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM6709</Id>
+				<Id type="QuickEvent">349</Id>
+				<Name>
+					<Family>Gryc</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:34:00Z</StartTime>
+				<ControlCard>53233</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT6002</Id>
+				<Id type="QuickEvent">356</Id>
+				<Name>
+					<Family>Ďoubalík</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:37:00Z</StartTime>
+				<ControlCard>336716</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183773</Id>
+			<Name>H65</Name>
+		</Class>
+		<Course>
+			<Length>2800</Length>
+			<Climb>70</Climb>
+			<NumberOfControls>13</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR5603</Id>
+				<Id type="QuickEvent">228</Id>
+				<Name>
+					<Family>Forst</Family>
+					<Given>Vlastimil</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:34:00Z</StartTime>
+				<ControlCard>8162866</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN5601</Id>
+				<Id type="QuickEvent">173</Id>
+				<Name>
+					<Family>Klusáček</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:37:00Z</StartTime>
+				<ControlCard>2103756</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR5309</Id>
+				<Id type="QuickEvent">136</Id>
+				<Name>
+					<Family>Novohradský</Family>
+					<Given>Jan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:40:00Z</StartTime>
+				<ControlCard>232741</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">VBM5613</Id>
+				<Id type="QuickEvent">127</Id>
+				<Id type="IOF">15117</Id>
+				<Name>
+					<Family>Potěšil</Family>
+					<Given>Václav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>VSK Mendelu Brno</Name>
+				<ShortName>VBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:43:00Z</StartTime>
+				<ControlCard>53237</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183774</Id>
+			<Name>H70</Name>
+		</Class>
+		<Course>
+			<Length>2330</Length>
+			<Climb>40</Climb>
+			<NumberOfControls>11</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TRT5100</Id>
+				<Id type="QuickEvent">1</Id>
+				<Name>
+					<Family>Blecha</Family>
+					<Given>Ladislav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS Třešť</Name>
+				<ShortName>TRT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:37:00Z</StartTime>
+				<ControlCard>8140927</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR5201</Id>
+				<Id type="QuickEvent">139</Id>
+				<Name>
+					<Family>Orálek</Family>
+					<Given>Miroslav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:41:00Z</StartTime>
+				<ControlCard>8482589</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR4800</Id>
+				<Id type="QuickEvent">94</Id>
+				<Id type="IOF">35512</Id>
+				<Name>
+					<Family>Kříž</Family>
+					<Given>Pavel</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:45:00Z</StartTime>
+				<ControlCard>2023807</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ5105</Id>
+				<Id type="QuickEvent">62</Id>
+				<Name>
+					<Family>Kodys</Family>
+					<Given>Václav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:49:00Z</StartTime>
+				<ControlCard>51920</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RBK5307</Id>
+				<Id type="QuickEvent">174</Id>
+				<Name>
+					<Family>Henek</Family>
+					<Given>Milan</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Radioklub Blansko</Name>
+				<ShortName>RBK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:53:00Z</StartTime>
+				<ControlCard>8506955</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR5401</Id>
+				<Id type="QuickEvent">33</Id>
+				<Name>
+					<Family>Koudelný</Family>
+					<Given>Jiří</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:01:00Z</StartTime>
+				<ControlCard>2092400</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ5306</Id>
+				<Id type="QuickEvent">37</Id>
+				<Id type="IOF">33142</Id>
+				<Name>
+					<Family>Kubálek</Family>
+					<Given>Zdeněk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:05:00Z</StartTime>
+				<ControlCard>8510284</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SBK5406</Id>
+				<Id type="QuickEvent">278</Id>
+				<Name>
+					<Family>Kolařík</Family>
+					<Given>Zdeněk</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOB START Blansko</Name>
+				<ShortName>SBK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:09:00Z</StartTime>
+				<ControlCard>49683</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI4911</Id>
+				<Id type="QuickEvent">305</Id>
+				<Name>
+					<Family>Paulíček</Family>
+					<Given>Jiří</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T07:13:00Z</StartTime>
+				<ControlCard>8196036</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183775</Id>
+			<Name>HDR</Name>
+		</Class>
+		<Course>
+			<Length>2490</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>8</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE"></Id>
+				<Id type="QuickEvent">350</Id>
+				<Name>
+					<Family>Sitařová</Family>
+					<Given>Amálie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name></Name>
+				<ShortName></ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T08:33:00Z</StartTime>
+				<ControlCard>2145635</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1800</Id>
+				<Id type="QuickEvent">286</Id>
+				<Name>
+					<Family>Beneš</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>129</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ1500</Id>
+				<Id type="QuickEvent">267</Id>
+				<Name>
+					<Family>Bloudíček</Family>
+					<Given>Jakub</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>51923</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">RUZ18xx</Id>
+				<Id type="QuickEvent">285</Id>
+				<Name>
+					<Family>Bloudíčková</Family>
+					<Given>Tereza</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Růžená</Name>
+				<ShortName>RUZ</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>53500</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1851</Id>
+				<Id type="QuickEvent">85</Id>
+				<Name>
+					<Family>Boučková</Family>
+					<Given>Gabriela</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2011866</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1552</Id>
+				<Id type="QuickEvent">176</Id>
+				<Name>
+					<Family>Fikarová</Family>
+					<Given>Magdalena</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>232861</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT7704</Id>
+				<Id type="QuickEvent">236</Id>
+				<Name>
+					<Family>Havlíček</Family>
+					<Given>Marek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>232888</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1801</Id>
+				<Id type="QuickEvent">81</Id>
+				<Name>
+					<Family>Ježek</Family>
+					<Given>Ondřej</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>112</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI1751</Id>
+				<Id type="QuickEvent">243</Id>
+				<Name>
+					<Family>Jirků</Family>
+					<Given>Klára</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>301273</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SHK2100</Id>
+				<Id type="QuickEvent">344</Id>
+				<Name>
+					<Family>Jirásek</Family>
+					<Given>Tobiáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Slavia Hradec Králové</Name>
+				<ShortName>SHK</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>7777400</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN2100</Id>
+				<Id type="QuickEvent">351</Id>
+				<Name>
+					<Family>Klusáček</Family>
+					<Given>Václav</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2020737</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1752</Id>
+				<Id type="QuickEvent">18</Id>
+				<Name>
+					<Family>Kosinová</Family>
+					<Given>Marie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1602</Id>
+				<Id type="QuickEvent">357</Id>
+				<Name>
+					<Family>Kysilko</Family>
+					<Given>Antonín</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>1425378</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1901</Id>
+				<Id type="QuickEvent">359</Id>
+				<Name>
+					<Family>Kysilko</Family>
+					<Given>Janek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2211448</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1851</Id>
+				<Id type="QuickEvent">342</Id>
+				<Name>
+					<Family>Líbalová</Family>
+					<Given>Josefína</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2212701</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT1951</Id>
+				<Id type="QuickEvent">68</Id>
+				<Name>
+					<Family>Martincová</Family>
+					<Given>Linda</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>53155</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT</Id>
+				<Id type="QuickEvent">346</Id>
+				<Name>
+					<Family>Ondrová</Family>
+					<Given>Josefa</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>49860</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT2151</Id>
+				<Id type="QuickEvent">358</Id>
+				<Name>
+					<Family>Sadílková</Family>
+					<Given>Alžběta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>4540</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TBM1810</Id>
+				<Id type="QuickEvent">203</Id>
+				<Name>
+					<Family>Strejček</Family>
+					<Given>Tomáš</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>KOS TJ Tesla Brno</Name>
+				<ShortName>TBM</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>53272</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJH1652</Id>
+				<Id type="QuickEvent">166</Id>
+				<Name>
+					<Family>Těthalová</Family>
+					<Given>Marie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SOS Jindřichův Hradec</Name>
+				<ShortName>SJH</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2260168</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CET1505</Id>
+				<Id type="QuickEvent">20</Id>
+				<Name>
+					<Family>Vacek</Family>
+					<Given>Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>TJ Loko Česká Třebová</Name>
+				<ShortName>CET</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2159886</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN1552</Id>
+				<Id type="QuickEvent">319</Id>
+				<Name>
+					<Family>Čejková</Family>
+					<Given>Klára</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>51995</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">OSN2001</Id>
+				<Id type="QuickEvent">312</Id>
+				<Name>
+					<Family>Černík</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK Orientační sporty Nové Město na Moravě</Name>
+				<ShortName>OSN</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8023</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB1701</Id>
+				<Id type="QuickEvent">226</Id>
+				<Name>
+					<Family>Šťastný</Family>
+					<Given>Hynek</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>51830</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+	<ClassStart>
+		<Class>
+			<Id>183776</Id>
+			<Name>P</Name>
+		</Class>
+		<Course>
+			<Length>2670</Length>
+			<Climb>65</Climb>
+			<NumberOfControls>13</NumberOfControls>
+		</Course>
+		<StartName>Start1</StartName>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8650</Id>
+				<Id type="QuickEvent">83</Id>
+				<Name>
+					<Family>Boučková</Family>
+					<Given>Kristýna</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2157322</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8354</Id>
+				<Id type="QuickEvent">233</Id>
+				<Name>
+					<Family>Burešová</Family>
+					<Given>Petra</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2419858</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7850</Id>
+				<Id type="QuickEvent">38</Id>
+				<Name>
+					<Family>Cipryánová</Family>
+					<Given>Alena</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>7207851</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CTB7953</Id>
+				<Id type="QuickEvent">119</Id>
+				<Name>
+					<Family>Hübnerová</Family>
+					<Given>Helena</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>SK OB Chotěboř</Name>
+				<ShortName>CTB</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>51833</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHC6001</Id>
+				<Id type="QuickEvent">348</Id>
+				<Name>
+					<Family>Janeba</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>K.O.B. Choceň</Name>
+				<ShortName>CHC</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>9573</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI8351</Id>
+				<Id type="QuickEvent">246</Id>
+				<Name>
+					<Family>Jirků</Family>
+					<Given>Lucie</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>53352</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">0020001</Id>
+				<Id type="QuickEvent">314</Id>
+				<Name>
+					<Family>Kapucián</Family>
+					<Given> Martin</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name></Name>
+				<ShortName>002</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8523526</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT8403</Id>
+				<Id type="QuickEvent">16</Id>
+				<Name>
+					<Family>Kosina</Family>
+					<Given>Vladimír</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">SJI</Id>
+				<Id type="QuickEvent">345</Id>
+				<Name>
+					<Family>Matějková</Family>
+					<Given>Aneta</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OK Jihlava</Name>
+				<ShortName>SJI</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2158509</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR8816</Id>
+				<Id type="QuickEvent">181</Id>
+				<Name>
+					<Family>Olišar</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2145537</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">PZR8757</Id>
+				<Id type="QuickEvent">182</Id>
+				<Name>
+					<Family>Olišarová</Family>
+					<Given>Tatiana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>UNITOP SKP Žďár nad Sázavou</Name>
+				<ShortName>PZR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2121893</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">0010001</Id>
+				<Id type="QuickEvent">308</Id>
+				<Name>
+					<Family>Podivínská</Family>
+					<Given>Ivana</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name></Name>
+				<ShortName>001</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>51557</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE"></Id>
+				<Id type="QuickEvent">336</Id>
+				<Name>
+					<Family>Podolský</Family>
+					<Given>Petr</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name></Name>
+				<ShortName></ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>51953</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">CHT9999</Id>
+				<Id type="QuickEvent">245</Id>
+				<Name>
+					<Family>Sádecká</Family>
+					<Given>Karolína</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB SK Chrast</Name>
+				<ShortName>CHT</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>8033202</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR8080</Id>
+				<Id type="QuickEvent">330</Id>
+				<Name>
+					<Family>Věžníková</Family>
+					<Given>Magda</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>7205015</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE">TTR0999</Id>
+				<Id type="QuickEvent">331</Id>
+				<Name>
+					<Family>Věžníková</Family>
+					<Given>Veronika</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name>OOB Třebíč</Name>
+				<ShortName>TTR</ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2115145</ControlCard>
+			</Start>
+		</PersonStart>
+		<PersonStart>
+			<Person>
+				<Id type="CZE"></Id>
+				<Id type="QuickEvent">347</Id>
+				<Name>
+					<Family>Šimon</Family>
+					<Given>Igor</Given>
+				</Name>
+			</Person>
+			<Organisation>
+				<Name></Name>
+				<ShortName></ShortName>
+			</Organisation>
+			<Start>
+				<StartTime>2024-05-04T06:30:00Z</StartTime>
+				<ControlCard>2102689</ControlCard>
+			</Start>
+		</PersonStart>
+	</ClassStart>
+</StartList>

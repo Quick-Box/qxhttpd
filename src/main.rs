@@ -3,9 +3,7 @@
 use crate::event::{user_info, EventInfo};
 use std::fmt::Debug;
 use std::collections::{HashMap};
-use std::io::Read;
 use std::sync::RwLock;
-use chrono::NaiveDateTime;
 use rocket::fs::{FileServer};
 use rocket::{request, State};
 use rocket::http::{CookieJar, Status};
@@ -26,6 +24,8 @@ mod ochecklist;
 mod quickevent;
 mod event;
 mod files;
+mod util;
+mod iofxml3;
 
 #[derive(Default)]
 struct AppConfig {
@@ -111,7 +111,7 @@ fn rocket() -> _ {
             handlebars.register_helper("dtstr",
                                        Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
                                            let val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("dtstr", 0))?.value();
-                                           let s = dtstr(val.as_str());
+                                           let s = util::dtstr(val.as_str());
                                            out.write(&s)?;
                                            Ok(())
                                        }));
@@ -141,70 +141,3 @@ fn rocket() -> _ {
     rocket.manage(SharedQxState::new(state))
 }
 
-fn dtstr(iso_date_str: Option<&str>) -> String {
-    let Some(s) = iso_date_str else {
-        return "--/--/--".to_string()
-    };
-    let Ok(dt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") else {
-        return s.to_string()
-    };
-    dt.format("%Y-%m-%d %H:%M:%S").to_string()
-}
-
-fn parse_naive_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
-    for &format in &[
-        "%Y-%m-%d %H:%M:%S",       // 2025-03-05 14:32:45
-        "%Y-%m-%d %H:%M",          // 2025-03-05 14:32
-        "%Y-%m-%dT%H:%M:%S",       // 2025-03-05T14:32:45
-        "%Y-%m-%dT%H:%M",          // 2025-03-05T14:32
-        "%d/%m/%Y %H:%M:%S",       // 05/03/2025 14:32:45
-        // "%m/%d/%Y %H:%M:%S",       // 03/05/2025 14:32:45
-        // "%Y/%m/%d %H:%M:%S",       // 2025/03/05 14:32:45
-        // "%Y-%m-%d",                // 2025-03-05
-        // "%m/%d/%Y",                // 03/05/2025
-        "%d/%m/%Y",                // 05/03/2025
-        "%H:%M:%S",                // 14:32:45
-    ] {
-        if let Ok(parsed) = NaiveDateTime::parse_from_str(datetime_str, format) {
-            return Some(parsed);
-        }
-    }
-
-    // Return None if no format matched
-    None
-}
-
-fn unzip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let mut z = flate2::read::ZlibDecoder::new(bytes);
-    let mut s = Vec::new();
-    z.read_to_end(&mut s).map_err(|e| { e.to_string() })?;
-    Ok(s)
-}
-
-#[cfg(test)]
-mod test_main {
-    use std::io::Read;
-    use flate2::bufread::ZlibEncoder;
-    use flate2::Compression;
-    use crate::{unzip_data};
-
-    pub(crate) fn zip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
-        let mut ret_vec = Vec::new();
-        let mut deflater = ZlibEncoder::new(bytes, Compression::fast());
-        deflater.read_to_end(&mut ret_vec).map_err(|e| e.to_string())?;
-        Ok(ret_vec)
-    }
-
-
-    #[test]
-    fn test_zip() {
-        let data = b"foo bar baz";
-        let zdata = zip_data(data).unwrap();
-        let udata = unzip_data(&zdata).unwrap();
-        assert_eq!(udata, data);
-    }
-}
-
-fn sqlx_error(err: sqlx::Error) -> Custom<String> {
-    Custom(Status::InternalServerError, format!("SQLx error: {}", err))
-}

@@ -4,6 +4,7 @@ use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
 use crate::event::{EventId, EventInfo, PostedEvent};
 use crate::files::FileInfo;
+use crate::util;
 
 const API_TOKEN: &str = "plelababamak";
 
@@ -60,7 +61,7 @@ fn upload_file() {
     // send file
     let file_name = "a.txt";
     let orig = b"foo-bar-baz";
-    let compressed = crate::test_main::zip_data(orig).unwrap();
+    let compressed = util::test::zip_data(orig).unwrap();
     let resp = client.post(format!("/api/event/current/file?name={file_name}"))
         .header(Header::new("qx-api-token", API_TOKEN))
         .header(ContentType::ZIP)

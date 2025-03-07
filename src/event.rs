@@ -11,11 +11,14 @@ use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, query_as, FromRow};
 use crate::db::DbPool;
-use crate::{files, parse_naive_datetime, sqlx_error, QxApiToken, QxSessionId, SharedQxState};
+use crate::{files, iofxml3, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{NaiveDateTime, NaiveTime, Timelike};
 use rocket::serde::{Deserialize, Serialize};
+use crate::util::{parse_naive_datetime, status_sqlx_error, tee_sqlx_error};
+
+pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 
 pub type RunId = i64;
 pub type SiId = i64;
@@ -45,13 +48,26 @@ impl EventInfo {
         }
     }
 }
+
+pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>, db: &State<DbPool>) -> anyhow::Result<()> {
+    let stlist = iofxml3::parser::parse_startlist_xml_data(&data)?;
+    Ok(())
+}
+pub async fn parse_startlist_xml(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
+    let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
+        .bind(event_id)
+        .bind(START_LIST_IOFXML3_FILE)
+        .fetch_one(&db.0)
+        .await.map_err(tee_sqlx_error)?.0;
+    parse_startlist_xml_data(event_id, data, db).await
+}
 pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<EventInfo, Custom<String>> {
     let pool = &db.0;
     let event: EventInfo = sqlx::query_as("SELECT * FROM events WHERE id=?")
         .bind(event_id)
         .fetch_one(pool)
         .await
-        .map_err(sqlx_error)?;
+        .map_err(status_sqlx_error)?;
     Ok(event)
 }
 pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventInfo, Custom<String>> {
@@ -244,3 +260,4 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             post_api_event_current,
         ])
 }
+
