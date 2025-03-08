@@ -18,6 +18,7 @@ pub struct RunsRecord {
     #[serde(default)]
     pub start_time: chrono::DateTime<FixedOffset>,
     #[serde(default)]
+    #[sqlx(default)]
     pub start_time_sec: i64,
     #[serde(default)]
     pub check_time: String,
