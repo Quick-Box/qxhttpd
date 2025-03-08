@@ -4,21 +4,22 @@ use anyhow::anyhow;
 use base64::engine::general_purpose;
 use image::ImageFormat;
 use rocket::form::{Contextual, Form};
-use rocket::http::Status;
+use rocket::http::{ContentType, Status};
 use rocket::response::{Redirect};
 use rocket::response::status::Custom;
-use rocket::{Build, Rocket, State};
+use rocket::{Build, Data, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, query_as, FromRow};
 use crate::db::DbPool;
 use crate::{files, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, Timelike};
 use rocket::serde::{Deserialize, Serialize};
 use crate::qe::classes::ClassesRecord;
+use crate::qe::import_startlist;
 use crate::qe::runs::RunsRecord;
-use crate::util::{status_sqlx_error, QxDateTime};
+use crate::util::{status_any_error, status_sqlx_error, QxDateTime};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 
@@ -36,15 +37,16 @@ pub struct EventInfo {
     api_token: QxApiToken,
 }
 impl EventInfo {
-    pub fn new() -> Self {
+    pub fn new(owner: &str) -> Self {
         let start_time = chrono::Local::now().fixed_offset();
+        let start_time = start_time.with_second(0).map(|dt| dt.with_nanosecond(0)).flatten().unwrap_or(start_time);
         Self {
             id: 0,
             name: "".to_string(),
             place: "".to_string(),
             start_time,
             // time_zone: "Europe/Prague".to_string(),
-            owner: "".to_string(),
+            owner: owner.to_string(),
             api_token: QxApiToken(generate_random_string(10)),
         }
     }
@@ -70,7 +72,7 @@ pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> 
 }
 async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
     let id = if event.id > 0 {
-        query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
+        query("UPDA pub(crate)TE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
             .bind(&event.start_time)
@@ -96,14 +98,11 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
 #[derive(Debug, FromForm)]
 struct EventFormValues<'v> {
     id: EventId,
-    #[field(validate = len(1..))]
     name: &'v str,
-    #[field(validate = len(1..))]
     place: &'v str,
-    #[field(validate = len(1..))]
     start_time: &'v str,
     // #[field(validate = len(1..))]
-    // time_zone: &'v str,
+    // owner: &'v str,
     #[field(validate = len(10..))]
     api_token: &'v str,
 }
@@ -136,7 +135,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
     let event = if let Some(event_id) = event_id {
         load_event_info(event_id, db).await?
     } else {
-        EventInfo::new()
+        EventInfo::new(&user.email)
     };
     let api_token_qrc_img_data = {
         let code = qrcode::QrCode::new(event.api_token.0.as_bytes()).unwrap();
@@ -223,22 +222,6 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
 }
-#[get("/event/create-demo")]
-async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let mut event_info = EventInfo::new();
-    event_info.name = String::from("Demo event");
-    event_info.place = String::from("Deep forest 42");
-    event_info.owner = String::from("fanda.vacek@gmail.com");
-    event_info.api_token = QxApiToken(String::from("plelababamak"));
-    let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
-
-    let data = crate::oc::load_oc_dir("tests/oc/data")
-        .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-    for chngset in &data {
-        crate::oc::add_oc_change_set(event_id, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
-    }
-    Ok(Redirect::to(format!("/event/{event_id}")))
-}
 #[get("/event/<event_id>/startlist?<class_name>")]
 async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
@@ -275,6 +258,29 @@ async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &
     }))
 
 }
+#[post("/api/event/current/upload/startlist", data = "<data>")]
+async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
+    let event_info = load_event_info2(&qx_api_token, db).await?;
+    let file_id = crate::files::post_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
+    import_startlist(event_info.id, db).await.map_err(status_any_error)?;
+    Ok(format!("{}", file_id))
+}
+#[get("/event/create-demo")]
+async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+    let mut event_info = EventInfo::new("fanda.vacek@gmail.com");
+    event_info.name = String::from("Demo event");
+    event_info.place = String::from("Deep forest 42");
+    event_info.api_token = QxApiToken(String::from("plelababamak"));
+    let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
+
+    let data = crate::oc::load_oc_dir("tests/oc/data")
+        .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
+    for chngset in &data {
+        crate::oc::add_oc_change_set(event_id, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
+    }
+    Ok(Redirect::to(format!("/event/{event_id}")))
+}
+
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             get_event_create_demo,
@@ -283,6 +289,7 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_event_delete,
             post_event,
             get_event,
+            post_upload_startlist,
             get_event_start_list,
             get_api_event_current,
             post_api_event_current,

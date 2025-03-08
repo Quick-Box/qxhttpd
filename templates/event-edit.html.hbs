@@ -11,18 +11,18 @@
                         <label><b>Id</b></label>
                         <input class="w3-input w3-border w3-margin-bottom" readonly type="text" placeholder="New event" name="id" value="{{id}}" required>
                         <label><b>Name</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event name" name="name" value="{{name}}" required>
+                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event name" name="name" value="{{name}}" >
                         <label><b>Place</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event place" name="place" value="{{place}}" required>
+                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event place" name="place" value="{{place}}" >
                         <label><b>Start time</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event start date-time with UTC offset" name="start_time" value="{{start_time}}" required>
+                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event start date-time with UTC offset" name="start_time" value="{{start_time}}" >
                     </div>
                     <div class="w3-half">
                         <div style="display:flex; justify-content:center"><img src="data:image/png;base64,{{../api_token_qrc_img_data}}" alt="API token QRC" /></div>
                         <label><b>API token</b></label>
                         <input class="w3-input w3-border w3-margin-bottom" readonly type="text" placeholder="API token" name="api_token" value="{{api_token}}" required>
                         <label><b>Owner</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" readonly type="text" placeholder="New event" name="owner" value="{{owner}}" required>
+                        <input class="w3-input w3-border w3-margin-bottom" readonly type="text" name="owner" value="{{owner}}" required>
                     </div>
                 </div>
             {{/with}}

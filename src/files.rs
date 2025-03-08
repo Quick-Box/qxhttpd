@@ -6,10 +6,9 @@ use rocket::response::status::{Custom};
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
 use crate::db::DbPool;
-use crate::event::{load_event_info2, EventId, START_LIST_IOFXML3_FILE};
+use crate::event::{load_event_info2, EventId};
 use crate::{QxApiToken};
-use crate::qe::import_startlist;
-use crate::util::{status_any_error, status_sqlx_error, unzip_data};
+use crate::util::{status_sqlx_error, unzip_data};
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct FileInfo {
@@ -61,7 +60,7 @@ async fn delete_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Res
     }
 }
 #[post("/api/event/current/file?<name>", data = "<data>")]
-async fn post_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
+pub async fn post_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info2(&qx_api_token, db).await?;
     let data = data.open(50.mebibytes()).into_bytes().await.map_err(|e| Custom(Status::PayloadTooLarge, e.to_string()))?.into_inner();
     let q = sqlx::query_as::<_, (i64,)>("INSERT OR REPLACE INTO files (event_id, name, data) VALUES (?, ?, ?) RETURNING id")
@@ -78,13 +77,6 @@ async fn post_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content
     let file_id = q.fetch_one(&db.0).await.map_err(status_sqlx_error)?.0;
     Ok(format!("{}", file_id))
 }
-#[post("/api/event/current/upload/startlist", data = "<data>")]
-async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
-    let event_info = load_event_info2(&qx_api_token, db).await?;
-    let file_id = post_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
-    import_startlist(event_info.id, db).await.map_err(status_any_error)?;
-    Ok(format!("{}", file_id))
-}
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             get_files,
@@ -92,6 +84,5 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_file,
             post_file,
             delete_file,
-            post_upload_startlist,
         ])
 }
