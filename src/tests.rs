@@ -1,5 +1,4 @@
-use std::str::FromStr;
-use chrono::NaiveDateTime;
+use chrono::{Local};
 use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
 use crate::event::{EventId, EventInfo, PostedEvent};
@@ -29,8 +28,8 @@ fn update_event_data() {
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
     let event = resp.into_json::<EventInfo>().unwrap();
     assert_eq!(event.id, 1);
-    
-    let dt = NaiveDateTime::from_str("2025-03-04T10:20:00").unwrap();
+
+    let dt = Local::now().fixed_offset();
     let post_event = PostedEvent {
         name: "Foo".to_string(),
         place: "Bar".to_string(),

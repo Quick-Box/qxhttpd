@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
-use chrono::NaiveDateTime;
+use std::str::FromStr;
+use chrono::{DateTime, FixedOffset, NaiveDateTime, TimeZone};
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::response::status::Custom;
@@ -15,15 +16,15 @@ use crate::iofxml3::structs::StartList;
 use crate::oc::OCheckListChange;
 use crate::qe::classes::ClassesRecord;
 use crate::qe::runs::RunsRecord;
-use crate::util::{try_parse_naive_datetime, tee_sqlx_error};
+use crate::util::{tee_sqlx_error, QxDateTime};
 
 pub mod runs;
 pub mod classes;
 
-fn start00(stlist: &StartList) -> Option<NaiveDateTime> {
+fn start_list_start00(stlist: &StartList) -> Option<NaiveDateTime> {
     let d = stlist.event.start_time.date.as_str();
     let t = stlist.event.start_time.time.as_str();
-    try_parse_naive_datetime(&format!("{d}T{t}"))
+    NaiveDateTime::from_str(&format!("{d}T{t}")).ok()
 }
 pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
@@ -77,9 +78,10 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
 
     Ok(())
 }
-pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyhow::Result<(NaiveDateTime, Vec<ClassesRecord>, Vec<RunsRecord>)> {
+pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyhow::Result<(Option<DateTime<FixedOffset>>, Vec<ClassesRecord>, Vec<RunsRecord>)> {
     let stlist = iofxml3::parser::parse_startlist(&data)?;
-    let start00 = start00(&stlist).ok_or(anyhow::anyhow!("Invalid start list date time"))?;
+    let start00_naive = start_list_start00(&stlist).ok_or(anyhow::anyhow!("Invalid start list date time"))?;
+    let mut fixed_offset = None;
     let mut runs = Vec::new();
     let mut classes = BTreeMap::new();
     for cs in &stlist.class_start {
@@ -112,17 +114,21 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
                 continue;
             };
             runsrec.run_id = run_id;
-            let Some(start_time) = try_parse_naive_datetime(&ps.start.start_time) else {
+            let Ok(start_time) = QxDateTime::from_iso_string(&ps.start.start_time) else {
                 warn!("Start time value invalid: {:?}", ps);
                 continue;
             };
-            runsrec.start_time = start_time;
+            if fixed_offset.is_none() {
+                fixed_offset = Some(start_time.0.offset().clone());
+            }
+            runsrec.start_time = start_time.0;
             let si = &ps.start.control_card.as_ref().map(|si| si.parse::<i64>().ok()).flatten().unwrap_or_default();
             runsrec.si_id = *si;
             runs.push(runsrec);
         }
     }
     let classes = classes.into_iter().map(|(_, v)| v).collect();
+    let start00 = fixed_offset.map(|offset| offset.from_local_datetime(&start00_naive).single() ).flatten();
     Ok((start00, classes, runs))
 }
 

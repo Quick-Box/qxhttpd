@@ -14,11 +14,11 @@ use crate::db::DbPool;
 use crate::{files, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
-use chrono::{NaiveDateTime, NaiveTime, Timelike};
+use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
 use crate::qe::classes::ClassesRecord;
 use crate::qe::runs::RunsRecord;
-use crate::util::{try_parse_naive_datetime, status_sqlx_error};
+use crate::util::{status_sqlx_error, QxDateTime};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 
@@ -31,14 +31,13 @@ pub struct EventInfo {
     pub id: EventId,
     pub name: String,
     pub place: String,
-    pub start_time: NaiveDateTime,
+    pub start_time: DateTime<FixedOffset>,
     pub owner: String,
     api_token: QxApiToken,
 }
 impl EventInfo {
     pub fn new() -> Self {
-        let dt = chrono::Local::now().naive_local();
-        let start_time = NaiveDateTime::new(dt.date(), NaiveTime::from_hms_opt(dt.hour(), dt.minute(), 0).expect("valid DT"));
+        let start_time = chrono::Local::now().fixed_offset();
         Self {
             id: 0,
             name: "".to_string(),
@@ -74,7 +73,7 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
         query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(event.start_time)
+            .bind(&event.start_time)
             // .bind(&event.time_zone)
             .bind(event.id)
             .execute(&db.0)
@@ -84,7 +83,7 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
         let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token, owner) VALUES (?, ?, ?, ?, ?) RETURNING id")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(event.start_time)
+            .bind(&event.start_time)
             .bind(&event.api_token.0)
             .bind(&event.owner)
             .fetch_one(&db.0)
@@ -115,11 +114,13 @@ struct EventFormValues<'v> {
 async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
+    let start_time = QxDateTime::from_iso_string(vals.start_time)
+        .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
     let event = EventInfo {
         id: vals.id,
         name: vals.name.to_string(),
         place: vals.place.to_string(),
-        start_time: try_parse_naive_datetime(vals.start_time).ok_or(Custom(Status::BadRequest, format!("Unrecognized date-time string: {}", vals.start_time)))?,
+        start_time: start_time.0,
         owner: user.email,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
@@ -208,16 +209,16 @@ async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Res
 pub struct PostedEvent {
     pub name: String,
     pub place: String,
-    pub start_time: NaiveDateTime,
+    pub start_time: DateTime<FixedOffset>,
 }
-#[post("/api/event/current", data = "<event>")]
-async fn post_api_event_current(api_token: QxApiToken, event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
+#[post("/api/event/current", data = "<posted_event>")]
+async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
     let Ok( mut event_info) = load_event_info2(&api_token, db).await else {
         return Err(Custom(Status::BadRequest, String::from("Event not found")));
     };
-    event_info.name = event.name.clone();
-    event_info.place = event.place.clone();
-    event_info.start_time = event.start_time;
+    event_info.name = posted_event.name.clone();
+    event_info.place = posted_event.place.clone();
+    event_info.start_time = posted_event.start_time;
     let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
@@ -259,12 +260,13 @@ async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &
         };
         classrec.clone()
     };
-    let runs = sqlx::query_as::<_, RunsRecord>(&format!(
-        "SELECT *, unixepoch(start_time) - {} as start_time_sec   
-         FROM runs WHERE event_id=? AND class_name=? ORDER BY start_time", event.start_time.and_utc().timestamp()))
+    let start00 = event.start_time;
+    let runs = sqlx::query_as::<_, RunsRecord>("SELECT *, 0 as start_time_sec FROM runs WHERE event_id=? AND class_name=? ORDER BY start_time")
         .bind(event_id)
         .bind(class_name)
-        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+        .fetch_all(&db.0).await.map_err(status_sqlx_error)?
+        .into_iter().map(|mut rec| { rec.start_time_sec = rec.start_time.signed_duration_since(&start00).num_seconds(); rec })
+        .collect::<Vec<_>>();
     Ok(Template::render("startlist", context! {
         event,
         classrec,

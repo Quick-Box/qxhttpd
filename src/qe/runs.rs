@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{FixedOffset};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -16,7 +16,7 @@ pub struct RunsRecord {
     #[serde(default)]
     pub registration: String,
     #[serde(default)]
-    pub start_time: NaiveDateTime,
+    pub start_time: chrono::DateTime<FixedOffset>,
     #[serde(default)]
     pub start_time_sec: i64,
     #[serde(default)]
