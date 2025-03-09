@@ -110,7 +110,10 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
                 continue;
             };
             let Some(run_id) = run_id.text.as_ref().map(|id| id.parse::<i64>().ok()).flatten() else {
-                warn!("QuickEvent ID value invalid: {:?}", ps);
+                // still can be a vacant
+                if !runsrec.registration.is_empty() {
+                    warn!("QuickEvent ID value invalid: {:?}", ps);
+                }
                 continue;
             };
             runsrec.run_id = run_id;
