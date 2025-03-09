@@ -236,8 +236,16 @@ struct StartListRecord {
     run: RunsRecord,
     start_time_sec: Option<i64>,
 }
+#[get("/event/<event_id>/startlist?<class_name>", rank = 2)]
+async fn get_event_startlist_anonymous(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    get_event_startlist(event_id, class_name, None, db).await
+}
 #[get("/event/<event_id>/startlist?<class_name>")]
-async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn get_event_startlist_authorized(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    get_event_startlist(event_id, class_name, Some(user), db).await
+}
+async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: Option<UserInfo>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes WHERE event_id=?")
         .bind(event_id)
@@ -270,6 +278,7 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, db: &S
         }
     }).collect::<Vec<_>>();
     Ok(Template::render("startlist", context! {
+        user,
         event,
         classrec,
         classes,
@@ -364,7 +373,8 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_event,
             get_event_authorized,
             post_upload_startlist,
-            get_event_startlist,
+            get_event_startlist_anonymous,
+            get_event_startlist_authorized,
             get_event_results,
             get_api_event_current,
             post_api_event_current,

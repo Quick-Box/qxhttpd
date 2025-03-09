@@ -19,9 +19,13 @@
     <table class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
+            {{#if user}}
+                <th>Edit</th>
+            {{/if}}
             <th>Start</th>
             <th>Name</th>
             <th>Registration</th>
+            <th>SI</th>
             <th>Edited by</th>
             <th>Run Id</th>
         </tr>
@@ -29,16 +33,55 @@
         <tbody>
         {{#each runs}}
             <tr>
+                {{#if ../user}}
+                    <td>
+                        <i onclick="openDialog('{{ run.runner_name }}', '{{ run.registration }}', '{{ run.si_id }}')" class="fa fa-pencil-square-o"></i>
+                    </td>
+                {{/if}}
                 <td class="w3-right-align">{{obtime start_time_sec }}</td>
                 <td>{{ run.runner_name }}</td>
                 <td>{{ run.registration }}</td>
+                <td class="w3-right-align">{{ run.si_id }}</td>
                 <td>{{dtstr run.edited_by }}</td>
                 <td class="w3-right-align">{{ run.run_id }}</td>
             </tr>
         {{/each}}
         </tbody>
     </table>
+<script>
+    function openDialog(name, registration, si) {
+        document.querySelector('input[name="name"]').value = name;
+        document.querySelector('input[name="registration"]').value = registration;
+        document.querySelector('input[name="si"]').value = si;
 
+        document.getElementById('dlg').style.display='block'
+    }
+</script>
+    <div id="dlg" class="w3-modal">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:600px">
+
+            <div class="w3-bar w3-theme">
+                <h2 class="w3-bar-item">Edit runner</h2>
+            </div>
+
+            <div class="w3-container">
+                <div class="w3-section">
+                    <label><b>Name</b></label>
+                    <input class="w3-input w3-border w3-margin-bottom" type="text" name="name" required>
+                    <label><b>Registration</b></label>
+                    <input class="w3-input w3-border" type="text" name="registration" required>
+                    <label><b>SI</b></label>
+                    <input class="w3-input w3-border" type="number" name="si" required>
+                </div>
+            </div>
+
+            <div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
+                <button onclick="document.getElementById('dlg').style.display='none'" type="button" class="w3-button  w3-round-large w3-red">Cancel</button>
+                <button onclick="document.getElementById('dlg').style.display='none'" class="w3-button w3-green  w3-round-large w3-right" type="button">Save</button>
+            </div>
+
+        </div>
+    </div>
 
 {{/inline}}
 {{> layout}}
