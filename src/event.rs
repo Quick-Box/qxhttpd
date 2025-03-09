@@ -157,7 +157,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
 async fn event_drop(event_id: EventId, db: &State<DbPool>) -> Result<(), anyhow::Error> {
     // Start a transaction
     let txn = db.0.begin().await?;
-    for tbl in &["files", "ocout", "qein", "qeout", ] {
+    for tbl in &["files", "ocout", "qein", "qeout", "runs", "classes" ] {
         sqlx::query(&format!("DELETE FROM {tbl} WHERE event_id=?"))
             .bind(event_id)
             .execute(&db.0).await?;
@@ -222,6 +222,13 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
 }
+
+#[derive(Serialize, Debug)]
+struct StartListRecord {
+    run: RunsRecord,
+    start_time_sec: Option<i64>,
+    time_msec: Option<i64>,
+}
 #[get("/event/<event_id>/startlist?<class_name>")]
 async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
@@ -247,9 +254,16 @@ async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &
     let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=? ORDER BY start_time")
         .bind(event_id)
         .bind(class_name)
-        .fetch_all(&db.0).await.map_err(status_sqlx_error)?
-        .into_iter().map(|mut rec| { rec.start_time_sec = rec.start_time.signed_duration_since(&start00).num_seconds(); rec })
-        .collect::<Vec<_>>();
+        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+    let runs = runs.into_iter().map(|run| {
+        let start_time_sec = run.start_time.map(|t| t.signed_duration_since(start00).num_seconds());
+        let time_msec = run.start_time.map(|st| run.finish_time.map(|ft| ft.signed_duration_since(st).num_milliseconds())).flatten();
+        StartListRecord {
+            run,
+            start_time_sec,
+            time_msec,
+        }
+    }).collect::<Vec<_>>();
     Ok(Template::render("startlist", context! {
         event,
         classrec,

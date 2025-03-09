@@ -22,16 +22,24 @@
             <th>Start</th>
             <th>Name</th>
             <th>Registration</th>
+            <th>Check</th>
+            <th>Finish</th>
+            <th>Time</th>
+            <th>Status</th>
             <th>Run Id</th>
         </tr>
         </thead>
         <tbody>
         {{#each runs}}
             <tr>
-                <td class="w3-right-align">{{obtime this.start_time_sec }}</td>
-                <td>{{ this.runner_name }}</td>
-                <td>{{ this.registration }}</td>
-                <td class="w3-right-align">{{ this.run_id }}</td>
+                <td class="w3-right-align">{{obtime start_time_sec }}</td>
+                <td>{{ run.runner_name }}</td>
+                <td>{{ run.registration }}</td>
+                <td>{{dtstr run.check_time }}</td>
+                <td>{{dtstr run.finish_time }}</td>
+                <td class="w3-right-align">{{ this.time_msec }}</td>
+                <td>{{dtstr run.status }}</td>
+                <td class="w3-right-align">{{ run.run_id }}</td>
             </tr>
         {{/each}}
         </tbody>

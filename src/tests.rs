@@ -1,3 +1,6 @@
+use crate::event::START_LIST_IOFXML3_FILE;
+use std::fs::OpenOptions;
+use std::io::{Read};
 use chrono::{Local};
 use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
@@ -6,6 +9,7 @@ use crate::files::FileInfo;
 use crate::util;
 
 const API_TOKEN: &str = "plelababamak";
+const EVENT_ID: EventId = 1;
 
 fn create_test_server() -> Client {
     let client = Client::tracked(super::rocket()).unwrap();
@@ -55,7 +59,6 @@ fn update_event_data() {
 #[test]
 fn upload_file() {
     let client = create_test_server();
-    const EVENT_ID: EventId = 1;
 
     // send file
     let file_name = "a.txt";
@@ -95,4 +98,24 @@ fn upload_file() {
     assert_eq!(resp.status(), Status::Ok);
 }
 
+#[test]
+fn upload_start_list() {
+    let client = create_test_server();
+    
+    let mut file = OpenOptions::new().read(true).open(format!("tests/{START_LIST_IOFXML3_FILE}")).unwrap();
+    let mut data = vec![];
+    file.read_to_end(&mut data).unwrap();
+
+    let compressed = util::test::zip_data(&data).unwrap();
+    let resp = client.post("/api/event/current/upload/startlist")
+        .header(Header::new("qx-api-token", API_TOKEN))
+        .header(ContentType::ZIP)
+        .body(compressed)
+        .dispatch();
+    assert_eq!(resp.status(), Status::Ok);
+
+    // get start list page
+    let resp = client.get(format!("/event/{EVENT_ID}/startlist")).dispatch();
+    assert_eq!(resp.status(), Status::Ok);
+}
 

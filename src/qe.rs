@@ -94,6 +94,9 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
                 length: cs.course.length.parse::<i64>().unwrap_or(0),
                 climb: cs.course.climb.parse::<i64>().unwrap_or(0),
                 control_count: cs.course.number_of_controls.parse::<i64>().unwrap_or(0),
+                start_time: Default::default(),
+                interval: 0,
+                start_slot_count: 0,
             };
             classes.insert(class_name.clone(), classrec);
         }
@@ -124,7 +127,7 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
             if fixed_offset.is_none() {
                 fixed_offset = Some(start_time.0.offset().clone());
             }
-            runsrec.start_time = start_time.0;
+            runsrec.start_time = Some(start_time.0);
             let si = &ps.start.control_card.as_ref().map(|si| si.parse::<i64>().ok()).flatten().unwrap_or_default();
             runsrec.si_id = *si;
             runs.push(runsrec);

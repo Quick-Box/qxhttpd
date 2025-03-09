@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -6,10 +7,10 @@ pub struct ClassesRecord {
     pub id: i64,
     pub event_id: i64,
     pub name: String,
-    #[serde(default)]
     pub length: i64,
-    #[serde(default)]
     pub climb: i64,
-    #[serde(default)]
     pub control_count: i64,
+    pub start_time: Option<DateTime<FixedOffset>>,
+    pub interval: i64,
+    pub start_slot_count: i64,
 }
