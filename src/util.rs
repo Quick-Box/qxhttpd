@@ -43,9 +43,16 @@ pub(crate) fn obtime(sec_since_midnight: i64) -> String {
     let min = sec_since_midnight / 60;
     format!("{min}:{sec:0>2}")
 }
+pub(crate) fn obtimems(msec_since_midnight: i64) -> String {
+    let msec = msec_since_midnight % 1000;
+    let sec = msec_since_midnight / 1000;
+    let min = sec / 60;
+    let sec = sec % 60;
+    format!("{min}:{sec:0>2}.{msec:0>3}")
+}
 pub(crate) fn dtstr(iso_date_str: Option<&str>) -> String {
     let Some(s) = iso_date_str else {
-        return "--/--/--".to_string()
+        return "---".to_string()
     };
     if let Ok(dt) = QxDateTime::from_iso_string(s) {
         dt.to_display_string()
@@ -54,53 +61,6 @@ pub(crate) fn dtstr(iso_date_str: Option<&str>) -> String {
         s.to_string()
     }
 }
-
-// pub(crate) fn try_parse_naive_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
-//     let datetime_str = datetime_str.trim();
-//     // remove timezone if any
-//     let datetime_str = if let Some(time_sep) = datetime_str.find(|c| c == 'T' || c == ' ') {
-//         let time_str = &datetime_str[time_sep+1..];
-//         if let Some(tz_sep) = time_str.find(|c| c == '-' || c == '+') {
-//             &datetime_str[.. time_sep + tz_sep + 1]
-//         } else {
-//             datetime_str
-//         }
-//     } else {
-//         datetime_str
-//     };
-//     for &format in &[
-//         "%Y-%m-%d %H:%M:%S",       // 2025-03-05 14:32:45
-//         "%Y-%m-%d %H:%M",          // 2025-03-05 14:32
-//         "%Y-%m-%dT%H:%M:%S",       // 2025-03-05T14:32:45
-//         "%Y-%m-%dT%H:%M",          // 2025-03-05T14:32
-//         // "%d/%m/%Y %H:%M:%S",       // 05/03/2025 14:32:45
-//         // "%m/%d/%Y %H:%M:%S",       // 03/05/2025 14:32:45
-//         // "%Y/%m/%d %H:%M:%S",       // 2025/03/05 14:32:45
-//     ] {
-//         match NaiveDateTime::parse_from_str(datetime_str, format) {
-//             Ok(dt) => { return Some(dt) }
-//             Err(e) => {
-//                 trace!("Failed to parse date time {datetime_str} with {format}: {:?}", e);
-//             }
-//         }
-//     }
-//     None
-// }
-//#[test]
-// fn test_parse_naive_datetime() {
-//     for (dtstr, dtstr2) in &[
-//         ("1970-03-05 14:32:45", "1970-03-05 14:32:45"),
-//         ("2025-03-05T14:32:45", "2025-03-05 14:32:45"),
-//         ("2025-03-05 14:32", "2025-03-05 14:32:00"),
-//         ("2025-03-05T14:32", "2025-03-05 14:32:00"),
-//         ("2025-03-05 14:32:45+10", "2025-03-05 14:32:45"),
-//         ("2025-03-05T14:32:45-01:30", "2025-03-05 14:32:45"),
-//     ] {
-//         let dt = try_parse_naive_datetime(dtstr).unwrap();
-//         // println!("{} -> {}", dtstr, dt.to_string());
-//         assert_eq!(&dt.to_string(), dtstr2)
-//     }
-// }
 
 pub(crate) fn unzip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
     let mut z = flate2::read::ZlibDecoder::new(bytes);

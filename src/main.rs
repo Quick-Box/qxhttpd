@@ -1,6 +1,6 @@
 #[macro_use] extern crate rocket;
 
-use crate::event::{user_info, EventInfo};
+use crate::event::{EventInfo};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::RwLock;
@@ -70,26 +70,16 @@ impl QxState {
 }
 type SharedQxState = RwLock<QxState>;
 
-async fn index(user: Option<UserInfo>, db: &State<DbPool>) -> std::result::Result<Template, status::Custom<String>> {
+#[get("/")]
+async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
     let pool = &db.0;
     let events: Vec<EventInfo> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
     Ok(Template::render("index", context! {
-            user,
-            events,
-        }))
-}
-
-#[get("/")]
-async fn index_authorized(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
-    index(Some(user), db).await
-}
-#[get("/", rank = 2)]
-async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
-    index(None, db).await
+        events,
+    }))
 }
 #[launch]
 fn rocket() -> _ {
@@ -126,11 +116,21 @@ fn rocket() -> _ {
                                            }
                                            Ok(())
                                        }));
+            handlebars.register_helper("obtimems",
+                                       Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
+                                           let val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("obtime", 0))?.value();
+                                           if let Some(msec) = val.as_i64() {
+                                               let s = util::obtimems(msec);
+                                               out.write(&s)?;
+                                           } else {
+                                               out.write("--:--:--")?;
+                                           }
+                                           Ok(())
+                                       }));
         }))
         .attach(DbPoolFairing())
         .mount("/", FileServer::from("./static"))
         .mount("/", routes![
-            index_authorized,
             index_anonymous,
         ]);
     let rocket = auth::extend(rocket);

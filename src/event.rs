@@ -187,17 +187,25 @@ async fn get_event_delete(event_id: EventId, session_id: QxSessionId, state: &St
         Err(Custom(Status::Unauthorized, String::from("Event owner email mismatch!")))
     }
 }
-
-#[get("/event/<event_id>")]
-async fn get_event(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn get_event_impl(event_id: EventId, user: Option<UserInfo>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
     let files = files::list_files(event_id, db).await?;
     Ok(Template::render("event", context! {
+        user,
         event,
         files,
     }))
 }
 
+#[get("/event/<event_id>", rank = 2)]
+async fn get_event(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    get_event_impl(event_id, None, db).await
+}
+#[get("/event/<event_id>")]
+async fn get_event_authorized(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    get_event_impl(event_id, Some(user), db).await
+}
 
 #[get("/api/event/current")]
 async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
@@ -227,10 +235,9 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
 struct StartListRecord {
     run: RunsRecord,
     start_time_sec: Option<i64>,
-    time_msec: Option<i64>,
 }
 #[get("/event/<event_id>/startlist?<class_name>")]
-async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes WHERE event_id=?")
         .bind(event_id)
@@ -257,14 +264,66 @@ async fn get_event_start_list(event_id: EventId, class_name: Option<&str>, db: &
         .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
     let runs = runs.into_iter().map(|run| {
         let start_time_sec = run.start_time.map(|t| t.signed_duration_since(start00).num_seconds());
-        let time_msec = run.start_time.map(|st| run.finish_time.map(|ft| ft.signed_duration_since(st).num_milliseconds())).flatten();
         StartListRecord {
             run,
             start_time_sec,
-            time_msec,
         }
     }).collect::<Vec<_>>();
     Ok(Template::render("startlist", context! {
+        event,
+        classrec,
+        classes,
+        runs,
+    }))
+
+}
+#[derive(Serialize, Debug)]
+struct ResultsRecord {
+    run: RunsRecord,
+    start_time_sec: Option<i64>,
+    finish_time_msec: Option<i64>,
+    time_msec: Option<i64>,
+}
+
+#[get("/event/<event_id>/results?<class_name>")]
+async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let event = load_event_info(event_id, db).await?;
+    let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes WHERE event_id=?")
+        .bind(event_id)
+        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+    let class_name = if let Some(name) = class_name {
+        name.to_string()
+    } else {
+        if let Some(classrec) = classes.first() {
+            classrec.name.clone()
+        } else {
+            return Err(Custom(Status::BadRequest, String::from("Classes not found")));
+        }
+    };
+    let classrec = {
+        let Some(classrec) = classes.iter().find(|c| c.name == class_name) else {
+            return Err(Custom(Status::BadRequest, format!("Class {class_name} not found")));
+        };
+        classrec.clone()
+    };
+    let start00 = event.start_time;
+    let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=?")
+        .bind(event_id)
+        .bind(class_name)
+        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+    let mut runs = runs.into_iter().map(|run| {
+        let start_time_sec = run.start_time.map(|t| t.signed_duration_since(start00).num_seconds());
+        let finish_time_msec = run.finish_time.map(|t| t.signed_duration_since(start00).num_milliseconds());
+        let time_msec = run.start_time.map(|st| run.finish_time.map(|ft| ft.signed_duration_since(st).num_milliseconds())).flatten();
+        ResultsRecord {
+            run,
+            start_time_sec,
+            finish_time_msec,
+            time_msec,
+        }
+    }).collect::<Vec<_>>();
+    runs.sort_by_key(|run| if let Some(time) = run.time_msec { time } else { i64::MAX });
+    Ok(Template::render("results", context! {
         event,
         classrec,
         classes,
@@ -303,8 +362,10 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_event_delete,
             post_event,
             get_event,
+            get_event_authorized,
             post_upload_startlist,
-            get_event_start_list,
+            get_event_startlist,
+            get_event_results,
             get_api_event_current,
             post_api_event_current,
         ])

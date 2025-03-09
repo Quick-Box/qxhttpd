@@ -12,10 +12,10 @@ pub struct RunsRecord {
     pub si_id: i64,
     pub registration: String,
     pub start_time: Option<DateTime<FixedOffset>>,
-    #[sqlx(default)]
     pub check_time: Option<DateTime<FixedOffset>>,
     pub finish_time: Option<DateTime<FixedOffset>>,
     pub status: String,
+    pub edited_by: String,
 }
 impl Default for RunsRecord {
     fn default() -> Self {
@@ -31,6 +31,7 @@ impl Default for RunsRecord {
             check_time: Default::default(),
             finish_time: Default::default(),
             status: "".to_string(),
+            edited_by: "".to_string(),
         }
     }
 }

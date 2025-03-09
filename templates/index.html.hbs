@@ -15,9 +15,6 @@
                 <td>{{this.place}}</td>
                 <td>{{dtstr this.start_time}}</td>
                 <td>{{dtstr this.owner}}</td>
-                {{#if ../user}}
-                <td><a href="/event/{{this.id}}/edit" class="w3-button w3-round-large w3-border"><i class="fa fa-cog"></i> edit</a></td>
-                {{/if}}
             </tr>
         {{/each}}
     </table>

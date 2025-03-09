@@ -5,7 +5,7 @@
 
     <div>
     {{#each classes}}
-        <a class="w3-button" href="/event/{{ ../event.id }}/startlist?class_name={{this.name}}">{{ this.name }}</a>
+        <a class="w3-button" href="/event/{{ ../event.id }}/results?class_name={{this.name}}">{{ this.name }}</a>
     {{/each}}
     </div>
 
@@ -22,7 +22,10 @@
             <th>Start</th>
             <th>Name</th>
             <th>Registration</th>
-            <th>Edited by</th>
+            <th>Check</th>
+            <th>Finish</th>
+            <th>Time</th>
+            <th>Status</th>
             <th>Run Id</th>
         </tr>
         </thead>
@@ -32,7 +35,10 @@
                 <td class="w3-right-align">{{obtime start_time_sec }}</td>
                 <td>{{ run.runner_name }}</td>
                 <td>{{ run.registration }}</td>
-                <td>{{dtstr run.edited_by }}</td>
+                <td>{{dtstr run.check_time }}</td>
+                <td>{{obtimems finish_time_msec }}</td>
+                <td class="w3-right-align">{{obtimems time_msec }}</td>
+                <td>{{dtstr run.status }}</td>
                 <td class="w3-right-align">{{ run.run_id }}</td>
             </tr>
         {{/each}}
