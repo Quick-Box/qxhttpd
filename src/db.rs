@@ -1,6 +1,6 @@
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::{Build, Rocket};
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePool, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqlitePoolOptions};
 use sqlx::migrate::Migrator;
 use std::path::Path;
 use std::str::FromStr;
@@ -84,7 +84,7 @@ impl Fairing for DbPoolFairing {
         info!("Opening database: {database_url}");
         // Initialize connection pool
         let opts = SqliteConnectOptions::from_str(&database_url).expect("valid sqlite url")
-            //.journal_mode(SqliteJournalMode::Wal) // use WAL for better concurrency
+            .journal_mode(SqliteJournalMode::Wal) // use WAL for better concurrency
             //.pragma("foreign_keys", "true") // enable foreign keys
             ;
         let pool = match SqlitePoolOptions::new()

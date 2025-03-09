@@ -3,3 +3,5 @@
 Cargo.lock
 Rocket.prod.toml
 Rocket.local.toml
+*.sqlite-shm
+*.sqlite-wal
