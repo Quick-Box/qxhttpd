@@ -1,40 +1,78 @@
 use std::backtrace::Backtrace;
 use std::io::Read;
 use anyhow::anyhow;
-use chrono::{DateTime, FixedOffset, SecondsFormat};
+use chrono::{DateTime, FixedOffset, SecondsFormat, TimeDelta};
 use rocket::http::Status;
 use rocket::response::status::Custom;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 pub struct QxDateTime(pub DateTime<FixedOffset>);
 impl QxDateTime {
-    fn to_display_string(&self) -> String {
+    pub fn new(datetime: DateTime<FixedOffset>) -> QxDateTime {
+        let millis = datetime.timestamp_subsec_millis();
+        let nanos = datetime.timestamp_subsec_nanos() - millis * 1_000_000;
+        if let Some(dt) = datetime.checked_sub_signed(TimeDelta::nanoseconds(nanos as i64)) {
+            QxDateTime(dt)
+        } else {
+            QxDateTime(datetime)
+        }
+    }
+    fn to_display_string(self) -> String {
         self.0.format("%F %T").to_string()
     }
-    fn to_iso_string(&self) -> String {
-        self.0.to_rfc3339_opts(SecondsFormat::Secs, true)
+    fn to_iso_string(self) -> String {
+        if self.0.timestamp_subsec_millis() == 0 {
+            self.0.to_rfc3339_opts(SecondsFormat::Secs, true)
+        } else {
+            self.0.to_rfc3339_opts(SecondsFormat::Millis, true)
+        }
     }
     pub(crate) fn from_iso_string(datetime_str: &str) -> Result<Self, anyhow::Error> {
         let dt = DateTime::parse_from_rfc3339(datetime_str)?;
         // println!("{datetime_str} -> {dt:?}");
-        Ok(Self(dt))
+        Ok(Self::new(dt))
     }
 }
 impl From<DateTime<FixedOffset>> for QxDateTime {
     fn from(value: DateTime<FixedOffset>) -> Self {
-        Self(value)
+        Self::new(value)
     }
 }
+impl<DB: sqlx::Database> sqlx::Type<DB> for QxDateTime
+where
+    str: sqlx::Type<DB>,
+{
+    fn type_info() -> <DB as sqlx::Database>::TypeInfo {
+        // TEXT columns only
+        <&str as sqlx::Type<DB>>::type_info()
+    }
+}
+impl<'r, DB: sqlx::Database> sqlx::Decode<'r, DB> for QxDateTime
+where
+    &'r str: sqlx::Decode<'r, DB>,
+{
+    fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let value = <&str as sqlx::Decode<DB>>::decode(value)?;
+        let res = QxDateTime::from_iso_string(value);
+        // println!("DECODE: {}, res: {:?}", value, res);
+        Ok(res?)
+    }
+}
+
 #[test]
 fn test_parse_qxdatetime() {
     for (dtstr, dtstr2) in &[
-        ("1970-03-05 14:32:45Z", "1970-03-05T14:32:45Z"),
+        ("1970-03-05 14:32:45+00:00", "1970-03-05T14:32:45Z"),
         ("2025-03-05T14:32:45Z", "2025-03-05T14:32:45Z"),
         ("2025-03-05 14:32:45+10:00", "2025-03-05T14:32:45+10:00"),
         ("2025-03-05T14:32:45-01:30", "2025-03-05T14:32:45-01:30"),
+        ("2025-03-17T20:45:38.565293063+01:00", "2025-03-17T20:45:38.565+01:00"),
+        ("2025-03-17T21:27:04.095+01:00", "2025-03-17T21:27:04.095+01:00")
     ] {
         let dt = QxDateTime::from_iso_string(dtstr)
             .map_err(|e| println!("parse {dtstr} error: {e}")).unwrap();
-        // println!("{} -> {:?}", dtstr, dt);
+        // println!("{} -> {:?}", dtstr, dt.0);
         assert_eq!(&dt.to_iso_string(), dtstr2)
     }
 }

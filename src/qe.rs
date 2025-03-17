@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use chrono::{DateTime, FixedOffset, NaiveDateTime, TimeZone};
+use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, TimeZone};
 use rocket::http::Status;
 use rocket::response::status;
 use rocket::response::status::Custom;
@@ -17,7 +17,7 @@ use crate::iofxml3::structs::StartList;
 use crate::oc::OCheckListChange;
 use crate::qe::classes::ClassesRecord;
 use crate::qe::runs::{apply_qe_out_change, RunsRecord};
-use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, QxDateTime};
+use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, QxDateTime};
 
 pub mod runs;
 pub mod classes;
@@ -71,9 +71,9 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
             .bind(run.first_name)
             .bind(run.registration)
             .bind(run.class_name)
-            .bind(run.start_time)
-            .bind(run.check_time)
-            .bind(run.finish_time)
+            .bind(run.start_time.map(|d| d.0))
+            .bind(run.check_time.map(|d| d.0))
+            .bind(run.finish_time.map(|d| d.0))
             .bind(run.status)
             .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
     }
@@ -104,18 +104,18 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
             classes.insert(class_name.clone(), classrec);
         }
         for ps in &cs.person_start {
-            let mut runsrec = RunsRecord::default();
-            runsrec.class_name = class_name.clone();
+            let mut runsrec = RunsRecord { class_name: class_name.clone(), ..Default::default() };
             let person = &ps.person;
             let name = &person.name;
-            runsrec.first_name = format!("{} {}", name.family, name.given);
+            runsrec.first_name = name.given.to_string();
+            runsrec.last_name = name.family.to_string();
             runsrec.registration = person.id.iter().find(|id| id.id_type == "CZE")
-                .map(|id| id.text.clone()).flatten().unwrap_or_default();
+                .and_then(|id| id.text.clone()).unwrap_or_default();
             let Some(run_id) = person.id.iter().find(|id| id.id_type == "QuickEvent") else {
                 warn!("QuickEvent ID not found in person_start {:?}", ps);
                 continue;
             };
-            let Some(run_id) = run_id.text.as_ref().map(|id| id.parse::<i64>().ok()).flatten() else {
+            let Some(run_id) = run_id.text.as_ref().and_then(|id| id.parse::<i64>().ok()) else {
                 // still can be a vacant
                 if !runsrec.registration.is_empty() {
                     warn!("QuickEvent ID value invalid: {:?}", ps);
@@ -128,16 +128,16 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
                 continue;
             };
             if fixed_offset.is_none() {
-                fixed_offset = Some(start_time.0.offset().clone());
+                fixed_offset = Some(*start_time.0.offset());
             }
-            runsrec.start_time = Some(start_time.0);
-            let si = &ps.start.control_card.as_ref().map(|si| si.parse::<i64>().ok()).flatten().unwrap_or_default();
+            runsrec.start_time = Some(start_time);
+            let si = &ps.start.control_card.as_ref().and_then(|si| si.parse::<i64>().ok()).unwrap_or_default();
             runsrec.si_id = *si;
             runs.push(runsrec);
         }
     }
-    let classes = classes.into_iter().map(|(_, v)| v).collect();
-    let start00 = fixed_offset.map(|offset| offset.from_local_datetime(&start00_naive).single() ).flatten();
+    let classes = classes.into_values().collect();
+    let start00 = fixed_offset.and_then(|offset| offset.from_local_datetime(&start00_naive).single());
     Ok((start00, classes, runs))
 }
 
@@ -176,24 +176,23 @@ pub struct QERunChange {
     pub registration: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub check_time: Option<String>,
+    pub check_time: Option<QxDateTime>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub start_time: Option<i64>,
+    pub start_time: Option<QxDateTime>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub finish_time: Option<String>,
+    pub finish_time: Option<QxDateTime>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
 }
-
-impl_sqlx_json_text_type_and_decode!(QERunChange);
-
-impl TryFrom<&OCheckListChange> for QERunChange {
-    type Error = String;
-
-    fn try_from(oc: &OCheckListChange) -> Result<Self, Self::Error> {
+impl QERunChange {
+    pub fn try_from_oc_change(start00: &DateTime<FixedOffset>, oc: &OCheckListChange) -> Result<Self, String> {
+        let tm = NaiveTime::parse_from_str(&oc.Runner.StartTime, "%H:%M:%S")
+            .map_err(|e| warn!("Invalid start time {}, parse error: {e}", oc.Runner.StartTime)).ok();
+        let dt = tm.map(|tm| NaiveDateTime::new(start00.date_naive(), tm))
+            .map(|ndt| QxDateTime::new(DateTime::<FixedOffset>::from_naive_utc_and_offset(ndt, *start00.offset())));
         Ok(QERunChange {
             run_id: oc.Runner.Id.parse::<i64>().ok(),
             si_id: if oc.Runner.Card > 0 {Some(oc.Runner.Card)} else {None},
@@ -201,7 +200,7 @@ impl TryFrom<&OCheckListChange> for QERunChange {
             first_name: None,
             last_name: None,
             registration: None,
-            check_time: if oc.Runner.StartTime.is_empty() {None} else {Some(oc.Runner.StartTime.clone())},
+            check_time: dt,
             start_time: None,
             finish_time: None,
             status: None,
@@ -209,6 +208,8 @@ impl TryFrom<&OCheckListChange> for QERunChange {
         })
     }
 }
+impl_sqlx_json_text_type_and_decode!(QERunChange);
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
 pub struct QERadioRecord {
@@ -356,11 +357,26 @@ fn get_api_event_qe_out_chng_sse(event_id: EventId, state: &State<SharedQxState>
     }
 }
 
+#[get("/api/event/<event_id>/runs?<run_id>&<class_name>")]
+async fn get_event_runs(event_id: EventId, class_name: Option<&str>, run_id: Option<i32>, db: &State<DbPool>) -> Result<Json<Vec<RunsRecord>>, Custom<String>> {
+    //let event = load_event_info(event_id, db).await?;
+    let run_id_filter = run_id.map(|id| format!("AND run_id={id}")).unwrap_or_default();
+    let class_filter = class_name.map(|n| format!("AND class_name='{n}'")).unwrap_or_default();
+    let qs = format!("SELECT * FROM runs WHERE event_id=? {run_id_filter} {class_filter} ORDER BY run_id");
+    let runs = sqlx::query_as::<_, RunsRecord>(&qs)
+        .bind(event_id)
+        .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
+    Ok(runs.into())
+}
+
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
         get_event_qe_in_chng,
         get_api_event_qe_in_chng_sse,
         request_run_change,
         post_api_qe_out,
+        qe_change_applied,
+        get_api_event_qe_out_chng_sse,
+        get_event_runs,
     ])
 }

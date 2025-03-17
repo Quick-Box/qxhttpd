@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
+use chrono::{DateTime, FixedOffset};
 use rocket::http::Status;
 use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
@@ -80,7 +81,7 @@ pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChange
         .collect();
     Ok(ocs)
 }
-pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
+pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &DateTime<FixedOffset>, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
     query("INSERT INTO ocout
                 (event_id, change_set)
                 VALUES (?, ?)")
@@ -89,7 +90,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: &OCheckList
         .execute(&db.0)
         .await.map_err(|e| e.to_string())?;
     for chng in &change_set.Data {
-        let Ok(qerec) = QERunChange::try_from(chng) else { continue; };
+        let Ok(qerec) = QERunChange::try_from_oc_change(start00, chng) else { continue; };
         add_qe_in_change_record(event_id, "oc", None, &qerec, db).await;
     }
     Ok(())
@@ -99,7 +100,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: &OCheckList
 async fn post_api_token_oc_out(api_token: QxApiToken, change_set_yaml: &str, db: &State<DbPool>) -> Result<(), Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
     let change_set: OCheckListChangeSet = serde_yaml::from_str(change_set_yaml).map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-    add_oc_change_set(event.id, &change_set, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
+    add_oc_change_set(event.id, &event.start_time, &change_set, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
     Ok(())
 }
 #[derive(Serialize, FromRow, Clone, Debug)]

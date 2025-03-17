@@ -39,7 +39,7 @@ pub struct EventInfo {
 impl EventInfo {
     pub fn new(owner: &str) -> Self {
         let start_time = chrono::Local::now().fixed_offset();
-        let start_time = start_time.with_second(0).map(|dt| dt.with_nanosecond(0)).flatten().unwrap_or(start_time);
+        let start_time = start_time.with_second(0).and_then(|dt| dt.with_nanosecond(0)).unwrap_or(start_time);
         Self {
             id: 0,
             name: "".to_string(),
@@ -75,7 +75,7 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
         query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(&event.start_time)
+            .bind(event.start_time)
             // .bind(&event.time_zone)
             .bind(event.id)
             .execute(&db.0)
@@ -85,7 +85,7 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
         let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token, owner) VALUES (?, ?, ?, ?, ?) RETURNING id")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(&event.start_time)
+            .bind(event.start_time)
             .bind(&event.api_token.0)
             .bind(&event.owner)
             .fetch_one(&db.0)
@@ -226,7 +226,7 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
     event_info.name = posted_event.name.clone();
     event_info.place = posted_event.place.clone();
     event_info.start_time = posted_event.start_time;
-    let event_id = save_event(&event_info, db).await.map_err(|e| anyhow_to_custom_error(e))?;
+    let event_id = save_event(&event_info, db).await.map_err(anyhow_to_custom_error)?;
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
 }
@@ -252,12 +252,10 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let class_name = if let Some(name) = class_name {
         name.to_string()
+    } else if let Some(classrec) = classes.first() {
+        classrec.name.clone()
     } else {
-        if let Some(classrec) = classes.first() {
-            classrec.name.clone()
-        } else {
-            return Err(Custom(Status::BadRequest, String::from("Classes not found")));
-        }
+        return Err(Custom(Status::BadRequest, String::from("Classes not found")));
     };
     let classrec = {
         let Some(classrec) = classes.iter().find(|c| c.name == class_name) else {
@@ -271,7 +269,7 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
         .bind(class_name)
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let runs = runs.into_iter().map(|run| {
-        let start_time_sec = run.start_time.map(|t| t.signed_duration_since(start00).num_seconds());
+        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00).num_seconds());
         StartListRecord {
             run,
             start_time_sec,
@@ -284,7 +282,6 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
         classes,
         runs,
     }))
-
 }
 #[derive(Serialize, Debug)]
 struct ResultsRecord {
@@ -302,12 +299,10 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let class_name = if let Some(name) = class_name {
         name.to_string()
+    } else if let Some(classrec) = classes.first() {
+        classrec.name.clone()
     } else {
-        if let Some(classrec) = classes.first() {
-            classrec.name.clone()
-        } else {
-            return Err(Custom(Status::BadRequest, String::from("Classes not found")));
-        }
+        return Err(Custom(Status::BadRequest, String::from("Classes not found")));
     };
     let classrec = {
         let Some(classrec) = classes.iter().find(|c| c.name == class_name) else {
@@ -321,9 +316,9 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
         .bind(class_name)
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let mut runs = runs.into_iter().map(|run| {
-        let start_time_sec = run.start_time.map(|t| t.signed_duration_since(start00).num_seconds());
-        let finish_time_msec = run.finish_time.map(|t| t.signed_duration_since(start00).num_milliseconds());
-        let time_msec = run.start_time.map(|st| run.finish_time.map(|ft| ft.signed_duration_since(st).num_milliseconds())).flatten();
+        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00).num_seconds());
+        let finish_time_msec = run.finish_time.map(|t| t.0.signed_duration_since(start00).num_milliseconds());
+        let time_msec = run.start_time.and_then(|st| run.finish_time.map(|ft| ft.0.signed_duration_since(st.0).num_milliseconds()));
         ResultsRecord {
             run,
             start_time_sec,
@@ -345,7 +340,7 @@ async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content
     let event_info = load_event_info2(&qx_api_token, db).await?;
     let file_id = crate::files::post_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
     import_startlist(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
-    Ok(format!("{}", file_id))
+    Ok(file_id)
 }
 #[get("/event/create-demo")]
 async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
@@ -358,7 +353,7 @@ async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<St
     let data = crate::oc::load_oc_dir("tests/oc/data")
         .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
     for chngset in &data {
-        crate::oc::add_oc_change_set(event_id, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
+        crate::oc::add_oc_change_set(event_id, &event_info.start_time, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
     }
     Ok(Redirect::to(format!("/event/{event_id}")))
 }

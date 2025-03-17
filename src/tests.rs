@@ -6,7 +6,10 @@ use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
 use crate::event::{EventId, EventInfo, PostedEvent};
 use crate::files::FileInfo;
+use crate::qe::QERunChange;
+use crate::qe::runs::RunsRecord;
 use crate::util;
+use crate::util::QxDateTime;
 
 const API_TOKEN: &str = "plelababamak";
 const EVENT_ID: EventId = 1;
@@ -20,7 +23,6 @@ fn create_test_server() -> Client {
     }
     client
 }
-
 #[test]
 fn update_event_data() {
     let client = create_test_server();
@@ -98,10 +100,7 @@ fn upload_file() {
     assert_eq!(resp.status(), Status::Ok);
 }
 
-#[test]
-fn upload_start_list() {
-    let client = create_test_server();
-    
+fn upload_start_list_impl(client: &Client) {
     let mut file = OpenOptions::new().read(true).open(format!("tests/{START_LIST_IOFXML3_FILE}")).unwrap();
     let mut data = vec![];
     file.read_to_end(&mut data).unwrap();
@@ -113,9 +112,55 @@ fn upload_start_list() {
         .body(compressed)
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
-
+}
+#[test]
+fn upload_start_list() {
+    let client = create_test_server();
+    upload_start_list_impl(&client);
     // get start list page
     let resp = client.get(format!("/event/{EVENT_ID}/startlist")).dispatch();
     assert_eq!(resp.status(), Status::Ok);
 }
 
+#[test]
+fn post_qe_out_change() {
+    let client = create_test_server();
+    upload_start_list_impl(&client);
+
+    fn apply_change(client: &Client, change: &QERunChange) -> Vec<RunsRecord> {
+        let resp = client.post("/api/event/current/qe/out/changes")
+            .header(Header::new("qx-api-token", API_TOKEN))
+            .header(ContentType::JSON)
+            .json(&change)
+            .dispatch();
+        assert_eq!(resp.status(), Status::Ok);
+
+        // get change
+        let resp = client.get(format!("/api/event/{EVENT_ID}/runs?run_id=1")).dispatch();
+        resp.into_json::<Vec<RunsRecord>>().unwrap()
+    }
+    {
+        let change = QERunChange {
+            run_id: Some(1),
+            si_id: Some(12345),
+            ..Default::default()
+        };
+        let records = apply_change(&client, &change);
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].si_id, 12345);
+    }
+    {
+        let start_time = Some(QxDateTime::new(Local::now().fixed_offset()));
+        let change = QERunChange {
+            run_id: Some(1),
+            si_id: Some(0),
+            last_name: Some("Foo".to_string()),
+            start_time,
+            ..Default::default()
+        };
+        let records = apply_change(&client, &change);
+        assert_eq!(records.len(), 1);
+        assert_eq!(&records[0].last_name, "Foo");
+        assert_eq!(records[0].start_time, start_time);
+    }
+}

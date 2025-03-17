@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use chrono::{DateTime, FixedOffset};
 use rocket::State;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -7,7 +6,7 @@ use sqlx::{Database, FromRow, Sqlite};
 use sqlx::query::Query;
 use crate::db::DbPool;
 use crate::qe::{QEJournalRecord};
-use crate::util::sqlx_to_anyhow;
+use crate::util::{sqlx_to_anyhow, QxDateTime};
 
 #[derive(Serialize, Deserialize, FromRow, Debug)]
 pub struct RunsRecord {
@@ -19,12 +18,14 @@ pub struct RunsRecord {
     pub class_name: String,
     pub si_id: i64,
     pub registration: String,
-    pub start_time: Option<DateTime<FixedOffset>>,
-    pub check_time: Option<DateTime<FixedOffset>>,
-    pub finish_time: Option<DateTime<FixedOffset>>,
+    pub start_time: Option<QxDateTime>,
+    pub check_time: Option<QxDateTime>,
+    pub finish_time: Option<QxDateTime>,
     pub status: String,
     pub edited_by: String,
 }
+// impl_sqlx_json_text_type_and_decode!(RunsRecord);
+
 impl Default for RunsRecord {
     fn default() -> Self {
         Self {
@@ -79,7 +80,11 @@ pub async fn apply_qe_out_change(rec: &QEJournalRecord, db: &State<DbPool>) -> a
         fn bind_recursive<'a, 'b>(json_chng: &'a Map<String, Value>, q: Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>>, keys: &'b [&'b str]) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
             if let Some(&key) = keys.first() {
                 let val = json_chng.get(key).expect("Value must exit here for key: {key}");
-                let q = q.bind(val);
+                let q = if val.is_string() {
+                    q.bind(val.as_str().unwrap_or_default())
+                } else {
+                    q.bind(val)
+                };
                 bind_recursive(json_chng, q, &keys[1..])
             } else {
                 q

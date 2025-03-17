@@ -5,6 +5,7 @@ use sqlx::migrate::Migrator;
 use std::path::Path;
 use std::str::FromStr;
 
+// macro to decode some type from SQL text
 #[macro_export]
 macro_rules! impl_sqlx_text_type_and_decode {
     ($type:ident) => {
@@ -12,6 +13,7 @@ macro_rules! impl_sqlx_text_type_and_decode {
         where str: sqlx::Type<DB>
         {
             fn type_info() -> <DB as sqlx::Database>::TypeInfo {
+                // TEXT columns only
                 <&str as sqlx::Type<DB>>::type_info()
             }
         }
@@ -26,6 +28,8 @@ macro_rules! impl_sqlx_text_type_and_decode {
         }
     };
 }
+
+// macro to decode some type from SQL JSON text
 #[macro_export]
 macro_rules! impl_sqlx_json_text_type_and_decode {
     ($type:ident) => {
@@ -33,6 +37,7 @@ macro_rules! impl_sqlx_json_text_type_and_decode {
         where str: sqlx::Type<DB>
         {
             fn type_info() -> <DB as sqlx::Database>::TypeInfo {
+                // TEXT columns only
                 <&str as sqlx::Type<DB>>::type_info()
             }
         }
