@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::db::DbPool;
 use crate::event::{load_event_info2, EventId};
 use crate::{QxApiToken};
-use crate::util::{status_sqlx_error, unzip_data};
+use crate::util::{sqlx_to_custom_error, unzip_data};
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct FileInfo {
@@ -22,7 +22,7 @@ pub async fn list_files(event_id: EventId, db: &State<DbPool>) -> Result<Vec<Fil
     let pool = &db.0;
     let files = sqlx::query_as::<_, FileInfo>("SELECT id, name, LENGTH(data) AS size, created FROM files WHERE event_id=?")
         .bind(event_id)
-        .fetch_all(pool).await.map_err(status_sqlx_error)?;
+        .fetch_all(pool).await.map_err(sqlx_to_custom_error)?;
     Ok(files)
 }
 #[get("/api/event/<event_id>/file")]
@@ -36,7 +36,7 @@ async fn get_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Result
         .bind(event_id)
         .bind(file_id)
         .fetch_one(&db.0).await;
-    files.map(|d| d.0 ).map_err(status_sqlx_error)
+    files.map(|d| d.0 ).map_err(sqlx_to_custom_error)
 }
 #[get("/event/<event_id>/file/<file_name>")]
 async fn get_file_by_name(event_id: EventId, file_name: &str, db: &State<DbPool>) -> Result<Vec<u8>, Custom<String>> {
@@ -44,7 +44,7 @@ async fn get_file_by_name(event_id: EventId, file_name: &str, db: &State<DbPool>
         .bind(event_id)
         .bind(file_name)
         .fetch_one(&db.0).await;
-    files.map(|d| d.0 ).map_err(status_sqlx_error)
+    files.map(|d| d.0 ).map_err(sqlx_to_custom_error)
 }
 
 #[delete("/api/event/<event_id>/file/<file_id>")]
@@ -52,7 +52,7 @@ async fn delete_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Res
     let res = sqlx::query("DELETE FROM files WHERE event_id=? AND id=?")
         .bind(event_id)
         .bind(file_id)
-        .execute(&db.0).await.map_err(status_sqlx_error)?;
+        .execute(&db.0).await.map_err(sqlx_to_custom_error)?;
     if res.rows_affected() == 0 {
         Err(Custom(Status::NotFound, format!("File id={file_id} not found")))
     } else {
@@ -74,7 +74,7 @@ pub async fn post_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, con
         info!("Event id: {}, updating file: {name} with {} bytes of data", event_info.id, data.len());
         q.bind(data)
     };
-    let file_id = q.fetch_one(&db.0).await.map_err(status_sqlx_error)?.0;
+    let file_id = q.fetch_one(&db.0).await.map_err(sqlx_to_custom_error)?.0;
     Ok(format!("{}", file_id))
 }
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {

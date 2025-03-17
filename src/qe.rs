@@ -7,16 +7,17 @@ use rocket::response::status::Custom;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::Json;
 use rocket::{Build, Rocket, State};
+use rocket::response::stream::{Event, EventStream};
 use rocket_dyn_templates::{context, Template};
-use sqlx::query;
+use sqlx::{query};
 use crate::db::DbPool;
-use crate::event::{load_event_info, load_event_info2, EventId, RunId, SiId, START_LIST_IOFXML3_FILE};
-use crate::{impl_sqlx_json_text_type_and_decode, iofxml3, QxApiToken};
+use crate::event::{load_event_info, load_event_info2, user_info, EventId, RunId, SiId, START_LIST_IOFXML3_FILE};
+use crate::{impl_sqlx_json_text_type_and_decode, iofxml3, QxApiToken, QxSessionId, SharedQxState};
 use crate::iofxml3::structs::StartList;
 use crate::oc::OCheckListChange;
 use crate::qe::classes::ClassesRecord;
-use crate::qe::runs::RunsRecord;
-use crate::util::{tee_sqlx_error, QxDateTime};
+use crate::qe::runs::{apply_qe_out_change, RunsRecord};
+use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, QxDateTime};
 
 pub mod runs;
 pub mod classes;
@@ -31,7 +32,7 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
         .bind(event_id)
         .bind(START_LIST_IOFXML3_FILE)
         .fetch_one(&db.0)
-        .await.map_err(tee_sqlx_error)?.0;
+        .await.map_err(sqlx_to_anyhow)?.0;
     
     let (start00, classes, runs) = parse_startlist_xml_data(event_id, data).await?;
 
@@ -39,7 +40,7 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
     sqlx::query("UPDATE events SET start_time=? WHERE id=?")
         .bind(start00)
         .bind(event_id)
-        .execute(&db.0).await.map_err(tee_sqlx_error)?;
+        .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
     for cr in classes {
         sqlx::query("INSERT OR REPLACE INTO classes (event_id, name, length, climb, control_count) VALUES (?, ?, ?, ?, ?)")
             .bind(event_id)
@@ -47,32 +48,34 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
             .bind(cr.length)
             .bind(cr.climb)
             .bind(cr.control_count)
-            .execute(&db.0).await.map_err(tee_sqlx_error)?;
+            .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
     }
     for run in runs {
         sqlx::query("INSERT OR REPLACE INTO runs (
                              event_id,
                              run_id,
                              si_id,
-                             runner_name,
+                             last_name,
+                             first_name,
                              registration,
                              class_name,
                              start_time,
                              check_time,
                              finish_time,
                              status
-                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .bind(event_id)
             .bind(run.run_id)
             .bind(run.si_id)
-            .bind(run.runner_name)
+            .bind(run.last_name)
+            .bind(run.first_name)
             .bind(run.registration)
             .bind(run.class_name)
             .bind(run.start_time)
             .bind(run.check_time)
             .bind(run.finish_time)
             .bind(run.status)
-            .execute(&db.0).await.map_err(tee_sqlx_error)?;
+            .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
     }
     txn.commit().await?;
 
@@ -105,7 +108,7 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
             runsrec.class_name = class_name.clone();
             let person = &ps.person;
             let name = &person.name;
-            runsrec.runner_name = format!("{} {}", name.family, name.given);
+            runsrec.first_name = format!("{} {}", name.family, name.given);
             runsrec.registration = person.id.iter().find(|id| id.id_type == "CZE")
                 .map(|id| id.text.clone()).flatten().unwrap_or_default();
             let Some(run_id) = person.id.iter().find(|id| id.id_type == "QuickEvent") else {
@@ -138,24 +141,8 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
     Ok((start00, classes, runs))
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct QERunRecord {
-    pub id: RunId,
-    #[serde(default)]
-    pub class_name: String,
-    #[serde(default)]
-    pub runner_name: String,
-    #[serde(default)]
-    pub si_id: SiId,
-    #[serde(default)]
-    pub check_time: String,
-    #[serde(default)]
-    pub start_time: i64,
-    #[serde(default)]
-    pub comment: String,
-}
 #[derive(Serialize, Deserialize, sqlx::FromRow, Clone, Debug)]
-pub struct QEInRecord {
+pub struct QEJournalRecord {
     pub id: i64,
     pub event_id: EventId,
     //#[serde(default)]
@@ -164,8 +151,8 @@ pub struct QEInRecord {
     #[serde(default)]
     pub source: String,
     #[serde(default)]
-    pub user_id: String,
-    created: chrono::DateTime<chrono::Utc>,
+    pub user_id: Option<String>,
+    created: DateTime<chrono::Utc>,
 }
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct QERunChange {
@@ -177,13 +164,28 @@ pub struct QERunChange {
     pub si_id: Option<SiId>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub first_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub registration: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub check_time: Option<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub start_time: Option<i64>,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub comment: Option<String>,
+    pub finish_time: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
 }
 
 impl_sqlx_json_text_type_and_decode!(QERunChange);
@@ -195,9 +197,15 @@ impl TryFrom<&OCheckListChange> for QERunChange {
         Ok(QERunChange {
             run_id: oc.Runner.Id.parse::<i64>().ok(),
             si_id: if oc.Runner.Card > 0 {Some(oc.Runner.Card)} else {None},
+            class_name: None,
+            first_name: None,
+            last_name: None,
+            registration: None,
             check_time: if oc.Runner.StartTime.is_empty() {None} else {Some(oc.Runner.StartTime.clone())},
             start_time: None,
-            comment: if oc.Runner.Comment.is_empty() { None } else { Some(oc.Runner.Comment.clone()) },
+            finish_time: None,
+            status: None,
+            //comment: if oc.Runner.Comment.is_empty() { None } else { Some(oc.Runner.Comment.clone()) },
         })
     }
 }
@@ -239,17 +247,17 @@ pub async fn add_qe_in_change_record(event_id: EventId, source: &str, user_id: O
         .execute(&db.0)
         .await.map_err(|e| warn!("Insert QE in record error: {e}"));
 }
-#[post("/api/token/qe/out", data = "<change_set>")]
-async fn post_api_token_oc_out(api_token: QxApiToken, change_set: Json<QERunChange>, db: &State<DbPool>) -> Result<(), Custom<String>> {
-    let event = load_event_info2(&api_token, db).await?;
-    add_qe_out_change_record(event.id, "qe", None, &change_set, db).await;
+#[post("/api/qe/<event_id>/out/changes", data = "<change_set>")]
+async fn post_api_qe_out(event_id: EventId, change_set: Json<QERunChange>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<(), Custom<String>> {
+    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    add_qe_out_change_record(event_id, "qe", Some(&user.email), &change_set, db).await;
     Ok(())
 }
-#[get("/event/<event_id>/qe/in")]
-async fn get_qe_in(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+#[get("/event/<event_id>/qe/in/changes")]
+async fn get_event_qe_in_chng(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
     let pool = &db.0;
-    let records: Vec<QEInRecord> = sqlx::query_as("SELECT * FROM qein WHERE event_id=?")
+    let records: Vec<QEJournalRecord> = sqlx::query_as("SELECT * FROM qein WHERE event_id=?")
         .bind(event_id)
         .fetch_all(pool)
         .await
@@ -259,9 +267,100 @@ async fn get_qe_in(event_id: EventId, db: &State<DbPool>) -> Result<Template, Cu
             records,
         }))
 }
+#[get("/api/event/<event_id>/qe/in/changes/sse")]
+fn get_api_event_qe_in_chng_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
+    let mut chng_receiver = state.read().unwrap().qe_in_changes_sender.subscribe();
+    EventStream! {
+        loop {
+            let in_rec = match chng_receiver.recv().await {
+                Ok(chng) => chng,
+                Err(e) => {
+                    error!("Receive QE in record error: {e}");
+                    break;
+                }
+            };
+            if event_id == in_rec.event_id {
+                match serde_json::to_string(&in_rec) {
+                    Ok(json) => {
+                        yield Event::data(json);
+                    }
+                    Err(e) => {
+                        error!("Serde error: {e}");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+#[post("/api/event/<event_id>/qe/in/changes", data = "<change>")]
+fn request_run_change(event_id: EventId, change: Json<QERunChange>, session_id: QxSessionId, state: &State<SharedQxState>) -> Result<(), Custom<String>> {
+    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    let rec = QEJournalRecord {
+        id: 0,
+        event_id,
+        change: change.into_inner(),
+        source: "browser".into(),
+        user_id: Some(user.email),
+        created: chrono::Utc::now(),
+    };
+    if let Err(e) = state.read().expect("not poisoned")
+        .broadcast_qe_in_run_change(rec) {
+        error!("Failed to send QE in record error: {e}");
+    }
+    Ok(())
+}
+
+#[post("/api/event/current/qe/out/changes", data = "<change>")]
+async fn qe_change_applied(change: Json<QERunChange>, api_token: QxApiToken, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<(), Custom<String>> {
+    let event = load_event_info2(&api_token, db).await?;
+    let rec = QEJournalRecord {
+        id: 0,
+        event_id: event.id,
+        change: change.into_inner(),
+        source: "qe".into(),
+        user_id: None,
+        created: chrono::Utc::now(),
+    };
+    apply_qe_out_change(&rec, db).await.map_err(anyhow_to_custom_error)?;
+    if let Err(e) = state.read().expect("not poisoned")
+        .broadcast_qe_out_run_change(rec) {
+        error!("Failed to send QE in record error: {e}");
+    }
+    Ok(())
+}
+#[get("/api/event/<event_id>/qe/out/changes/sse")]
+fn get_api_event_qe_out_chng_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
+    let mut chng_receiver = state.read().unwrap().qe_in_changes_sender.subscribe();
+    EventStream! {
+        loop {
+            let in_rec = match chng_receiver.recv().await {
+                Ok(chng) => chng,
+                Err(e) => {
+                    error!("Receive QE in record error: {e}");
+                    break;
+                }
+            };
+            if event_id == in_rec.event_id {
+                match serde_json::to_string(&in_rec) {
+                    Ok(json) => {
+                        yield Event::data(json);
+                    }
+                    Err(e) => {
+                        error!("Serde error: {e}");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
-            get_qe_in,
-            post_api_token_oc_out,
-        ])
+        get_event_qe_in_chng,
+        get_api_event_qe_in_chng_sse,
+        request_run_change,
+        post_api_qe_out,
+    ])
 }

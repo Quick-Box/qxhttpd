@@ -11,10 +11,12 @@ use rocket::response::{status};
 use rocket::response::status::{Custom};
 use rocket_dyn_templates::{Template, context, handlebars};
 use rocket::serde::Serialize;
+use rocket::tokio::sync::broadcast;
 use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
 use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
+use crate::qe::{QEJournalRecord};
 
 #[cfg(test)]
 mod tests;
@@ -65,8 +67,27 @@ impl<'r> request::FromRequest<'r> for QxApiToken {
 }
 struct QxState {
     sessions: HashMap<QxSessionId, QxSession>,
+    qe_in_changes_sender: broadcast::Sender<QEJournalRecord>,
+    qe_out_changes_sender: broadcast::Sender<QEJournalRecord>,
 }
 impl QxState {
+    fn new() -> Self {
+        let (in_sender, _receiver) = broadcast::channel(16);
+        let (out_sender, _receiver) = broadcast::channel(16);
+        Self {
+            sessions: Default::default(),
+            qe_in_changes_sender: in_sender,
+            qe_out_changes_sender: out_sender,
+        }
+    }
+    fn broadcast_qe_in_run_change(&self, chng: QEJournalRecord) -> anyhow::Result<()> {
+        self.qe_in_changes_sender.send(chng)?;
+        Ok(())
+    }
+    fn broadcast_qe_out_run_change(&self, chng: QEJournalRecord) -> anyhow::Result<()> {
+        self.qe_out_changes_sender.send(chng)?;
+        Ok(())
+    }
 }
 type SharedQxState = RwLock<QxState>;
 
@@ -145,9 +166,7 @@ fn rocket() -> _ {
 
     let rocket = rocket.manage(cfg);
 
-    let state = QxState {
-        sessions: Default::default(),
-    };
+    let state = QxState::new();
 
     rocket.manage(SharedQxState::new(state))
 }

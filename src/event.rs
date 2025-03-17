@@ -19,7 +19,7 @@ use rocket::serde::{Deserialize, Serialize};
 use crate::qe::classes::ClassesRecord;
 use crate::qe::import_startlist;
 use crate::qe::runs::RunsRecord;
-use crate::util::{status_any_error, status_sqlx_error, QxDateTime};
+use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, string_to_custom_error, QxDateTime};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 
@@ -58,7 +58,7 @@ pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<Ev
         .bind(event_id)
         .fetch_one(pool)
         .await
-        .map_err(status_sqlx_error)?;
+        .map_err(sqlx_to_custom_error)?;
     Ok(event)
 }
 pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventInfo, Custom<String>> {
@@ -72,7 +72,7 @@ pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> 
 }
 async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
     let id = if event.id > 0 {
-        query("UPDA pub(crate)TE events SET name=?, place=?, start_time=? WHERE id=?")
+        query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
             .bind(&event.start_time)
@@ -221,12 +221,12 @@ pub struct PostedEvent {
 #[post("/api/event/current", data = "<posted_event>")]
 async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
     let Ok( mut event_info) = load_event_info2(&api_token, db).await else {
-        return Err(Custom(Status::BadRequest, String::from("Event not found")));
+        return Err(string_to_custom_error("Event not found"));
     };
     event_info.name = posted_event.name.clone();
     event_info.place = posted_event.place.clone();
     event_info.start_time = posted_event.start_time;
-    let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
+    let event_id = save_event(&event_info, db).await.map_err(|e| anyhow_to_custom_error(e))?;
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
 }
@@ -249,7 +249,7 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
     let event = load_event_info(event_id, db).await?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes WHERE event_id=?")
         .bind(event_id)
-        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+        .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let class_name = if let Some(name) = class_name {
         name.to_string()
     } else {
@@ -269,7 +269,7 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
     let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=? ORDER BY start_time")
         .bind(event_id)
         .bind(class_name)
-        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+        .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let runs = runs.into_iter().map(|run| {
         let start_time_sec = run.start_time.map(|t| t.signed_duration_since(start00).num_seconds());
         StartListRecord {
@@ -299,7 +299,7 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
     let event = load_event_info(event_id, db).await?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes WHERE event_id=?")
         .bind(event_id)
-        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+        .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let class_name = if let Some(name) = class_name {
         name.to_string()
     } else {
@@ -319,7 +319,7 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
     let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=?")
         .bind(event_id)
         .bind(class_name)
-        .fetch_all(&db.0).await.map_err(status_sqlx_error)?;
+        .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let mut runs = runs.into_iter().map(|run| {
         let start_time_sec = run.start_time.map(|t| t.signed_duration_since(start00).num_seconds());
         let finish_time_msec = run.finish_time.map(|t| t.signed_duration_since(start00).num_milliseconds());
@@ -344,7 +344,7 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
 async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info2(&qx_api_token, db).await?;
     let file_id = crate::files::post_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
-    import_startlist(event_info.id, db).await.map_err(status_any_error)?;
+    import_startlist(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
     Ok(format!("{}", file_id))
 }
 #[get("/event/create-demo")]
