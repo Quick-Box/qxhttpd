@@ -6,7 +6,8 @@ use sqlx::{Database, FromRow, Sqlite};
 use sqlx::query::Query;
 use crate::db::DbPool;
 use crate::qe::{QEJournalRecord};
-use crate::util::{sqlx_to_anyhow, QxDateTime};
+use crate::qxdatetime::QxDateTime;
+use crate::util::{sqlx_to_anyhow};
 
 #[derive(Serialize, Deserialize, FromRow, Debug)]
 pub struct RunsRecord {

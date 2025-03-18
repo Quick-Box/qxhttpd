@@ -17,7 +17,8 @@ use crate::iofxml3::structs::StartList;
 use crate::oc::OCheckListChange;
 use crate::qe::classes::ClassesRecord;
 use crate::qe::runs::{apply_qe_out_change, RunsRecord};
-use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, QxDateTime};
+use crate::qxdatetime::QxDateTime;
+use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
 
 pub mod runs;
 pub mod classes;
@@ -188,11 +189,10 @@ pub struct QERunChange {
     pub status: Option<String>,
 }
 impl QERunChange {
-    pub fn try_from_oc_change(start00: &DateTime<FixedOffset>, oc: &OCheckListChange) -> Result<Self, String> {
+    pub fn try_from_oc_change(start00: &QxDateTime, oc: &OCheckListChange) -> Result<Self, String> {
         let tm = NaiveTime::parse_from_str(&oc.Runner.StartTime, "%H:%M:%S")
             .map_err(|e| warn!("Invalid start time {}, parse error: {e}", oc.Runner.StartTime)).ok();
-        let dt = tm.map(|tm| NaiveDateTime::new(start00.date_naive(), tm))
-            .map(|ndt| QxDateTime::new(DateTime::<FixedOffset>::from_naive_utc_and_offset(ndt, *start00.offset())));
+        let dt = tm.and_then(|tm| QxDateTime::from_local_timezone(NaiveDateTime::new(start00.0.date_naive(), tm), start00.0.offset()));
         Ok(QERunChange {
             run_id: oc.Runner.Id.parse::<i64>().ok(),
             si_id: if oc.Runner.Card > 0 {Some(oc.Runner.Card)} else {None},

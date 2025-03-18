@@ -1,6 +1,5 @@
 use std::fs;
 use std::path::PathBuf;
-use chrono::{DateTime, FixedOffset};
 use rocket::http::Status;
 use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
@@ -11,6 +10,7 @@ use crate::db::DbPool;
 use crate::{impl_sqlx_json_text_type_and_decode, QxApiToken};
 use crate::event::{load_event_info, load_event_info2, EventId, SiId};
 use crate::qe::{add_qe_in_change_record, QERunChange};
+use crate::qxdatetime::QxDateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -81,7 +81,7 @@ pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChange
         .collect();
     Ok(ocs)
 }
-pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &DateTime<FixedOffset>, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
+pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &QxDateTime, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
     query("INSERT INTO ocout
                 (event_id, change_set)
                 VALUES (?, ?)")

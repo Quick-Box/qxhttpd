@@ -14,12 +14,13 @@ use crate::db::DbPool;
 use crate::{files, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
-use chrono::{DateTime, FixedOffset, Timelike};
+use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
 use crate::qe::classes::ClassesRecord;
 use crate::qe::import_startlist;
 use crate::qe::runs::RunsRecord;
-use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, string_to_custom_error, QxDateTime};
+use crate::qxdatetime::QxDateTime;
+use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, string_to_custom_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 
@@ -28,18 +29,17 @@ pub type SiId = i64;
 pub type EventId = i64;
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
-pub struct EventInfo {
+pub struct Eventrecord {
     pub id: EventId,
     pub name: String,
     pub place: String,
-    pub start_time: DateTime<FixedOffset>,
+    pub start_time: QxDateTime,
     pub owner: String,
     api_token: QxApiToken,
 }
-impl EventInfo {
+impl Eventrecord {
     pub fn new(owner: &str) -> Self {
-        let start_time = chrono::Local::now().fixed_offset();
-        let start_time = start_time.with_second(0).and_then(|dt| dt.with_nanosecond(0)).unwrap_or(start_time);
+        let start_time = QxDateTime::now();
         Self {
             id: 0,
             name: "".to_string(),
@@ -52,30 +52,30 @@ impl EventInfo {
     }
 }
 
-pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<EventInfo, Custom<String>> {
+pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<Eventrecord, Custom<String>> {
     let pool = &db.0;
-    let event: EventInfo = sqlx::query_as("SELECT * FROM events WHERE id=?")
+    let event: Eventrecord = sqlx::query_as("SELECT * FROM events WHERE id=?")
         .bind(event_id)
         .fetch_one(pool)
         .await
         .map_err(sqlx_to_custom_error)?;
     Ok(event)
 }
-pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventInfo, Custom<String>> {
+pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<Eventrecord, Custom<String>> {
     let pool = &db.0;
-    let event: EventInfo = sqlx::query_as("SELECT * FROM events WHERE api_token=?")
+    let event: Eventrecord = sqlx::query_as("SELECT * FROM events WHERE api_token=?")
         .bind(&qx_api_token.0)
         .fetch_one(pool)
         .await
         .map_err(|e| Custom(Status::Unauthorized, e.to_string()))?;
     Ok(event)
 }
-async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
+async fn save_event(event: &Eventrecord, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
     let id = if event.id > 0 {
         query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(event.start_time)
+            .bind(event.start_time.0)
             // .bind(&event.time_zone)
             .bind(event.id)
             .execute(&db.0)
@@ -85,7 +85,7 @@ async fn save_event(event: &EventInfo, db: &State<DbPool>) -> Result<EventId, an
         let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token, owner) VALUES (?, ?, ?, ?, ?) RETURNING id")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(event.start_time)
+            .bind(event.start_time.0)
             .bind(&event.api_token.0)
             .bind(&event.owner)
             .fetch_one(&db.0)
@@ -115,11 +115,11 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
     let start_time = QxDateTime::from_iso_string(vals.start_time)
         .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
-    let event = EventInfo {
+    let event = Eventrecord {
         id: vals.id,
         name: vals.name.to_string(),
         place: vals.place.to_string(),
-        start_time: start_time.0,
+        start_time,
         owner: user.email,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
@@ -135,7 +135,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
     let event = if let Some(event_id) = event_id {
         load_event_info(event_id, db).await?
     } else {
-        EventInfo::new(&user.email)
+        Eventrecord::new(&user.email)
     };
     let api_token_qrc_img_data = {
         let code = qrcode::QrCode::new(event.api_token.0.as_bytes()).unwrap();
@@ -208,7 +208,7 @@ async fn get_event_authorized(event_id: EventId, session_id: QxSessionId, state:
 }
 
 #[get("/api/event/current")]
-async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
+async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Result<Json<Eventrecord>, Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
     Ok(Json(event))
 }
@@ -219,13 +219,14 @@ pub struct PostedEvent {
     pub start_time: DateTime<FixedOffset>,
 }
 #[post("/api/event/current", data = "<posted_event>")]
-async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventInfo>, Custom<String>> {
+async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<Eventrecord>, Custom<String>> {
     let Ok( mut event_info) = load_event_info2(&api_token, db).await else {
         return Err(string_to_custom_error("Event not found"));
     };
     event_info.name = posted_event.name.clone();
     event_info.place = posted_event.place.clone();
-    event_info.start_time = posted_event.start_time;
+    event_info.start_time = posted_event.start_time.into();
+    debug!("Post event info, start00: {}", event_info.start_time.to_iso_string());
     let event_id = save_event(&event_info, db).await.map_err(anyhow_to_custom_error)?;
     let reloaded_event = load_event_info(event_id, db).await?;
     Ok(Json(reloaded_event))
@@ -269,7 +270,7 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
         .bind(class_name)
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let runs = runs.into_iter().map(|run| {
-        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00).num_seconds());
+        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00.0).num_seconds());
         StartListRecord {
             run,
             start_time_sec,
@@ -316,8 +317,8 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
         .bind(class_name)
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
     let mut runs = runs.into_iter().map(|run| {
-        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00).num_seconds());
-        let finish_time_msec = run.finish_time.map(|t| t.0.signed_duration_since(start00).num_milliseconds());
+        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00.0).num_seconds());
+        let finish_time_msec = run.finish_time.map(|t| t.0.signed_duration_since(start00.0).num_milliseconds());
         let time_msec = run.start_time.and_then(|st| run.finish_time.map(|ft| ft.0.signed_duration_since(st.0).num_milliseconds()));
         ResultsRecord {
             run,
@@ -344,7 +345,7 @@ async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content
 }
 #[get("/event/create-demo")]
 async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let mut event_info = EventInfo::new("fanda.vacek@gmail.com");
+    let mut event_info = Eventrecord::new("fanda.vacek@gmail.com");
     event_info.name = String::from("Demo event");
     event_info.place = String::from("Deep forest 42");
     event_info.api_token = QxApiToken(String::from("plelababamak"));

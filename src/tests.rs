@@ -1,15 +1,14 @@
 use crate::event::START_LIST_IOFXML3_FILE;
 use std::fs::OpenOptions;
 use std::io::{Read};
-use chrono::{Local};
 use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
-use crate::event::{EventId, EventInfo, PostedEvent};
+use crate::event::{EventId, Eventrecord, PostedEvent};
 use crate::files::FileInfo;
 use crate::qe::QERunChange;
 use crate::qe::runs::RunsRecord;
+use crate::qxdatetime::QxDateTime;
 use crate::util;
-use crate::util::QxDateTime;
 
 const API_TOKEN: &str = "plelababamak";
 const EVENT_ID: EventId = 1;
@@ -32,14 +31,14 @@ fn update_event_data() {
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
-    let event = resp.into_json::<EventInfo>().unwrap();
+    let event = resp.into_json::<Eventrecord>().unwrap();
     assert_eq!(event.id, 1);
 
-    let dt = Local::now().fixed_offset();
+    let dt = QxDateTime::now().trimmed_to_sec();
     let post_event = PostedEvent {
         name: "Foo".to_string(),
         place: "Bar".to_string(),
-        start_time: dt,
+        start_time: dt.0,
     };
     let resp = client.post("/api/event/current")
         .header(Header::new("qx-api-token", API_TOKEN))
@@ -52,10 +51,10 @@ fn update_event_data() {
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
-    let event = resp.into_json::<EventInfo>().unwrap();
+    let event = resp.into_json::<Eventrecord>().unwrap();
     assert_eq!(event.name, post_event.name);
     assert_eq!(event.place, post_event.place);
-    assert_eq!(event.start_time, post_event.start_time);
+    assert_eq!(event.start_time.0, post_event.start_time);
 }
 
 #[test]
@@ -150,7 +149,7 @@ fn post_qe_out_change() {
         assert_eq!(records[0].si_id, 12345);
     }
     {
-        let start_time = Some(QxDateTime::new(Local::now().fixed_offset()));
+        let start_time = Some(QxDateTime::now());
         let change = QERunChange {
             run_id: Some(1),
             si_id: Some(0),

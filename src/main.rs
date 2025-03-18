@@ -1,6 +1,6 @@
 #[macro_use] extern crate rocket;
 
-use crate::event::{EventInfo};
+use crate::event::{Eventrecord};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::RwLock;
@@ -17,6 +17,7 @@ use serde::{Deserialize};
 use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
 use crate::qe::{QEJournalRecord};
+use crate::qxdatetime::{dtstr, obtime, obtimems};
 
 #[cfg(test)]
 mod tests;
@@ -28,6 +29,7 @@ mod files;
 mod util;
 mod iofxml3;
 mod qe;
+mod qxdatetime;
 
 #[derive(Default)]
 struct AppConfig {
@@ -94,7 +96,7 @@ type SharedQxState = RwLock<QxState>;
 #[get("/")]
 async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
     let pool = &db.0;
-    let events: Vec<EventInfo> = sqlx::query_as("SELECT * FROM events")
+    let events: Vec<Eventrecord> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
@@ -122,7 +124,7 @@ fn rocket() -> _ {
             handlebars.register_helper("dtstr",
                                        Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
                                            let val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("dtstr", 0))?.value();
-                                           let s = util::dtstr(val.as_str());
+                                           let s = dtstr(val.as_str());
                                            out.write(&s)?;
                                            Ok(())
                                        }));
@@ -130,7 +132,7 @@ fn rocket() -> _ {
                                        Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
                                            let val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("obtime", 0))?.value();
                                            if let Some(sec) = val.as_i64() {
-                                              let s = util::obtime(sec);
+                                              let s = obtime(sec);
                                               out.write(&s)?;
                                            } else {
                                               out.write("--:--:--")?;
@@ -141,7 +143,7 @@ fn rocket() -> _ {
                                        Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
                                            let val = h.param(0).ok_or(handlebars::RenderErrorReason::ParamNotFoundForIndex("obtime", 0))?.value();
                                            if let Some(msec) = val.as_i64() {
-                                               let s = util::obtimems(msec);
+                                               let s = obtimems(msec);
                                                out.write(&s)?;
                                            } else {
                                                out.write("--:--:--")?;
