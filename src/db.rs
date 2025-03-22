@@ -105,7 +105,7 @@ impl Fairing for DbPoolFairing {
         };
 
         // Run migrations
-        #[cfg(test)]
+        #[cfg(any(not(debug_assertions), test))]
         match MIGRATOR.run(&pool).await {
             Ok(_) => info!("Migrations applied successfully!"),
             Err(err) => {
