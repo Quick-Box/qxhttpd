@@ -4,11 +4,12 @@
         <a class="w3-bar-item w3-button w3-left w3-hide-large w3-hover-white w3-large" href="javascript:void(0)" onclick="w3_open()"><i class="fa fa-bars"></i></a>
         <a href="/" class="w3-bar-item w3-button">Quick Exchange</a>
 <!--        <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hover-white">About</a>-->
-<!--        <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Values</a>-->
-<!--        <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hover-white">News</a>-->
-<!--        <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Contact</a>-->
-<!--        <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Clients</a>-->
-<!--        <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Partners</a>-->
+        {{#if user}}
+            <span class="w3-bar-item w3-right">{{user.name}}</span>
+            <img src="{{user.picture}}" alt="avatar" class="w3-circle w3-right"  width="40" height="40">
+        {{else}}
+            <a class="w3-bar-item w3-button w3-hover-black w3-right" href="/login">Login</a>
+        {{/if}}
     </div>
 <!--</div>-->
 
@@ -19,17 +20,8 @@
     </div>
     <a href="javascript:void(0)" onclick="w3_close()" class="w3-right w3-large w3-padding-large w3-hover-black w3-hide-large" title="Close Menu"><i class="fa fa-remove"></i></a>
 
-<!--    <h4 class="w3-bar-item"><b><a href="/">Quick Exchange</a></b></h4>-->
-
     <a class="w3-bar-item w3-button w3-hover-black" href="/">Events</a>
     <a class="w3-bar-item w3-button w3-hover-black" href="/about">About</a>
-    {{#if user}}
-        <div class="w3-bar-item w3-display-bottomleft" style="display: flex;">
-            <p style="flex-grow: 8">{{user.name}}</p><img src="{{user.picture}}" alt="avatar" class="w3-circle w3-right"  width="50" height="50">
-        </div>
-    {{else}}
-        <a class="w3-bar-item w3-button w3-hover-black" href="/login">Login</a>
-    {{/if}}
 </nav>
 
 <!-- Overlay effect when opening sidebar on small screens -->
