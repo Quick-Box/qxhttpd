@@ -34,6 +34,11 @@ mod qxdatetime;
 struct AppConfig {
     server_address: String,
 }
+impl AppConfig {
+    pub fn is_local_server(&self) -> bool {
+        self.server_address == "127.0.0.1"
+    }
+}
 struct QxSession {
     user_info: UserInfo,
 }
@@ -114,7 +119,7 @@ impl QxState {
 type SharedQxState = RwLock<QxState>;
 
 #[get("/")]
-async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
+async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, cfg: &State<AppConfig>, db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
     let user = if let MaybeSessionId::Some(session_id) = sid {
         user_info(session_id, state).ok()
     } else { 
@@ -128,6 +133,7 @@ async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbP
     Ok(Template::render("index", context! {
         user,
         events,
+        show_create_demo: cfg.is_local_server(),
     }))
 }
 #[launch]

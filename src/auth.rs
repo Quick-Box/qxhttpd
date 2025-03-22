@@ -60,7 +60,7 @@ struct GoogleUserInfo {
 fn login(cfg: &State<AppConfig>) -> Redirect {
     // must be the same host as redirect_uri, both have to be localhost or 127.0.0.1
     // Redirect::to("/login/google") doesn't work because of state cookie error in rocket-oauth2 check
-    if cfg.server_address == "127.0.0.1" {
+    if cfg.is_local_server() {
         Redirect::to("http://localhost:8000/login/google")
     } else {
         Redirect::to("https://qxqx.org:8000/login/google")

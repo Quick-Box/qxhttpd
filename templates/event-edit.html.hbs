@@ -27,9 +27,11 @@
                 </div>
             {{/with}}
                 <div class="w3-row w3-margin-top">
-                    <a href="/event/{{event.id}}/delete" class="w3-button w3-round-large w3-red">Delete event</a>
-                    <button class="w3-button w3-round-large w3-green w3-right" type="submit">Save</button>
-                    <a href="/event/{{event.id}}" class="w3-button w3-round-large w3-right w3-border">Cancel</a>
+                    {{#if event}}
+                        <a href="/event/{{event.id}}/delete" class="w3-button w3-round-large w3-red">Delete event</a>
+                    {{/if}}
+                    <button class="w3-button w3-round-large w3-theme w3-right" type="submit">Save</button>
+                    <a href="{{back_link}}" class="w3-button w3-round-large w3-right w3-border">Cancel</a>
                 </div>
         </form>
     </div>

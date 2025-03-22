@@ -2,7 +2,9 @@
 
     <h2>Events</h2>
     <div class="w3-container w3-light-grey">
-        <a href="/event/create-demo" class="w3-button w3-round-large"><b>create demo event</b></a>
+        {{#if show_create_demo}}
+            <a href="/event/create-demo" class="w3-button w3-round-large"><b>create demo event</b></a>
+        {{/if}}
         {{#if user}}
             <a href="/event/create" class="w3-button w3-green w3-round-large w3-right"><b>create event</b></a>
         {{/if}}
