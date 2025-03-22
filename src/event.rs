@@ -29,7 +29,7 @@ pub type SiId = i64;
 pub type EventId = i64;
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
-pub struct Eventrecord {
+pub struct EventRecord {
     pub id: EventId,
     pub name: String,
     pub place: String,
@@ -37,9 +37,9 @@ pub struct Eventrecord {
     pub owner: String,
     api_token: QxApiToken,
 }
-impl Eventrecord {
+impl EventRecord {
     pub fn new(owner: &str) -> Self {
-        let start_time = QxDateTime::now();
+        let start_time = QxDateTime::now().trimmed_to_sec();
         Self {
             id: 0,
             name: "".to_string(),
@@ -52,25 +52,25 @@ impl Eventrecord {
     }
 }
 
-pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<Eventrecord, Custom<String>> {
+pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<EventRecord, Custom<String>> {
     let pool = &db.0;
-    let event: Eventrecord = sqlx::query_as("SELECT * FROM events WHERE id=?")
+    let event: EventRecord = sqlx::query_as("SELECT * FROM events WHERE id=?")
         .bind(event_id)
         .fetch_one(pool)
         .await
         .map_err(sqlx_to_custom_error)?;
     Ok(event)
 }
-pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<Eventrecord, Custom<String>> {
+pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventRecord, Custom<String>> {
     let pool = &db.0;
-    let event: Eventrecord = sqlx::query_as("SELECT * FROM events WHERE api_token=?")
+    let event: EventRecord = sqlx::query_as("SELECT * FROM events WHERE api_token=?")
         .bind(&qx_api_token.0)
         .fetch_one(pool)
         .await
         .map_err(|e| Custom(Status::Unauthorized, e.to_string()))?;
     Ok(event)
 }
-async fn save_event(event: &Eventrecord, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
+async fn save_event(event: &EventRecord, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
     let id = if event.id > 0 {
         query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
@@ -115,7 +115,7 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
     let start_time = QxDateTime::from_iso_string(vals.start_time)
         .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
-    let event = Eventrecord {
+    let event = EventRecord {
         id: vals.id,
         name: vals.name.to_string(),
         place: vals.place.to_string(),
@@ -135,7 +135,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
     let event = if let Some(event_id) = event_id {
         load_event_info(event_id, db).await?
     } else {
-        Eventrecord::new(&user.email)
+        EventRecord::new(&user.email)
     };
     let api_token_qrc_img_data = {
         let code = qrcode::QrCode::new(event.api_token.0.as_bytes()).unwrap();
@@ -208,7 +208,7 @@ async fn get_event_authorized(event_id: EventId, session_id: QxSessionId, state:
 }
 
 #[get("/api/event/current")]
-async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Result<Json<Eventrecord>, Custom<String>> {
+async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Result<Json<EventRecord>, Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
     Ok(Json(event))
 }
@@ -219,7 +219,7 @@ pub struct PostedEvent {
     pub start_time: DateTime<FixedOffset>,
 }
 #[post("/api/event/current", data = "<posted_event>")]
-async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<Eventrecord>, Custom<String>> {
+async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventRecord>, Custom<String>> {
     let Ok( mut event_info) = load_event_info2(&api_token, db).await else {
         return Err(string_to_custom_error("Event not found"));
     };
@@ -345,7 +345,7 @@ async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content
 }
 #[get("/event/create-demo")]
 async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let mut event_info = Eventrecord::new("fanda.vacek@gmail.com");
+    let mut event_info = EventRecord::new("fanda.vacek@gmail.com");
     event_info.name = String::from("Demo event");
     event_info.place = String::from("Deep forest 42");
     event_info.api_token = QxApiToken(String::from("plelababamak"));

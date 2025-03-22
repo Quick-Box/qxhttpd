@@ -1,6 +1,6 @@
 #[macro_use] extern crate rocket;
 
-use crate::event::{Eventrecord};
+use crate::event::{EventRecord};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::RwLock;
@@ -96,7 +96,7 @@ type SharedQxState = RwLock<QxState>;
 #[get("/")]
 async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
     let pool = &db.0;
-    let events: Vec<Eventrecord> = sqlx::query_as("SELECT * FROM events")
+    let events: Vec<EventRecord> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;

@@ -3,7 +3,7 @@ use std::fs::OpenOptions;
 use std::io::{Read};
 use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Header, Status};
-use crate::event::{EventId, Eventrecord, PostedEvent};
+use crate::event::{EventId, EventRecord, PostedEvent};
 use crate::files::FileInfo;
 use crate::qe::QERunChange;
 use crate::qe::runs::RunsRecord;
@@ -31,7 +31,7 @@ fn update_event_data() {
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
-    let event = resp.into_json::<Eventrecord>().unwrap();
+    let event = resp.into_json::<EventRecord>().unwrap();
     assert_eq!(event.id, 1);
 
     let dt = QxDateTime::now().trimmed_to_sec();
@@ -51,7 +51,7 @@ fn update_event_data() {
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
-    let event = resp.into_json::<Eventrecord>().unwrap();
+    let event = resp.into_json::<EventRecord>().unwrap();
     assert_eq!(event.name, post_event.name);
     assert_eq!(event.place, post_event.place);
     assert_eq!(event.start_time.0, post_event.start_time);
