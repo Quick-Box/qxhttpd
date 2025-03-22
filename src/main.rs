@@ -1,6 +1,6 @@
 #[macro_use] extern crate rocket;
 
-use crate::event::{EventRecord};
+use crate::event::{user_info, EventRecord};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::RwLock;
@@ -31,8 +31,8 @@ mod iofxml3;
 mod qe;
 mod qxdatetime;
 
-#[derive(Default)]
 struct AppConfig {
+    server_address: String,
 }
 struct QxSession {
     user_info: UserInfo,
@@ -42,17 +42,37 @@ struct QxSessionId(String);
 #[rocket::async_trait]
 impl<'r> request::FromRequest<'r> for QxSessionId {
     type Error = ();
-    async fn from_request(request: &'r request::Request<'_>) -> request::Outcome<QxSessionId, ()> {
+    async fn from_request(request: &'r request::Request<'_>) -> request::Outcome<Self, ()> {
         let cookies = request
             .guard::<&CookieJar<'_>>()
             .await
             .expect("request cookies");
         if let Some(cookie) = cookies.get_private(QX_SESSION_ID) {
-            return request::Outcome::Success(QxSessionId(cookie.value().to_string()));
+            return request::Outcome::Success(Self(cookie.value().to_string()));
         }
         request::Outcome::Forward(Status::Unauthorized)
     }
 }
+
+enum MaybeSessionId {
+    None,
+    Some(QxSessionId),
+}
+#[rocket::async_trait]
+impl<'r> request::FromRequest<'r> for MaybeSessionId {
+    type Error = ();
+    async fn from_request(request: &'r request::Request<'_>) -> request::Outcome<Self, ()> {
+        let cookies = request
+            .guard::<&CookieJar<'_>>()
+            .await
+            .expect("request cookies");
+        if let Some(cookie) = cookies.get_private(QX_SESSION_ID) {
+            return request::Outcome::Success(Self::Some(QxSessionId(cookie.value().to_string())));
+        }
+        request::Outcome::Success(Self::None)
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Default, Clone, Debug)]
 struct QxApiToken(String);
 impl_sqlx_text_type_and_decode!(QxApiToken);
@@ -94,13 +114,19 @@ impl QxState {
 type SharedQxState = RwLock<QxState>;
 
 #[get("/")]
-async fn index_anonymous(db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
+async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
+    let user = if let MaybeSessionId::Some(session_id) = sid {
+        user_info(session_id, state).ok()
+    } else { 
+        None
+    };
     let pool = &db.0;
     let events: Vec<EventRecord> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
     Ok(Template::render("index", context! {
+        user,
         events,
     }))
 }
@@ -154,7 +180,7 @@ fn rocket() -> _ {
         .attach(DbPoolFairing())
         .mount("/", FileServer::from("./static"))
         .mount("/", routes![
-            index_anonymous,
+            index,
         ]);
     let rocket = auth::extend(rocket);
     let rocket = event::extend(rocket);
@@ -162,14 +188,12 @@ fn rocket() -> _ {
     let rocket = qe::extend(rocket);
     let rocket = files::extend(rocket);
 
-    let cfg = AppConfig::default();
-    // let figment = rocket.figment();
-    // let create_demo_event = figment.extract_inner::<bool>("qx_create_demo_event").ok().unwrap_or(false);
-
+    let figment = rocket.figment();
+    let addr = figment.extract_inner::<String>("address");
+    let cfg = AppConfig{ server_address: addr.unwrap_or_default() };
     let rocket = rocket.manage(cfg);
 
     let state = QxState::new();
-
     rocket.manage(SharedQxState::new(state))
 }
 
