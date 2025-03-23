@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use anyhow::anyhow;
 use rocket::http::Status;
 use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
@@ -28,12 +30,13 @@ impl_sqlx_json_text_type_and_decode!(OCheckListChangeSet);
 #[allow(non_snake_case)]
 pub struct OCheckListChange {
     pub Runner: OChecklistRunner,
-    pub ChangeLog: String,
+    pub ChangeLog: Option<HashMap<String, String>>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum OChecklistStartStatus {
     #[serde(rename = "Started OK")]
     StartedOk,
+    #[serde(rename = "DNS")]
     DidNotStart,
     LateStart,
 }
@@ -60,26 +63,29 @@ fn load_oc_file(file: &PathBuf) -> anyhow::Result<OCheckListChangeSet> {
 }
 pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChangeSet>> {
     info!("Loading test data from: {data_dir}");
-    let ocs = fs::read_dir(data_dir)?
-        .filter_map(|dir| {
-            match dir {
-                Ok(dir) => {
-                    match load_oc_file(&dir.path()) {
-                        Ok(oc) => { Some(oc) }
-                        Err(e) => {
-                            error!("Cannot read OC file: {} - {}", dir.path().to_string_lossy(), e.to_string());
-                            None
-                        }
+    let mut ocs = Vec::new();
+    for dir in fs::read_dir(data_dir)? {
+        match dir {
+            Ok(dir) => {
+                match load_oc_file(&dir.path()) {
+                    Ok(oc) => { ocs.push(oc) }
+                    Err(e) => {
+                        error!("Cannot read OC file: {} - {}", dir.path().to_string_lossy(), e.to_string());
+                        return Err(anyhow!("{e}"))
                     }
                 }
-                Err(e) => {
-                    error!("Cannot read OC dir: {} - {}", data_dir, e.to_string());
-                    None
-                }
             }
-        })
-        .collect();
+            Err(e) => {
+                error!("Cannot read OC dir: {} - {}", data_dir, e.to_string());
+                return Err(anyhow!("{e}"))
+            }
+        }
+    }
     Ok(ocs)
+}
+#[test]
+fn test_load_oc() {
+    load_oc_dir("tests/oc/data").unwrap();
 }
 pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &QxDateTime, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
     query("INSERT INTO ocout
@@ -99,7 +105,16 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &QxDateTime, c
 #[post("/api/token/oc/out", data = "<change_set_yaml>")]
 async fn post_api_token_oc_out(api_token: QxApiToken, change_set_yaml: &str, db: &State<DbPool>) -> Result<(), Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
-    let change_set: OCheckListChangeSet = serde_yaml::from_str(change_set_yaml).map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
+    let change_set: OCheckListChangeSet = match serde_yaml::from_str(change_set_yaml) {
+        Ok(change_set) => {
+            change_set
+        }
+        Err(e) => {
+            info!("OC change-set YAML:\n{change_set_yaml}");
+            error!("OC change-set YAML parse error: {e}");
+            return Err(Custom(Status::InternalServerError, e.to_string()));
+        }
+    };
     add_oc_change_set(event.id, &event.start_time, &change_set, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
     Ok(())
 }
