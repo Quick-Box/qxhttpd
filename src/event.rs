@@ -152,7 +152,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
         user,
         event,
         api_token_qrc_img_data,
-        back_link: if let Some(event_id) = event_id {format!("/event/{event_id}")} else {"/event".to_string()},
+        back_link: if let Some(event_id) = event_id {format!("/event/{event_id}")} else {"/".to_string()},
     }))
 }
 async fn event_drop(event_id: EventId, db: &State<DbPool>) -> Result<(), anyhow::Error> {
