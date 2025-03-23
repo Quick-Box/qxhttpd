@@ -33,6 +33,7 @@ mod qxdatetime;
 
 struct AppConfig {
     server_address: String,
+    server_port: u16,
 }
 impl AppConfig {
     pub fn is_local_server(&self) -> bool {
@@ -195,8 +196,9 @@ fn rocket() -> _ {
     let rocket = files::extend(rocket);
 
     let figment = rocket.figment();
-    let addr = figment.extract_inner::<String>("address");
-    let cfg = AppConfig{ server_address: addr.unwrap_or_default() };
+    let server_address = figment.extract_inner::<String>("address").expect("server address");
+    let server_port = figment.extract_inner::<u16>("port").expect("Server port");
+    let cfg = AppConfig{ server_address, server_port };
     let rocket = rocket.manage(cfg);
 
     let state = QxState::new();

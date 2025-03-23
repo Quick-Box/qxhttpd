@@ -1,0 +1,19 @@
+Version: 1.5
+Creator: "O Checklist v4.2.1"
+Created: 2025-03-23T13:46:58+01:00
+Event:   "Mistrovství oblasti na krátké trati"
+Data:
+  - Runner:
+      StartStatus: DNS
+      Id:          "11080"
+      Bib:         null
+      Name:        "Pavel Izdný"
+      Org:         "SJI"
+      Card:        8149899
+      StartTime:   2024-05-04T10:22:00+02:00
+      ClassName:   "H45"
+    ChangeLog:
+      DNS:         2025-03-23T13:32:44+01:00
+EndOfData:
+  NumRunners: 1
+  NumLines:   19
