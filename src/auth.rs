@@ -36,7 +36,7 @@ impl TryFrom<&GoogleUserInfo> for UserInfo {
 
 pub fn generate_random_string(len: usize) -> String {
     const WOWELS: &str = "aeiouy";
-    const CONSONANTS: &str = "bcdfghjklmnopqrstvwxz";
+    const CONSONANTS: &str = "bcdfghjklmnpqrstvwxz";
     let mut rng = rand::thread_rng();
     (0..len)
         .map(|n| {
@@ -46,6 +46,12 @@ pub fn generate_random_string(len: usize) -> String {
         })
         .collect()
 }
+// #[test]
+// fn test_generate_random_string() {
+//     for _i in 0 .. 50 {
+//         println!("{}", generate_random_string(10));
+//     }
+// }
 pub const QX_SESSION_ID: &str = "qx_session_id";
 
 /// User information to be retrieved from the Google People API.
@@ -61,9 +67,9 @@ fn login(cfg: &State<AppConfig>) -> Redirect {
     // must be the same host as redirect_uri, both have to be localhost or 127.0.0.1
     // Redirect::to("/login/google") doesn't work because of state cookie error in rocket-oauth2 check
     if cfg.is_local_server() {
-        Redirect::to("http://localhost:8000/login/google")
+        Redirect::to(format!("http://localhost:{}/login/google", cfg.server_port))
     } else {
-        Redirect::to("https://qxqx.org:8000/login/google")
+        Redirect::to(format!("https://qxqx.org:{}/login/google", cfg.server_port))
     }
 }
 
