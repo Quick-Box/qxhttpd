@@ -1,6 +1,6 @@
 #[macro_use] extern crate rocket;
 
-use crate::event::{user_info_opt, EventRecord};
+use crate::event::{user_info_opt, EventId, EventRecord};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::RwLock;
@@ -16,7 +16,7 @@ use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
 use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
-use crate::qe::{QEJournalRecord};
+use crate::qe::{QERunChange};
 use crate::qxdatetime::{dtstr, obtime, obtimems};
 use crate::util::anyhow_to_custom_error;
 
@@ -96,25 +96,18 @@ impl<'r> request::FromRequest<'r> for QxApiToken {
 }
 struct QxState {
     sessions: HashMap<QxSessionId, QxSession>,
-    qe_in_changes_sender: broadcast::Sender<QEJournalRecord>,
-    qe_out_changes_sender: broadcast::Sender<QEJournalRecord>,
+    runs_changes_sender: broadcast::Sender<(EventId, QERunChange)>,
 }
 impl QxState {
     fn new() -> Self {
-        let (in_sender, _receiver) = broadcast::channel(16);
-        let (out_sender, _receiver) = broadcast::channel(16);
+        let (runs_changes_sender, _receiver) = broadcast::channel(16);
         Self {
             sessions: Default::default(),
-            qe_in_changes_sender: in_sender,
-            qe_out_changes_sender: out_sender,
+            runs_changes_sender,
         }
     }
-    fn broadcast_qe_in_run_change(&self, chng: QEJournalRecord) -> anyhow::Result<()> {
-        self.qe_in_changes_sender.send(chng)?;
-        Ok(())
-    }
-    fn broadcast_qe_out_run_change(&self, chng: QEJournalRecord) -> anyhow::Result<()> {
-        self.qe_out_changes_sender.send(chng)?;
+    fn broadcast_runs_change(&self, chng: (EventId, QERunChange)) -> anyhow::Result<()> {
+        self.runs_changes_sender.send(chng)?;
         Ok(())
     }
 }

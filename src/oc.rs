@@ -11,7 +11,7 @@ use sqlx::{query, FromRow};
 use crate::db::DbPool;
 use crate::{impl_sqlx_json_text_type_and_decode, QxApiToken};
 use crate::event::{load_event_info, load_event_info2, EventId, SiId};
-use crate::qe::{add_qe_in_change_record, QERunChange};
+use crate::qe::{add_runs_change_request, QERunChange};
 use crate::qxdatetime::QxDateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -98,7 +98,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &QxDateTime, c
         .await.map_err(|e| e.to_string())?;
     for chng in &change_set.Data {
         let Ok(qerec) = QERunChange::try_from_oc_change(start00, chng) else { continue; };
-        add_qe_in_change_record(event_id, "oc", None, &qerec, db).await;
+        add_runs_change_request(event_id, "oc", None, &qerec, db).await;
     }
     Ok(())
 }

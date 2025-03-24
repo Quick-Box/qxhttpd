@@ -5,7 +5,8 @@ use serde_json::{Map, Value};
 use sqlx::{Database, FromRow, Sqlite};
 use sqlx::query::Query;
 use crate::db::DbPool;
-use crate::qe::{QEJournalRecord};
+use crate::event::EventId;
+use crate::qe::QERunChange;
 use crate::qxdatetime::QxDateTime;
 use crate::util::{sqlx_to_anyhow};
 
@@ -47,11 +48,8 @@ impl Default for RunsRecord {
     }
 }
 
-pub async fn apply_qe_out_change(rec: &QEJournalRecord, db: &State<DbPool>) -> anyhow::Result<()> {
-    let event_id = if rec.event_id > 0 { rec.event_id } else { 
-        return Err(anyhow!("Event ID must not be 0."));
-    };
-    let run_id = rec.change.run_id.ok_or(anyhow!("Run ID must be set in QE out change."))?;
+pub async fn apply_qe_out_change(event_id: EventId, user_id: Option<&str>, source: Option<&str>, change: &QERunChange, db: &State<DbPool>) -> anyhow::Result<()> {
+    let run_id = change.run_id.ok_or(anyhow!("Run ID must be set in QE out change."))?;
     sqlx::query("INSERT INTO qeout (
                         event_id,
                         change,
@@ -59,13 +57,12 @@ pub async fn apply_qe_out_change(rec: &QEJournalRecord, db: &State<DbPool>) -> a
                         source
                 ) VALUES (?, ?, ?, ?)")
         .bind(event_id)
-        .bind(serde_json::to_string(&rec.change).expect("convertible to JSON"))
-        .bind(&rec.user_id)
-        .bind(&rec.source)
+        .bind(serde_json::to_string(change).expect("convertible to JSON"))
+        .bind(user_id)
+        .bind(source)
         .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
     
-    let chng = &rec.change;
-    let json_chng = serde_json::to_value(chng)
+    let json_chng = serde_json::to_value(change)
         .map_err(|e| anyhow!("serde error: {e}"))?;
     let json_chng = json_chng.as_object().expect("must be object here");
     

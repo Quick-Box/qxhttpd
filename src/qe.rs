@@ -197,19 +197,6 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
     Ok((start00, classes, runs))
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, Clone, Debug)]
-pub struct QEJournalRecord {
-    pub id: i64,
-    pub event_id: EventId,
-    //#[serde(default)]
-    //pub original: Option<QERunRecord>,
-    pub change: QERunChange,
-    #[serde(default)]
-    pub source: String,
-    #[serde(default)]
-    pub user_id: Option<String>,
-    created: DateTime<chrono::Utc>,
-}
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct QERunChange {
     #[serde(default)]
@@ -274,22 +261,20 @@ pub struct QERadioRecord {
     pub time: String,
 }
 
-pub async fn add_qe_out_change_record(event_id: EventId, source: &str, user_id: Option<&str>, change: &QERunChange, db: &State<DbPool>) {
-    let Ok(change) = serde_json::to_string(change) else {
-        error!("Serde error");
-        return
-    };
-    let _ = query("INSERT INTO qeout
-    (event_id, change, source, user_id)
-    VALUES (?, ?, ?, ?)")
-        .bind(event_id)
-        .bind(change)
-        .bind(source)
-        .bind(user_id)
-        .execute(&db.0)
-        .await.map_err(|e| warn!("Insert QE in record error: {e}"));
+#[derive(Serialize, Deserialize, sqlx::FromRow, Clone, Debug)]
+pub struct QEJournalRecord {
+    pub id: i64,
+    pub event_id: EventId,
+    //#[serde(default)]
+    //pub original: Option<QERunRecord>,
+    pub change: QERunChange,
+    #[serde(default)]
+    pub source: String,
+    #[serde(default)]
+    pub user_id: Option<String>,
+    created: DateTime<chrono::Utc>,
 }
-pub async fn add_qe_in_change_record(event_id: EventId, source: &str, user_id: Option<&str>, change: &QERunChange, db: &State<DbPool>) {
+pub async fn add_runs_change_request(event_id: EventId, source: &str, user_id: Option<&str>, change: &QERunChange, db: &State<DbPool>) {
     let Ok(change) = serde_json::to_string(change) else {
         error!("Serde error");
         return
@@ -304,18 +289,14 @@ pub async fn add_qe_in_change_record(event_id: EventId, source: &str, user_id: O
         .execute(&db.0)
         .await.map_err(|e| warn!("Insert QE in record error: {e}"));
 }
-#[post("/api/qe/<event_id>/out/changes", data = "<change_set>")]
-async fn post_api_qe_out(event_id: EventId, change_set: Json<QERunChange>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<(), Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
-    add_qe_out_change_record(event_id, "qe", Some(&user.email), &change_set, db).await;
-    Ok(())
-}
-#[get("/event/<event_id>/qe/in/changes")]
-async fn get_event_qe_in_chng(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+#[get("/event/<event_id>/runs/changes?<from_id>")]
+async fn get_runs_change_requests(event_id: EventId, from_id: Option<i64>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
     let pool = &db.0;
-    let records: Vec<QEJournalRecord> = sqlx::query_as("SELECT * FROM qein WHERE event_id=?")
+    let from_id = from_id.unwrap_or(0);
+    let records: Vec<QEJournalRecord> = sqlx::query_as("SELECT * FROM qein WHERE event_id=? AND id>=?")
         .bind(event_id)
+        .bind(from_id)
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
@@ -324,20 +305,33 @@ async fn get_event_qe_in_chng(event_id: EventId, db: &State<DbPool>) -> Result<T
             records,
         }))
 }
-#[get("/api/event/<event_id>/qe/in/changes/sse")]
-fn get_api_event_qe_in_chng_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
-    let mut chng_receiver = state.read().unwrap().qe_in_changes_sender.subscribe();
+
+#[post("/api/event/<event_id>/runs/changes", data = "<change>")]
+async fn request_run_change(event_id: EventId, change: Json<QERunChange>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<(), Custom<String>> {
+    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    let change = change.into_inner();
+    add_runs_change_request(event_id, "www", Some(user.email.as_str()), &change, db).await;
+    if let Err(e) = state.read().expect("not poisoned")
+        .broadcast_runs_change((event_id, change)) {
+        error!("Failed to send QE in record error: {e}");
+    }
+    Ok(())
+}
+
+#[get("/api/event/<event_id>/runs/changes/sse")]
+fn runs_changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
+    let mut chng_receiver = state.read().unwrap().runs_changes_sender.subscribe();
     EventStream! {
         loop {
-            let in_rec = match chng_receiver.recv().await {
+            let (chng_event_id, change) = match chng_receiver.recv().await {
                 Ok(chng) => chng,
                 Err(e) => {
                     error!("Receive QE in record error: {e}");
                     break;
                 }
             };
-            if event_id == in_rec.event_id {
-                match serde_json::to_string(&in_rec) {
+            if event_id == chng_event_id {
+                match serde_json::to_string(&change) {
                     Ok(json) => {
                         yield Event::data(json);
                     }
@@ -349,70 +343,14 @@ fn get_api_event_qe_in_chng_sse(event_id: EventId, state: &State<SharedQxState>)
             }
         }
     }
-}
-#[post("/api/event/<event_id>/qe/in/changes", data = "<change>")]
-fn request_run_change(event_id: EventId, change: Json<QERunChange>, session_id: QxSessionId, state: &State<SharedQxState>) -> Result<(), Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
-    let rec = QEJournalRecord {
-        id: 0,
-        event_id,
-        change: change.into_inner(),
-        source: "browser".into(),
-        user_id: Some(user.email),
-        created: chrono::Utc::now(),
-    };
-    if let Err(e) = state.read().expect("not poisoned")
-        .broadcast_qe_in_run_change(rec) {
-        error!("Failed to send QE in record error: {e}");
-    }
-    Ok(())
 }
 
 #[post("/api/event/current/qe/out/changes", data = "<change>")]
-async fn qe_change_applied(change: Json<QERunChange>, api_token: QxApiToken, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<(), Custom<String>> {
+async fn qe_change_applied(change: Json<QERunChange>, api_token: QxApiToken, db: &State<DbPool>) -> Result<(), Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
-    let rec = QEJournalRecord {
-        id: 0,
-        event_id: event.id,
-        change: change.into_inner(),
-        source: "qe".into(),
-        user_id: None,
-        created: chrono::Utc::now(),
-    };
-    apply_qe_out_change(&rec, db).await.map_err(anyhow_to_custom_error)?;
-    if let Err(e) = state.read().expect("not poisoned")
-        .broadcast_qe_out_run_change(rec) {
-        error!("Failed to send QE in record error: {e}");
-    }
+    apply_qe_out_change(event.id, None, Some("qe"), &change.into_inner(), db).await.map_err(anyhow_to_custom_error)?;
     Ok(())
 }
-#[get("/api/event/<event_id>/qe/out/changes/sse")]
-fn get_api_event_qe_out_chng_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
-    let mut chng_receiver = state.read().unwrap().qe_in_changes_sender.subscribe();
-    EventStream! {
-        loop {
-            let in_rec = match chng_receiver.recv().await {
-                Ok(chng) => chng,
-                Err(e) => {
-                    error!("Receive QE in record error: {e}");
-                    break;
-                }
-            };
-            if event_id == in_rec.event_id {
-                match serde_json::to_string(&in_rec) {
-                    Ok(json) => {
-                        yield Event::data(json);
-                    }
-                    Err(e) => {
-                        error!("Serde error: {e}");
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
-
 #[get("/api/event/<event_id>/runs?<run_id>&<class_name>")]
 async fn get_event_runs(event_id: EventId, class_name: Option<&str>, run_id: Option<i32>, db: &State<DbPool>) -> Result<Json<Vec<RunsRecord>>, Custom<String>> {
     //let event = load_event_info(event_id, db).await?;
@@ -427,12 +365,10 @@ async fn get_event_runs(event_id: EventId, class_name: Option<&str>, run_id: Opt
 
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
-        get_event_qe_in_chng,
-        get_api_event_qe_in_chng_sse,
         request_run_change,
-        post_api_qe_out,
+        get_runs_change_requests,
+        runs_changes_sse,
         qe_change_applied,
-        get_api_event_qe_out_chng_sse,
         get_event_runs,
     ])
 }
