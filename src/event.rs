@@ -11,18 +11,19 @@ use rocket::{Build, Data, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, query_as, FromRow};
 use crate::db::DbPool;
-use crate::{files, QxApiToken, QxSessionId, SharedQxState};
+use crate::{files, MaybeSessionId, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
 use crate::qe::classes::ClassesRecord;
-use crate::qe::import_startlist;
+use crate::qe::{import_runs, import_startlist};
 use crate::qe::runs::RunsRecord;
 use crate::qxdatetime::QxDateTime;
 use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, string_to_custom_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
+pub const RUNS_CSV_FILE: &str = "runs.csv";
 
 pub type RunId = i64;
 pub type SiId = i64;
@@ -70,7 +71,7 @@ pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> 
         .map_err(|e| Custom(Status::Unauthorized, e.to_string()))?;
     Ok(event)
 }
-async fn save_event(event: &EventRecord, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
+pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
     let id = if event.id > 0 {
         query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
@@ -129,6 +130,16 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
 pub fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, String> {
     state.read().map_err(|e| e.to_string())?
         .sessions.get(&session_id).map(|s| s.user_info.clone()).ok_or("Session expired".to_string() )
+}
+pub fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -> Result<Option<UserInfo>, anyhow::Error> {
+    match session_id {
+        MaybeSessionId::None => Ok(None),
+        MaybeSessionId::Some(session_id) => {
+            let user_info = state.read().map_err(|e| anyhow!("{e}"))?
+                .sessions.get(&session_id).map(|s| s.user_info.clone());
+            Ok(user_info)
+        }
+    }
 }
 async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
@@ -198,14 +209,10 @@ async fn get_event_impl(event_id: EventId, user: Option<UserInfo>, db: &State<Db
     }))
 }
 
-#[get("/event/<event_id>", rank = 2)]
-async fn get_event(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    get_event_impl(event_id, None, db).await
-}
 #[get("/event/<event_id>")]
-async fn get_event_authorized(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
-    get_event_impl(event_id, Some(user), db).await
+async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let user = user_info_opt(session_id, state).map_err(anyhow_to_custom_error)?;
+    get_event_impl(event_id, user, db).await
 }
 
 #[get("/api/event/current")]
@@ -233,11 +240,6 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
     Ok(Json(reloaded_event))
 }
 
-#[derive(Serialize, Debug)]
-struct StartListRecord {
-    run: RunsRecord,
-    start_time_sec: Option<i64>,
-}
 #[get("/event/<event_id>/startlist?<class_name>", rank = 2)]
 async fn get_event_startlist_anonymous(event_id: EventId, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     get_event_startlist(event_id, class_name, None, db).await
@@ -270,27 +272,14 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
         .bind(event_id)
         .bind(class_name)
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
-    let runs = runs.into_iter().map(|run| {
-        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00.0).num_seconds());
-        StartListRecord {
-            run,
-            start_time_sec,
-        }
-    }).collect::<Vec<_>>();
     Ok(Template::render("startlist", context! {
         user,
         event,
         classrec,
         classes,
         runs,
+        start00,
     }))
-}
-#[derive(Serialize, Debug)]
-struct ResultsRecord {
-    run: RunsRecord,
-    start_time_sec: Option<i64>,
-    finish_time_msec: Option<i64>,
-    time_msec: Option<i64>,
 }
 
 #[get("/event/<event_id>/results?<class_name>")]
@@ -313,35 +302,35 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
         classrec.clone()
     };
     let start00 = event.start_time;
-    let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=?")
+    let mut runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=? AND class_name=?")
         .bind(event_id)
         .bind(class_name)
         .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
-    let mut runs = runs.into_iter().map(|run| {
-        let start_time_sec = run.start_time.map(|t| t.0.signed_duration_since(start00.0).num_seconds());
-        let finish_time_msec = run.finish_time.map(|t| t.0.signed_duration_since(start00.0).num_milliseconds());
-        let time_msec = run.start_time.and_then(|st| run.finish_time.map(|ft| ft.0.signed_duration_since(st.0).num_milliseconds()));
-        ResultsRecord {
-            run,
-            start_time_sec,
-            finish_time_msec,
-            time_msec,
-        }
-    }).collect::<Vec<_>>();
-    runs.sort_by_key(|run| if let Some(time) = run.time_msec { time } else { i64::MAX });
+    runs.sort_by_key(|run| {
+        let msec = QxDateTime::msec_since_until(&run.start_time, &run.finish_time);
+        if let Some(msec) = msec { msec } else { i64::MAX }
+    });
     Ok(Template::render("results", context! {
         event,
         classrec,
         classes,
         runs,
+        start00,
     }))
 
 }
 #[post("/api/event/current/upload/startlist", data = "<data>")]
-async fn post_upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
+async fn upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info2(&qx_api_token, db).await?;
-    let file_id = crate::files::post_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
+    let file_id = crate::files::upload_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
     import_startlist(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
+    Ok(file_id)
+}
+#[post("/api/event/current/upload/runs", data = "<data>")]
+async fn upload_event(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
+    let event_info = load_event_info2(&qx_api_token, db).await?;
+    let file_id = crate::files::upload_file(qx_api_token, RUNS_CSV_FILE, data, content_type, db).await?;
+    import_runs(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
     Ok(file_id)
 }
 #[get("/event/create-demo")]
@@ -360,6 +349,14 @@ async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<St
     Ok(Redirect::to(format!("/event/{event_id}")))
 }
 
+#[get("/event/<event_id>/export/runs")]
+async fn export_runs(event_id: EventId, db: &State<DbPool>) -> Result<Json<Vec<RunsRecord>>, Custom<String>> {
+    let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE event_id=?")
+        .bind(event_id)
+        .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
+    Ok(runs.into())
+}
+
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             get_event_create_demo,
@@ -368,13 +365,14 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_event_delete,
             post_event,
             get_event,
-            get_event_authorized,
-            post_upload_startlist,
+            upload_startlist,
+            upload_event,
             get_event_startlist_anonymous,
             get_event_startlist_authorized,
             get_event_results,
             get_api_event_current,
             post_api_event_current,
+            export_runs,
         ])
 }
 

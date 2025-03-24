@@ -47,6 +47,13 @@ impl QxDateTime {
         // println!("{datetime_str} -> {dt:?}");
         Ok(Self::from_fixed_offset(dt))
     }
+    pub fn msec_since(&self, since: &Option<QxDateTime>) -> Option<i64> {
+        let msec = since.map(|since| self.0.signed_duration_since(since.0).num_milliseconds());
+        msec
+    }
+    pub fn msec_since_until(since: &Option<QxDateTime>, until: &Option<QxDateTime>) -> Option<i64> {
+        until.and_then(|until| until.msec_since(since))
+    }
 }
 
 impl From<DateTime<FixedOffset>> for QxDateTime {

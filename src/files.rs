@@ -60,7 +60,7 @@ async fn delete_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Res
     }
 }
 #[post("/api/event/current/file?<name>", data = "<data>")]
-pub async fn post_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
+pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info2(&qx_api_token, db).await?;
     let data = data.open(50.mebibytes()).into_bytes().await.map_err(|e| Custom(Status::PayloadTooLarge, e.to_string()))?.into_inner();
     let q = sqlx::query_as::<_, (i64,)>("INSERT OR REPLACE INTO files (event_id, name, data) VALUES (?, ?, ?) RETURNING id")
@@ -82,7 +82,7 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_files,
             get_file_by_name,
             get_file,
-            post_file,
+            upload_file,
             delete_file,
         ])
 }

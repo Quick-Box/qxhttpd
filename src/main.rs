@@ -1,6 +1,6 @@
 #[macro_use] extern crate rocket;
 
-use crate::event::{user_info, EventRecord};
+use crate::event::{user_info_opt, EventRecord};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::RwLock;
@@ -18,6 +18,7 @@ use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
 use crate::qe::{QEJournalRecord};
 use crate::qxdatetime::{dtstr, obtime, obtimems};
+use crate::util::anyhow_to_custom_error;
 
 #[cfg(test)]
 mod tests;
@@ -121,11 +122,7 @@ type SharedQxState = RwLock<QxState>;
 
 #[get("/")]
 async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, cfg: &State<AppConfig>, db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
-    let user = if let MaybeSessionId::Some(session_id) = sid {
-        user_info(session_id, state).ok()
-    } else { 
-        None
-    };
+    let user = user_info_opt(sid, state).map_err(anyhow_to_custom_error)?;
     let pool = &db.0;
     let events: Vec<EventRecord> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)

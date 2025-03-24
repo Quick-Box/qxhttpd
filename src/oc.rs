@@ -38,6 +38,7 @@ pub enum OChecklistStartStatus {
     StartedOk,
     #[serde(rename = "DNS")]
     DidNotStart,
+    #[serde(rename = "Late start")]
     LateStart,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -102,7 +103,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &QxDateTime, c
     Ok(())
 }
 
-#[post("/api/token/oc/out", data = "<change_set_yaml>")]
+#[post("/api/event/current/oc", data = "<change_set_yaml>")]
 async fn post_api_token_oc_out(api_token: QxApiToken, change_set_yaml: &str, db: &State<DbPool>) -> Result<(), Custom<String>> {
     let event = load_event_info2(&api_token, db).await?;
     let change_set: OCheckListChangeSet = match serde_yaml::from_str(change_set_yaml) {

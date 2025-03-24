@@ -1,5 +1,7 @@
+use crate::iofxml3::structs::StartList;
 use std::collections::BTreeMap;
 use std::str::FromStr;
+use crate::event::START_LIST_IOFXML3_FILE;
 use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, TimeZone};
 use rocket::http::Status;
 use rocket::response::status;
@@ -11,9 +13,8 @@ use rocket::response::stream::{Event, EventStream};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query};
 use crate::db::DbPool;
-use crate::event::{load_event_info, load_event_info2, user_info, EventId, RunId, SiId, START_LIST_IOFXML3_FILE};
+use crate::event::{load_event_info, load_event_info2, user_info, EventId, RunId, SiId, RUNS_CSV_FILE};
 use crate::{impl_sqlx_json_text_type_and_decode, iofxml3, QxApiToken, QxSessionId, SharedQxState};
-use crate::iofxml3::structs::StartList;
 use crate::oc::OCheckListChange;
 use crate::qe::classes::ClassesRecord;
 use crate::qe::runs::{apply_qe_out_change, RunsRecord};
@@ -24,9 +25,63 @@ pub mod runs;
 pub mod classes;
 
 fn start_list_start00(stlist: &StartList) -> Option<NaiveDateTime> {
-    let d = stlist.event.start_time.date.as_str();
-    let t = stlist.event.start_time.time.as_str();
-    NaiveDateTime::from_str(&format!("{d}T{t}")).ok()
+   let d = stlist.event.start_time.date.as_str();
+   let t = stlist.event.start_time.time.as_str();
+   NaiveDateTime::from_str(&format!("{d}T{t}")).ok()
+}
+pub async fn import_runs(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
+    let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
+        .bind(event_id)
+        .bind(RUNS_CSV_FILE)
+        .fetch_one(&db.0)
+        .await.map_err(sqlx_to_anyhow)?.0;
+    let runs: Vec<RunsRecord> = serde_json::from_slice(&data)?;
+
+    let mut run_ids = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs WHERE event_id=?")
+        .bind(event_id)
+        .fetch_all(&db.0)
+        .await.map_err(sqlx_to_anyhow)?;
+    
+    let txn = db.0.begin().await?;
+
+    for run in runs {
+        run_ids.retain(|n| n.0 != run.run_id);
+        sqlx::query("INSERT OR REPLACE INTO runs (
+                             event_id,
+                             run_id,
+                             si_id,
+                             last_name,
+                             first_name,
+                             registration,
+                             class_name,
+                             start_time,
+                             check_time,
+                             finish_time,
+                             status
+                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            .bind(event_id)
+            .bind(run.run_id)
+            .bind(run.si_id)
+            .bind(run.last_name)
+            .bind(run.first_name)
+            .bind(run.registration)
+            .bind(run.class_name)
+            .bind(run.start_time.map(|d| d.0))
+            .bind(run.check_time.map(|d| d.0))
+            .bind(run.finish_time.map(|d| d.0))
+            .bind(run.status)
+            .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
+    }
+    for run_id in run_ids {
+        sqlx::query("DELETE FROM runs WHERE run_id=? AND event_id=?")
+            .bind(run_id.0)
+            .bind(event_id)
+            .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
+    }
+
+    txn.commit().await?;
+
+    Ok(())
 }
 pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
@@ -34,7 +89,7 @@ pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::
         .bind(START_LIST_IOFXML3_FILE)
         .fetch_one(&db.0)
         .await.map_err(sqlx_to_anyhow)?.0;
-    
+
     let (start00, classes, runs) = parse_startlist_xml_data(event_id, data).await?;
 
     let txn = db.0.begin().await?;
@@ -193,6 +248,7 @@ impl QERunChange {
         let tm = NaiveTime::parse_from_str(&oc.Runner.StartTime, "%H:%M:%S")
             .map_err(|e| warn!("Invalid start time {}, parse error: {e}", oc.Runner.StartTime)).ok();
         let dt = tm.and_then(|tm| QxDateTime::from_local_timezone(NaiveDateTime::new(start00.0.date_naive(), tm), start00.0.offset()));
+
         Ok(QERunChange {
             run_id: oc.Runner.Id.parse::<i64>().ok(),
             si_id: if oc.Runner.Card > 0 {Some(oc.Runner.Card)} else {None},

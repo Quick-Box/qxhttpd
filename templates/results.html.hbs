@@ -1,6 +1,6 @@
 {{#*inline "page"}}
 
-    <h2>Start list</h2>
+    <h2>Results</h2>
     <h3><a href="/event/{{ event.id }}">{{ event.name }}</a></h3>
 
     <div>
@@ -16,15 +16,15 @@
         <span class="w3-bar-item w3-right">length: {{classrec.length}}</span>
     </div>
 
-    <table class="w3-table-all w3-hoverable">
+    <table id="table" class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
-            <th>Start</th>
+            <th class="start_time w3-right-align">Start</th>
             <th>Name</th>
             <th>Registration</th>
             <th>Check</th>
-            <th>Finish</th>
-            <th>Time</th>
+            <th class="finish_time w3-right-align">Finish</th>
+            <th class="time w3-right-align">Time</th>
             <th>Status</th>
             <th>Run Id</th>
         </tr>
@@ -32,19 +32,23 @@
         <tbody>
         {{#each runs}}
             <tr>
-                <td class="w3-right-align">{{obtime start_time_sec }}</td>
-                <td>{{ run.runner_name }}</td>
-                <td>{{ run.registration }}</td>
-                <td>{{dtstr run.check_time }}</td>
-                <td>{{obtimems finish_time_msec }}</td>
-                <td class="w3-right-align">{{obtimems time_msec }}</td>
-                <td>{{dtstr run.status }}</td>
-                <td class="w3-right-align">{{ run.run_id }}</td>
+                <td class="w3-right-align">{{ start_time }}</td>
+                <td>{{ last_name }} {{ first_name }}</td>
+                <td>{{ registration }}</td>
+                <td>{{dtstr check_time }}</td>
+                <td class="w3-right-align">{{ finish_time }}</td>
+                <td class="w3-right-align"></td>
+                <td>{{ status }}</td>
+                <td class="w3-right-align">{{ run_id }}</td>
             </tr>
         {{/each}}
         </tbody>
     </table>
 
+    <script src="/js/utils.js"></script>
+    <script>
+    formatRunTable('{{ start00 }}');
+    </script>
 
 {{/inline}}
 {{> layout}}
