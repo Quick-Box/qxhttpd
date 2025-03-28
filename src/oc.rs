@@ -8,11 +8,14 @@ use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, FromRow};
-use crate::db::DbPool;
-use crate::{impl_sqlx_json_text_type_and_decode, QxApiToken};
-use crate::event::{load_event_info, load_event_info2, EventId, SiId};
-use crate::qe::{add_runs_change_request, QERunChange};
+use crate::db::{get_event_db, DbPool};
+use crate::{impl_sqlx_json_text_type_encode_decode, QxApiToken, SharedQxState};
+use crate::event::{load_event_info, load_event_info_for_api_token, EventId, SiId};
 use crate::qxdatetime::QxDateTime;
+use crate::tables::qxchng::{add_qx_change, QxChange};
+use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow};
+use sqlx::sqlite::SqliteArgumentValue;
+use sqlx::{Encode, Sqlite};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -24,7 +27,7 @@ pub struct OCheckListChangeSet {
     Data: Vec<OCheckListChange>,
 }
 
-impl_sqlx_json_text_type_and_decode!(OCheckListChangeSet);
+impl_sqlx_json_text_type_encode_decode!(OCheckListChangeSet);
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -88,24 +91,26 @@ pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChange
 fn test_load_oc() {
     load_oc_dir("tests/oc/data").unwrap();
 }
-pub(crate) async fn add_oc_change_set(event_id: EventId, start00: &QxDateTime, change_set: &OCheckListChangeSet, db: &State<DbPool>) -> Result<(), String> {
-    query("INSERT INTO ocout
-                (event_id, change_set)
-                VALUES (?, ?)")
-        .bind(event_id)
-        .bind(serde_json::to_string(change_set).map_err(|e| e.to_string())?)
-        .execute(&db.0)
-        .await.map_err(|e| e.to_string())?;
+pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: &OCheckListChangeSet, state: &State<SharedQxState>) -> anyhow::Result<()> {
+    let db = get_event_db(event_id, state).await?;
+    query("INSERT INTO occhng (change_set) VALUES (?)")
+        .bind(serde_json::to_string(change_set).map_err(|e| anyhow!("{e}"))?)
+        .execute(&db)
+        .await.map_err(sqlx_to_anyhow)?;
+    let now = QxDateTime::now();
+    let change_dt = QxDateTime::parse_from_string(&change_set.Created, Some(now.0.offset()))?;
     for chng in &change_set.Data {
-        let Ok(qerec) = QERunChange::try_from_oc_change(start00, chng) else { continue; };
-        add_runs_change_request(event_id, "oc", None, &qerec, db).await;
+        let Ok(qxrecs) = QxChange::try_from_oc_change(chng, Some(change_dt.0.offset())) else { continue; };
+        for chng in qxrecs {
+            add_qx_change(event_id, Some("oc"), &chng, state).await?;
+        }
     }
     Ok(())
 }
 
 #[post("/api/event/current/oc", data = "<change_set_yaml>")]
-async fn post_api_token_oc_out(api_token: QxApiToken, change_set_yaml: &str, db: &State<DbPool>) -> Result<(), Custom<String>> {
-    let event = load_event_info2(&api_token, db).await?;
+async fn post_oc_change_set(api_token: QxApiToken, change_set_yaml: &str, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<(), Custom<String>> {
+    let event = load_event_info_for_api_token(&api_token, db).await?;
     let change_set: OCheckListChangeSet = match serde_yaml::from_str(change_set_yaml) {
         Ok(change_set) => {
             change_set
@@ -116,7 +121,7 @@ async fn post_api_token_oc_out(api_token: QxApiToken, change_set_yaml: &str, db:
             return Err(Custom(Status::InternalServerError, e.to_string()));
         }
     };
-    add_oc_change_set(event.id, &event.start_time, &change_set, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
+    add_oc_change_set(event.id, &change_set, state).await.map_err(anyhow_to_custom_error)?;
     Ok(())
 }
 #[derive(Serialize, FromRow, Clone, Debug)]
@@ -147,6 +152,6 @@ async fn get_oc_out(event_id: EventId, db: &State<DbPool>) -> Result<Template, C
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             get_oc_out,
-            post_api_token_oc_out,
+            post_oc_change_set,
         ])
 }

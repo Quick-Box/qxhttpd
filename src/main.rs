@@ -3,7 +3,8 @@
 use crate::event::{user_info_opt, EventId, EventRecord};
 use std::fmt::Debug;
 use std::collections::{HashMap};
-use std::sync::RwLock;
+use std::sync::atomic::AtomicU64;
+use std::sync::{Arc, RwLock};
 use rocket::fs::{FileServer};
 use rocket::{request, State};
 use rocket::http::{CookieJar, Status};
@@ -14,10 +15,11 @@ use rocket::serde::Serialize;
 use rocket::tokio::sync::broadcast;
 use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
+use sqlx::SqlitePool;
 use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
-use crate::qe::{QERunChange};
 use crate::qxdatetime::{dtstr, obtime, obtimems};
+use crate::tables::qxchng::QxChange;
 use crate::util::anyhow_to_custom_error;
 
 #[cfg(test)]
@@ -29,12 +31,14 @@ mod event;
 mod files;
 mod util;
 mod iofxml3;
-mod qe;
 mod qxdatetime;
+mod tables;
+mod qe;
 
 struct AppConfig {
     server_address: String,
     server_port: u16,
+    db_path: String,
 }
 impl AppConfig {
     pub fn is_local_server(&self) -> bool {
@@ -94,19 +98,28 @@ impl<'r> request::FromRequest<'r> for QxApiToken {
         request::Outcome::Forward(Status::Unauthorized)
     }
 }
+
+struct OpenEvent {
+    hit_count: Arc<AtomicU64>,
+    db: SqlitePool,
+}
 struct QxState {
+    app_config: AppConfig,
     sessions: HashMap<QxSessionId, QxSession>,
-    runs_changes_sender: broadcast::Sender<(EventId, QERunChange)>,
+    open_events: HashMap<EventId, OpenEvent>,
+    runs_changes_sender: broadcast::Sender<(EventId, QxChange)>,
 }
 impl QxState {
-    fn new() -> Self {
+    fn new(app_config: AppConfig) -> Self {
         let (runs_changes_sender, _receiver) = broadcast::channel(16);
         Self {
+            app_config,
             sessions: Default::default(),
+            open_events: Default::default(),
             runs_changes_sender,
         }
     }
-    fn broadcast_runs_change(&self, chng: (EventId, QERunChange)) -> anyhow::Result<()> {
+    fn broadcast_runs_change(&self, chng: (EventId, QxChange)) -> anyhow::Result<()> {
         self.runs_changes_sender.send(chng)?;
         Ok(())
     }
@@ -182,16 +195,18 @@ fn rocket() -> _ {
     let rocket = auth::extend(rocket);
     let rocket = event::extend(rocket);
     let rocket = oc::extend(rocket);
-    let rocket = qe::extend(rocket);
+    let rocket = tables::runs::extend(rocket);
+    let rocket = tables::qxchng::extend(rocket);
     let rocket = files::extend(rocket);
 
     let figment = rocket.figment();
     let server_address = figment.extract_inner::<String>("address").expect("server address");
     let server_port = figment.extract_inner::<u16>("port").expect("Server port");
-    let cfg = AppConfig{ server_address, server_port };
-    let rocket = rocket.manage(cfg);
+    let db_path = figment.extract_inner::<String>("db_path").expect("db_path");
+    
+    let cfg = AppConfig{ server_address, server_port, db_path };
 
-    let state = QxState::new();
+    let state = QxState::new(cfg);
     rocket.manage(SharedQxState::new(state))
 }
 

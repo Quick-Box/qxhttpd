@@ -342,7 +342,7 @@ components:
             - runs # QERunsRecord
             - radio # QERadioRecord
           
-          # corresponding table record properties follows 
+          # corresponding tables record properties follows 
 
     QERunsRecord:
       properties:

@@ -16,10 +16,10 @@ use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
-use crate::qe::classes::ClassesRecord;
-use crate::qe::{import_runs, import_startlist};
-use crate::qe::runs::RunsRecord;
 use crate::qxdatetime::QxDateTime;
+use crate::tables::classes::ClassesRecord;
+use crate::tables::qxchng::{import_runs, import_startlist};
+use crate::tables::runs::RunsRecord;
 use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, string_to_custom_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
@@ -62,7 +62,7 @@ pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<Ev
         .map_err(sqlx_to_custom_error)?;
     Ok(event)
 }
-pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventRecord, Custom<String>> {
+pub async fn load_event_info_for_api_token(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventRecord, Custom<String>> {
     let pool = &db.0;
     let event: EventRecord = sqlx::query_as("SELECT * FROM events WHERE api_token=?")
         .bind(&qx_api_token.0)
@@ -71,9 +71,9 @@ pub async fn load_event_info2(qx_api_token: &QxApiToken, db: &State<DbPool>) -> 
         .map_err(|e| Custom(Status::Unauthorized, e.to_string()))?;
     Ok(event)
 }
-pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> Result<EventId, anyhow::Error> {
+pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> anyhow::Result<EventId> {
     let id = if event.id > 0 {
-        query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
+        query("UPDATE main.events SET name=?, place=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
             .bind(event.start_time.0)
@@ -83,7 +83,7 @@ pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> Resul
             .await.map_err(|e| anyhow!("{e}"))?;
         event.id
     } else {
-        let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token, owner) VALUES (?, ?, ?, ?, ?) RETURNING id")
+        let id: (i64, ) = query_as("INSERT INTO main.events(name, place, start_time, api_token, owner) VALUES (?, ?, ?, ?, ?) RETURNING id")
             .bind(&event.name)
             .bind(&event.place)
             .bind(event.start_time.0)
@@ -112,9 +112,9 @@ struct EventFormValues<'v> {
 // need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
 #[post("/event", data = "<form>")]
 async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    let user = user_info(session_id, state)?;
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
-    let start_time = QxDateTime::from_iso_string(vals.start_time)
+    let start_time = QxDateTime::parse_from_iso(vals.start_time)
         .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
     let event = EventRecord {
         id: vals.id,
@@ -127,11 +127,11 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
     save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     Ok(Redirect::to("/"))
 }
-pub fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, String> {
-    state.read().map_err(|e| e.to_string())?
-        .sessions.get(&session_id).map(|s| s.user_info.clone()).ok_or("Session expired".to_string() )
+pub fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, Custom<String>> {
+    state.read().expect("Not poisoned")
+        .sessions.get(&session_id).map(|s| s.user_info.clone()).ok_or( Custom(Status::Unauthorized, "Invalid session ID".to_string()) )
 }
-pub fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -> Result<Option<UserInfo>, anyhow::Error> {
+pub fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -> anyhow::Result<Option<UserInfo>> {
     match session_id {
         MaybeSessionId::None => Ok(None),
         MaybeSessionId::Some(session_id) => {
@@ -142,7 +142,7 @@ pub fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -
     }
 }
 async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    let user = user_info(session_id, state)?;
     let event = if let Some(event_id) = event_id {
         load_event_info(event_id, db).await?
     } else {
@@ -190,7 +190,7 @@ async fn get_event_edit(event_id: EventId, session_id: QxSessionId, state: &Stat
 }
 #[get("/event/<event_id>/delete")]
 async fn get_event_delete(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    let user = user_info(session_id, state)?;
     let event = load_event_info(event_id, db).await?;
     if event.owner == user.email {
         event_drop(event_id, db).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
@@ -217,7 +217,7 @@ async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<
 
 #[get("/api/event/current")]
 async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Result<Json<EventRecord>, Custom<String>> {
-    let event = load_event_info2(&api_token, db).await?;
+    let event = load_event_info_for_api_token(&api_token, db).await?;
     Ok(Json(event))
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -228,7 +228,7 @@ pub struct PostedEvent {
 }
 #[post("/api/event/current", data = "<posted_event>")]
 async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventRecord>, Custom<String>> {
-    let Ok( mut event_info) = load_event_info2(&api_token, db).await else {
+    let Ok( mut event_info) = load_event_info_for_api_token(&api_token, db).await else {
         return Err(string_to_custom_error("Event not found"));
     };
     event_info.name = posted_event.name.clone();
@@ -246,7 +246,7 @@ async fn get_event_startlist_anonymous(event_id: EventId, class_name: Option<&st
 }
 #[get("/event/<event_id>/startlist?<class_name>")]
 async fn get_event_startlist_authorized(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, class_name: Option<&str>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state).map_err(|e| Custom(Status::Unauthorized, e))?;
+    let user = user_info(session_id, state)?;
     get_event_startlist(event_id, class_name, Some(user), db).await
 }
 async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: Option<UserInfo>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
@@ -321,20 +321,20 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, db: &Sta
 }
 #[post("/api/event/current/upload/startlist", data = "<data>")]
 async fn upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
-    let event_info = load_event_info2(&qx_api_token, db).await?;
+    let event_info = load_event_info_for_api_token(&qx_api_token, db).await?;
     let file_id = crate::files::upload_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, db).await?;
     import_startlist(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
     Ok(file_id)
 }
 #[post("/api/event/current/upload/runs", data = "<data>")]
 async fn upload_event(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
-    let event_info = load_event_info2(&qx_api_token, db).await?;
+    let event_info = load_event_info_for_api_token(&qx_api_token, db).await?;
     let file_id = crate::files::upload_file(qx_api_token, RUNS_CSV_FILE, data, content_type, db).await?;
     import_runs(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
     Ok(file_id)
 }
 #[get("/event/create-demo")]
-async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+async fn create_demo_event(state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let mut event_info = EventRecord::new("fanda.vacek@gmail.com");
     event_info.name = String::from("Demo event");
     event_info.place = String::from("Deep forest 42");
@@ -344,7 +344,7 @@ async fn get_event_create_demo(db: &State<DbPool>) -> Result<Redirect, Custom<St
     let data = crate::oc::load_oc_dir("tests/oc/data")
         .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
     for chngset in &data {
-        crate::oc::add_oc_change_set(event_id, &event_info.start_time, chngset, db).await.map_err(|e| Custom(Status::InternalServerError, e))?;
+        crate::oc::add_oc_change_set(event_id, chngset, state).await.map_err(anyhow_to_custom_error)?;
     }
     Ok(Redirect::to(format!("/event/{event_id}")))
 }
@@ -359,7 +359,7 @@ async fn export_runs(event_id: EventId, db: &State<DbPool>) -> Result<Json<Vec<R
 
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
-            get_event_create_demo,
+            create_demo_event,
             get_event_create,
             get_event_edit,
             get_event_delete,

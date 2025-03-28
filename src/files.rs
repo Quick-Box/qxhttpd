@@ -6,7 +6,7 @@ use rocket::response::status::{Custom};
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
 use crate::db::DbPool;
-use crate::event::{load_event_info2, EventId};
+use crate::event::{load_event_info_for_api_token, EventId};
 use crate::{QxApiToken};
 use crate::util::{sqlx_to_custom_error, unzip_data};
 
@@ -61,7 +61,7 @@ async fn delete_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Res
 }
 #[post("/api/event/current/file?<name>", data = "<data>")]
 pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
-    let event_info = load_event_info2(&qx_api_token, db).await?;
+    let event_info = load_event_info_for_api_token(&qx_api_token, db).await?;
     let data = data.open(50.mebibytes()).into_bytes().await.map_err(|e| Custom(Status::PayloadTooLarge, e.to_string()))?.into_inner();
     let q = sqlx::query_as::<_, (i64,)>("INSERT OR REPLACE INTO files (event_id, name, data) VALUES (?, ?, ?) RETURNING id")
         .bind(event_info.id)
