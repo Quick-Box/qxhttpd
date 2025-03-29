@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use anyhow::anyhow;
+use chrono::{FixedOffset, TimeDelta};
 use rocket::http::Status;
 use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
@@ -12,10 +13,12 @@ use crate::db::{get_event_db, DbPool};
 use crate::{impl_sqlx_json_text_type_encode_decode, QxApiToken, SharedQxState};
 use crate::event::{load_event_info, load_event_info_for_api_token, EventId, SiId};
 use crate::qxdatetime::QxDateTime;
-use crate::tables::qxchng::{add_qx_change, QxChange};
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow};
 use sqlx::sqlite::SqliteArgumentValue;
 use sqlx::{Encode, Sqlite};
+use crate::changes::{add_change, ChangeData, DataType};
+use crate::qx::{QxValue, QxValueMap};
+use crate::runs::run_id_from_values;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -57,6 +60,34 @@ pub struct OChecklistRunner {
     pub Comment: String,
 }
 
+pub fn try_value_map_from_oc_change(oc: &OCheckListChange, local_offset: Option<&FixedOffset>) -> anyhow::Result<QxValueMap> {
+    const SI_ID: &str = "si_id";
+    const CHECK_TIME: &str = "check_time";
+    let mut values = QxValueMap::new();
+    let run_id = oc.Runner.Id.parse::<i64>()?;
+    let dt = QxDateTime::parse_from_string(&oc.Runner.StartTime, local_offset)?.0
+        .checked_sub_signed(TimeDelta::minutes(2)); // estimate check time to be 2 minutes before start time
+    if let Some(dt) = dt {
+        values.insert(CHECK_TIME.to_string(), QxValue::DateTime(QxDateTime(dt)));
+    }
+    if let Some(change_log) = &oc.ChangeLog {
+        if change_log.contains_key("NewCard") {
+            values.insert(SI_ID.to_string(), QxValue::Number(oc.Runner.Card));
+        }
+        if let Some(dtstr) = change_log.get("Late start") {
+            // take check time from change log
+            let dt = QxDateTime::parse_from_string(dtstr, None)?;
+            values.insert(CHECK_TIME.to_string(), QxValue::DateTime(dt));
+        }
+        if let Some(_dtstr) = change_log.get("DNS") {
+            // no start - no check
+            values.remove(CHECK_TIME);
+        }
+    }
+    Ok(values)
+}
+
+
 fn load_oc_change_set(content: &str) -> anyhow::Result<OCheckListChangeSet> {
     Ok(serde_yaml::from_str(content)?)
 }
@@ -91,18 +122,24 @@ pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChange
 fn test_load_oc() {
     load_oc_dir("tests/oc/data").unwrap();
 }
-pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: &OCheckListChangeSet, state: &State<SharedQxState>) -> anyhow::Result<()> {
-    let db = get_event_db(event_id, state).await?;
-    query("INSERT INTO occhng (change_set) VALUES (?)")
-        .bind(serde_json::to_string(change_set).map_err(|e| anyhow!("{e}"))?)
-        .execute(&db)
-        .await.map_err(sqlx_to_anyhow)?;
+
+pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListChangeSet, state: &State<SharedQxState>) -> anyhow::Result<()> {
     let now = QxDateTime::now();
     let change_dt = QxDateTime::parse_from_string(&change_set.Created, Some(now.0.offset()))?;
-    for chng in &change_set.Data {
-        let Ok(qxrecs) = QxChange::try_from_oc_change(chng, Some(change_dt.0.offset())) else { continue; };
-        for chng in qxrecs {
-            add_qx_change(event_id, Some("oc"), &chng, state).await?;
+    for chng in change_set.Data {
+        let Ok(value_map) = try_value_map_from_oc_change(&chng, Some(change_dt.0.offset())) else { 
+            continue; 
+        };
+        {
+            let data_type = DataType::OcChange;
+            let data = ChangeData::OcChange(chng);
+            add_change(event_id, "oc", data_type, data, None, None, state).await?;
+        }
+        {
+            let run_id = run_id_from_values(&value_map)?;
+            let data_type = DataType::RunUpdateRequest;
+            let data = ChangeData::RunUpdateRequest(value_map);
+            add_change(event_id, "oc", data_type, data, Some(run_id), None, state).await?;
         }
     }
     Ok(())
@@ -121,7 +158,7 @@ async fn post_oc_change_set(api_token: QxApiToken, change_set_yaml: &str, state:
             return Err(Custom(Status::InternalServerError, e.to_string()));
         }
     };
-    add_oc_change_set(event.id, &change_set, state).await.map_err(anyhow_to_custom_error)?;
+    add_oc_change_set(event.id, change_set, state).await.map_err(anyhow_to_custom_error)?;
     Ok(())
 }
 #[derive(Serialize, FromRow, Clone, Debug)]

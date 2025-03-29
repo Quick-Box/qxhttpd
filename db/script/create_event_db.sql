@@ -20,19 +20,13 @@ create table files
     constraint files_file_name_index unique (name)
 );
 
-create table occhng
+create table changes
 (
     id INTEGER primary key autoincrement,
-    change_set TEXT,
-    created    TEXT default CURRENT_TIMESTAMP
-);
-
-create table qxchng
-(
-    id INTEGER primary key autoincrement,
+    source   TEXT not null,
+    data_type   TEXT not null,
+    data   TEXT,
     run_id INTEGER,
-    property   TEXT,
-    value   TEXT,
     status   TEXT,
     user_id  TEXT,
     created  TEXT default CURRENT_TIMESTAMP
@@ -41,12 +35,12 @@ create table qxchng
 create table runs
 (
     id INTEGER primary key autoincrement,
-    run_id       integer,
-    class_name   text,
-    first_name   text,
+    run_id       INTEGER not null,
+    class_name   TEXT,
+    first_name   TEXT,
     last_name    TEXT,
-    registration text,
-    si_id        integer,
+    registration TEXT,
+    si_id        INTEGER,
     start_time   TEXT,
     check_time   TEXT,
     finish_time  TEXT,

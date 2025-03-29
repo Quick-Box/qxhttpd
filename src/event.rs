@@ -16,11 +16,11 @@ use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
+use crate::iofxml3::parser::parse_startlist_xml_data;
+use crate::qx::{import_runs};
 use crate::qxdatetime::QxDateTime;
-use crate::tables::classes::ClassesRecord;
-use crate::tables::qxchng::{import_runs, import_startlist};
-use crate::tables::runs::RunsRecord;
-use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, string_to_custom_error};
+use crate::runs::{ClassesRecord, RunsRecord};
+use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, string_to_custom_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 pub const RUNS_CSV_FILE: &str = "runs.csv";
@@ -326,6 +326,61 @@ async fn upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type
     import_startlist(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
     Ok(file_id)
 }
+pub async fn import_startlist(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
+    let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
+        .bind(event_id)
+        .bind(START_LIST_IOFXML3_FILE)
+        .fetch_one(&db.0)
+        .await.map_err(sqlx_to_anyhow)?.0;
+
+    let (start00, classes, runs) = parse_startlist_xml_data(event_id, data).await?;
+
+    let txn = db.0.begin().await?;
+    sqlx::query("UPDATE events SET start_time=? WHERE id=?")
+        .bind(start00)
+        .bind(event_id)
+        .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
+    for cr in classes {
+        sqlx::query("INSERT OR REPLACE INTO classes (event_id, name, length, climb, control_count) VALUES (?, ?, ?, ?, ?)")
+            .bind(event_id)
+            .bind(cr.name)
+            .bind(cr.length)
+            .bind(cr.climb)
+            .bind(cr.control_count)
+            .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
+    }
+    for run in runs {
+        sqlx::query("INSERT OR REPLACE INTO runs (
+                             event_id,
+                             run_id,
+                             si_id,
+                             last_name,
+                             first_name,
+                             registration,
+                             class_name,
+                             start_time,
+                             check_time,
+                             finish_time,
+                             status
+                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            .bind(event_id)
+            .bind(run.run_id)
+            .bind(run.si_id)
+            .bind(run.last_name)
+            .bind(run.first_name)
+            .bind(run.registration)
+            .bind(run.class_name)
+            .bind(run.start_time.map(|d| d.0))
+            .bind(run.check_time.map(|d| d.0))
+            .bind(run.finish_time.map(|d| d.0))
+            .bind(run.status)
+            .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
+    }
+    txn.commit().await?;
+
+    Ok(())
+}
+
 #[post("/api/event/current/upload/runs", data = "<data>")]
 async fn upload_event(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info_for_api_token(&qx_api_token, db).await?;
@@ -343,7 +398,7 @@ async fn create_demo_event(state: &State<SharedQxState>, db: &State<DbPool>) -> 
 
     let data = crate::oc::load_oc_dir("tests/oc/data")
         .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-    for chngset in &data {
+    for chngset in data {
         crate::oc::add_oc_change_set(event_id, chngset, state).await.map_err(anyhow_to_custom_error)?;
     }
     Ok(Redirect::to(format!("/event/{event_id}")))

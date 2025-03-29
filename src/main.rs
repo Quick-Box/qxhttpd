@@ -18,8 +18,8 @@ use serde::{Deserialize};
 use sqlx::SqlitePool;
 use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
+use crate::qx::QxValueMap;
 use crate::qxdatetime::{dtstr, obtime, obtimems};
-use crate::tables::qxchng::QxChange;
 use crate::util::anyhow_to_custom_error;
 
 #[cfg(test)]
@@ -32,8 +32,10 @@ mod files;
 mod util;
 mod iofxml3;
 mod qxdatetime;
-mod tables;
 mod qe;
+mod qx;
+mod runs;
+mod changes;
 
 struct AppConfig {
     server_address: String,
@@ -107,7 +109,7 @@ struct QxState {
     app_config: AppConfig,
     sessions: HashMap<QxSessionId, QxSession>,
     open_events: HashMap<EventId, OpenEvent>,
-    runs_changes_sender: broadcast::Sender<(EventId, QxChange)>,
+    runs_changes_sender: broadcast::Sender<(EventId, QxValueMap)>,
 }
 impl QxState {
     fn new(app_config: AppConfig) -> Self {
@@ -119,7 +121,7 @@ impl QxState {
             runs_changes_sender,
         }
     }
-    fn broadcast_runs_change(&self, chng: (EventId, QxChange)) -> anyhow::Result<()> {
+    fn broadcast_runs_change(&self, chng: (EventId, QxValueMap)) -> anyhow::Result<()> {
         self.runs_changes_sender.send(chng)?;
         Ok(())
     }
@@ -195,8 +197,10 @@ fn rocket() -> _ {
     let rocket = auth::extend(rocket);
     let rocket = event::extend(rocket);
     let rocket = oc::extend(rocket);
-    let rocket = tables::runs::extend(rocket);
-    let rocket = tables::qxchng::extend(rocket);
+    let rocket = qe::extend(rocket);
+    let rocket = qx::extend(rocket);
+    let rocket = runs::extend(rocket);
+    let rocket = changes::extend(rocket);
     let rocket = files::extend(rocket);
 
     let figment = rocket.figment();
