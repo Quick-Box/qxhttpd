@@ -34,8 +34,7 @@ create table changes
 
 create table runs
 (
-    id INTEGER primary key autoincrement,
-    run_id       INTEGER not null,
+    run_id       INTEGER not null primary key,
     class_name   TEXT,
     first_name   TEXT,
     last_name    TEXT,
@@ -44,7 +43,6 @@ create table runs
     start_time   TEXT,
     check_time   TEXT,
     finish_time  TEXT,
-    status       TEXT,
-    constraint runs_pk_2 unique (run_id)
+    status       TEXT
 );
 

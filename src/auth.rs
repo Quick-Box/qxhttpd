@@ -7,7 +7,7 @@ use rocket::log::private::info;
 use rocket::response::{Debug, Redirect};
 use rocket_oauth2::{OAuth2, TokenResponse};
 use serde_json::Value;
-use crate::{AppConfig, QxSession, QxSessionId, SharedQxState};
+use crate::{QxSession, QxSessionId, SharedQxState};
 
 #[derive(Clone, serde::Serialize)]
 pub struct UserInfo {
@@ -63,13 +63,15 @@ struct GoogleUserInfo {
     picture: Value,
 }
 #[get("/login")]
-fn login(cfg: &State<AppConfig>) -> Redirect {
+fn login(state: &State<SharedQxState>) -> Redirect {
     // must be the same host as redirect_uri, both have to be localhost or 127.0.0.1
     // Redirect::to("/login/google") doesn't work because of state cookie error in rocket-oauth2 check
-    if cfg.is_local_server() {
-        Redirect::to(format!("http://localhost:{}/login/google", cfg.server_port))
+    let (is_local_server, server_port) = state.read().map(|s| (s.app_config.is_local_server(), s.app_config.server_port))
+        .expect("Not poisoned");
+    if is_local_server {
+        Redirect::to(format!("http://localhost:{}/login/google", server_port))
     } else {
-        Redirect::to(format!("https://qxqx.org:{}/login/google", cfg.server_port))
+        Redirect::to(format!("https://qxqx.org:{}/login/google", server_port))
     }
 }
 

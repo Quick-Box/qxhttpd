@@ -32,7 +32,6 @@ mod files;
 mod util;
 mod iofxml3;
 mod qxdatetime;
-mod qe;
 mod qx;
 mod runs;
 mod changes;
@@ -129,17 +128,18 @@ impl QxState {
 type SharedQxState = RwLock<QxState>;
 
 #[get("/")]
-async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, cfg: &State<AppConfig>, db: &State<DbPool>) -> std::result::Result<Template, Custom<String>> {
+async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let user = user_info_opt(sid, state).map_err(anyhow_to_custom_error)?;
     let pool = &db.0;
     let events: Vec<EventRecord> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
+    let is_local_server = state.read().expect("Not poisoned").app_config.is_local_server();
     Ok(Template::render("index", context! {
         user,
         events,
-        show_create_demo: cfg.is_local_server(),
+        show_create_demo: is_local_server,
     }))
 }
 #[launch]
@@ -197,7 +197,6 @@ fn rocket() -> _ {
     let rocket = auth::extend(rocket);
     let rocket = event::extend(rocket);
     let rocket = oc::extend(rocket);
-    let rocket = qe::extend(rocket);
     let rocket = qx::extend(rocket);
     let rocket = runs::extend(rocket);
     let rocket = changes::extend(rocket);

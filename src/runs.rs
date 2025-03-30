@@ -1,17 +1,18 @@
+use itertools::Itertools;
 use chrono::{DateTime, FixedOffset};
 use rocket::response::stream::{Event, EventStream};
 use rocket::{Build, Rocket, State};
 use rocket::response::status::Custom;
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
-use crate::db::{DbPool};
+use sqlx::{FromRow, SqlitePool};
+use crate::db::{get_event_db, DbPool};
 use crate::event::{load_event_info_for_api_token, user_info, EventId};
 use crate::qxdatetime::QxDateTime;
 use crate::{QxApiToken, QxSessionId, SharedQxState};
 use crate::changes::{add_change, ChangeData, DataType};
 use crate::qx::QxRunChange;
-use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error};
+use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct ClassesRecord {
@@ -30,7 +31,6 @@ pub struct ClassesRecord {
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct RunsRecord {
     pub id: i64,
-    pub event_id: i64,
     pub run_id: i64,
     pub first_name: String,
     pub last_name: String,
@@ -41,7 +41,6 @@ pub struct RunsRecord {
     pub check_time: Option<QxDateTime>,
     pub finish_time: Option<QxDateTime>,
     pub status: String,
-    pub edited_by: String,
 }
 // impl_sqlx_json_text_type_and_decode!(RunsRecord);
 
@@ -49,7 +48,6 @@ impl Default for RunsRecord {
     fn default() -> Self {
         Self {
             id: 0,
-            event_id: 0,
             run_id: 0,
             first_name: "".to_string(),
             last_name: "".to_string(),
@@ -60,7 +58,6 @@ impl Default for RunsRecord {
             check_time: Default::default(),
             finish_time: Default::default(),
             status: "".to_string(),
-            edited_by: "".to_string(),
         }
     }
 }
@@ -71,7 +68,7 @@ pub async fn add_run_update_request_change(event_id: EventId, session_id: QxSess
     let change = change.into_inner();
     let data_type = DataType::RunUpdateRequest;
     let data = ChangeData::RunUpdateRequest(change.clone());
-    add_change(event_id, "www", data_type, data, Some(change.run_id), Some(user.email.as_str()), state).await.map_err(anyhow_to_custom_error)?;
+    add_change(event_id, "www", data_type, &data, Some(change.run_id), Some(user.email.as_str()), state).await.map_err(anyhow_to_custom_error)?;
     if let Err(e) = state.read().expect("not poisoned")
         .broadcast_runs_change((event_id, change)) {
         error!("Failed to send QE in record error: {e}");
@@ -86,8 +83,61 @@ async fn add_run_updated_change(change: Json<QxRunChange>, api_token: QxApiToken
     let run_change = change.into_inner();
     let run_id = run_change.run_id;
     let data_type = DataType::RunUpdated;
-    let data = ChangeData::RunUpdated(run_change);
-    add_change(event.id, "qe", data_type, data, Some(run_id), None, state).await.map_err(anyhow_to_custom_error)?;
+    let data = ChangeData::RunUpdated(run_change.clone());
+    add_change(event.id, "qe", data_type, &data, Some(run_id), None, state).await.map_err(anyhow_to_custom_error)?;
+    let db = get_event_db(event.id, state).await.map_err(anyhow_to_custom_error)?;
+    apply_qe_run_change(&run_change, &db).await.map_err(anyhow_to_custom_error)?;
+    Ok(())
+}
+
+async fn apply_qe_run_change(change: &QxRunChange, edb: &SqlitePool) -> anyhow::Result<()> {
+    let run_id = change.run_id;
+    if change.drop_record {
+        sqlx::query("DELETE FROM runs WHERE run_id=?")
+            .bind(run_id)
+            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+        return Ok(())
+    }
+    let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM runs WHERE run_id=?")
+        .bind(run_id)
+        .fetch_one(edb).await.map_err(sqlx_to_anyhow)?;
+    if count.0 == 0 {
+        sqlx::query("INSERT INTO runs (
+                 run_id,
+                 si_id,
+                 last_name,
+                 first_name,
+                 registration,
+                 class_name,
+                 start_time,
+                 check_time,
+                 finish_time
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            .bind(change.run_id)
+            .bind(change.si_id)
+            .bind(change.last_name.as_ref())
+            .bind(change.first_name.as_ref())
+            .bind(change.registration.as_ref())
+            .bind(change.class_name.as_ref())
+            .bind(change.start_time)
+            .bind(change.check_time)
+            .bind(change.finish_time)
+            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+    } else {
+        let changed_fields = change.changed_fields();
+        let placeholders = changed_fields.iter().map(|&fld_name| format!("{fld_name}=?") ).join(",");
+        let qs = format!("UPDATE runs SET {placeholders} WHERE run_id=?");
+        let q = sqlx::query(&qs);
+        let q = q.bind(change.run_id);
+        let q = if changed_fields.contains(&"si_id") { q.bind(change.si_id) } else { q };
+        let q = if changed_fields.contains(&"registration") { q.bind(change.registration.as_ref()) } else { q };
+        let q = if changed_fields.contains(&"class_name") { q.bind(change.class_name.as_ref()) } else { q };
+        let q = if changed_fields.contains(&"start_time") { q.bind(change.start_time) } else { q };
+        let q = if changed_fields.contains(&"check_time") { q.bind(change.check_time) } else { q };
+        let q = if changed_fields.contains(&"finish_time") { q.bind(change.finish_time) } else { q };
+        let q = q.bind(run_id);
+        q.execute(edb).await.map_err(sqlx_to_anyhow)?;
+    }
     Ok(())
 }
 
@@ -119,14 +169,13 @@ fn runs_changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStr
 }
 
 #[get("/api/event/<event_id>/runs?<run_id>&<class_name>")]
-async fn get_runs(event_id: EventId, class_name: Option<&str>, run_id: Option<i32>, db: &State<DbPool>) -> Result<Json<Vec<RunsRecord>>, Custom<String>> {
-    //let event = load_event_info(event_id, db).await?;
+async fn get_runs(event_id: EventId, class_name: Option<&str>, run_id: Option<i32>, state: &State<SharedQxState>) -> Result<Json<Vec<RunsRecord>>, Custom<String>> {
+    let db = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
     let run_id_filter = run_id.map(|id| format!("AND run_id={id}")).unwrap_or_default();
     let class_filter = class_name.map(|n| format!("AND class_name='{n}'")).unwrap_or_default();
-    let qs = format!("SELECT * FROM runs WHERE event_id=? {run_id_filter} {class_filter} ORDER BY run_id");
+    let qs = format!("SELECT * FROM runs WHERE id>0 {run_id_filter} {class_filter} ORDER BY run_id");
     let runs = sqlx::query_as::<_, RunsRecord>(&qs)
-        .bind(event_id)
-        .fetch_all(&db.0).await.map_err(sqlx_to_custom_error)?;
+        .fetch_all(&db).await.map_err(sqlx_to_custom_error)?;
     Ok(runs.into())
 }
 

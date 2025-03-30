@@ -5,10 +5,10 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status::{Custom};
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
-use crate::db::DbPool;
+use crate::db::{get_event_db, DbPool};
 use crate::event::{load_event_info_for_api_token, EventId};
-use crate::{QxApiToken};
-use crate::util::{sqlx_to_custom_error, unzip_data};
+use crate::{QxApiToken, SharedQxState};
+use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, unzip_data};
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct FileInfo {
@@ -60,11 +60,11 @@ async fn delete_file(event_id: EventId, file_id: i64, db: &State<DbPool>) -> Res
     }
 }
 #[post("/api/event/current/file?<name>", data = "<data>")]
-pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, db: &State<DbPool>) -> Result<String, Custom<String>> {
-    let event_info = load_event_info_for_api_token(&qx_api_token, db).await?;
+pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
+    let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
+    let db = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let data = data.open(50.mebibytes()).into_bytes().await.map_err(|e| Custom(Status::PayloadTooLarge, e.to_string()))?.into_inner();
-    let q = sqlx::query_as::<_, (i64,)>("INSERT OR REPLACE INTO files (event_id, name, data) VALUES (?, ?, ?) RETURNING id")
-        .bind(event_info.id)
+    let q = sqlx::query_as::<_, (i64,)>("INSERT OR REPLACE INTO files (name, data) VALUES (?, ?) RETURNING id")
         .bind(name);
     let q = if content_type == &ContentType::ZIP {
         let decompressed = unzip_data(&data).map_err(|e| Custom(Status::UnprocessableEntity, e.to_string()))?;
@@ -74,7 +74,7 @@ pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, c
         info!("Event id: {}, updating file: {name} with {} bytes of data", event_info.id, data.len());
         q.bind(data)
     };
-    let file_id = q.fetch_one(&db.0).await.map_err(sqlx_to_custom_error)?.0;
+    let file_id = q.fetch_one(&db).await.map_err(sqlx_to_custom_error)?.0;
     Ok(format!("{}", file_id))
 }
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {

@@ -104,13 +104,13 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
         {
             let data_type = DataType::OcChange;
             let data = ChangeData::OcChange(chng);
-            add_change(event_id, "oc", data_type, data, None, None, state).await?;
+            add_change(event_id, "oc", data_type, &data, None, None, state).await?;
         }
         {
             let run_id = run_chng.run_id;
             let data_type = DataType::RunUpdateRequest;
             let data = ChangeData::RunUpdateRequest(run_chng);
-            add_change(event_id, "oc", data_type, data, Some(run_id), None, state).await?;
+            add_change(event_id, "oc", data_type, &data, Some(run_id), None, state).await?;
         }
     }
     Ok(())

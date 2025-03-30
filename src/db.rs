@@ -5,7 +5,8 @@ use sqlx::migrate::Migrator;
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::Arc;
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
+use sqlx::Executor;
 use crate::event::EventId;
 use crate::{OpenEvent, SharedQxState};
 
@@ -69,6 +70,8 @@ static MIGRATOR: Migrator = sqlx::migrate!("db/migrations"); // Auto-discovers m
 pub struct DbPool(pub SqlitePool);
 
 pub struct DbPoolFairing();
+
+const EVENTS_DB: &str = "qxdb";
 #[rocket::async_trait]
 impl Fairing for DbPoolFairing {
     fn info(&self) -> Info {
@@ -81,8 +84,8 @@ impl Fairing for DbPoolFairing {
     async fn on_ignite(&self, rocket: Rocket<Build>) -> rocket::fairing::Result {
 
         let figment = rocket.figment();
-        let db_path = figment.extract_inner::<String>("database_path").expect("database_path");
-        let pool= match open_db(&db_path, "qxdb").await {
+        let db_path = figment.extract_inner::<String>("db_path").expect("db_path");
+        let pool= match open_db(&db_path, EVENTS_DB).await {
             Ok(p) => p,
             Err(err) => {
                 error!("Migration error: {:?}", err);
@@ -118,13 +121,20 @@ pub async fn get_event_db(event_id: EventId, state: &State<SharedQxState>) -> an
 }
 
 async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool> {
+    let mut create_tables = false;
     let database_url = if cfg!(test) {
-        "sqlite::memory:".to_string()
+        create_tables = true;
+        // "sqlite::memory:".to_string()
+        let db_path = format!("/tmp/{}.sqlite", schema_name);
+        let _ = std::fs::remove_file(&db_path);
+        std::fs::File::create(&db_path).map_err(|e | anyhow!("Failed to create SQLite database file {db_path} error: {e}"))?;
+        format!("sqlite://{db_path}")
     } else {
         let db_path = format!("{db_path}/{schema_name}.sqlite");
         if !Path::new(&db_path).exists() {
             // info!("creating database: {database_url}");
             std::fs::File::create(&db_path).map_err(|e | anyhow!("Failed to create SQLite database file {db_path} error: {e}"))?;
+            create_tables = true;
         }
         format!("sqlite://{db_path}")
     };
@@ -136,6 +146,12 @@ async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool>
         .max_connections(5)
         .connect_with(opts)
         .await.map_err(|e| anyhow!(e.to_string()))?;
+    if create_tables && schema_name != EVENTS_DB {
+        info!("Creating tables for {database_url} ...");
+        pool.execute(include_str!("../db/script/create_event_db.sql"))
+            .await
+            .context("Failed to create Event DB")?;
+    }
     Ok(pool)
 }
 

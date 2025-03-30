@@ -74,7 +74,7 @@ pub struct ChangesRecord {
     pub created: QxDateTime,
 }
 
-pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, data: ChangeData, run_id: Option<RunId>, user_id: Option<&str>, state: &State<SharedQxState>) -> anyhow::Result<()> {
+pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, data: &ChangeData, run_id: Option<RunId>, user_id: Option<&str>, state: &State<SharedQxState>) -> anyhow::Result<()> {
     //let change = serde_json::to_value(change).map_err(|e| anyhow!("{e}"))?;
     let db = get_event_db(event_id, state).await?;
     query("INSERT INTO changes
