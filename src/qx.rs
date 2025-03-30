@@ -1,32 +1,72 @@
-use std::collections::HashMap;
 use chrono::{FixedOffset, TimeDelta};
 use rocket::response::status::Custom;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
-use crate::event::{load_event_info, EventId, RunId, SiId, RUNS_CSV_FILE, START_LIST_IOFXML3_FILE};
-use crate::{impl_sqlx_json_text_type_encode_decode, SharedQxState};
+use crate::event::{load_event_info, EventId, RUNS_CSV_FILE};
 use crate::oc::OCheckListChange;
 use crate::qxdatetime::QxDateTime;
-use sqlx::sqlite::SqliteArgumentValue;
-use sqlx::{Encode, Sqlite};
 use crate::changes::ChangesRecord;
 use crate::db::DbPool;
-use crate::runs::{ClassesRecord, RunsRecord};
+use crate::runs::{RunsRecord};
 use crate::util::{sqlx_to_anyhow, sqlx_to_custom_error};
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
-pub enum QxValue {
-    #[default]
-    Null,
-    Text(String),
-    Number(i64),
-    DateTime(QxDateTime),
+pub struct QxRunChange {
+    pub run_id: i64,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub first_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub si_id: Option<i64>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub registration: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start_time: Option<QxDateTime>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub check_time: Option<QxDateTime>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub finish_time: Option<QxDateTime>,
 }
-impl_sqlx_json_text_type_encode_decode!(QxValue);
-
-pub type QxValueMap = HashMap<String, QxValue>;
-
+impl QxRunChange {
+    pub fn try_from_oc_change(oc: &OCheckListChange, local_offset: Option<&FixedOffset>) -> anyhow::Result<Self> {
+        let mut change = Self {
+            run_id: oc.Runner.Id.parse::<i64>()?,
+            ..Default::default()
+        };
+        let dt = QxDateTime::parse_from_string(&oc.Runner.StartTime, local_offset)?.0
+            .checked_sub_signed(TimeDelta::minutes(2)); // estimate check time to be 2 minutes before start time
+        if let Some(dt) = dt {
+            change.check_time = Some(QxDateTime(dt));
+        }
+        if let Some(change_log) = &oc.ChangeLog {
+            if change_log.contains_key("NewCard") {
+                change.si_id = Some(oc.Runner.Card);
+            }
+            if let Some(dtstr) = change_log.get("Late start") {
+                // take check time from change log
+                let dt = QxDateTime::parse_from_string(dtstr, None)?;
+                change. check_time = Some(dt);
+            }
+            if let Some(_dtstr) = change_log.get("DNS") {
+                // no start - no check
+                change.check_time = None;
+            }
+        }
+        Ok(change)
+    }
+}
 pub async fn import_runs(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
         .bind(event_id)

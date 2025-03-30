@@ -1,19 +1,16 @@
 use std::fmt::{Display, Formatter};
-use anyhow::anyhow;
 use rocket::{Build, Rocket, State};
-use rocket::response::status::Custom;
 use rocket::serde::{Deserialize, Serialize};
-use rocket::serde::json::Json;
 use sqlx::{query, FromRow};
-use crate::event::{load_event_info_for_api_token, EventId, RunId, SiId};
-use crate::{impl_sqlx_json_text_type_encode_decode, QxApiToken, SharedQxState};
+use crate::event::{EventId, RunId};
+use crate::{impl_sqlx_json_text_type_encode_decode, SharedQxState};
 use crate::qxdatetime::QxDateTime;
 use sqlx::{Encode, Sqlite};
 use sqlx::sqlite::SqliteArgumentValue;
-use crate::db::{get_event_db, DbPool};
+use crate::db::{get_event_db};
 use crate::oc::OCheckListChange;
-use crate::qx::{QxValue, QxValueMap};
-use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow};
+use crate::qx::QxRunChange;
+use crate::util::{sqlx_to_anyhow};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ChangeStatus {
@@ -59,8 +56,8 @@ impl Display for DataType {
 pub enum ChangeData {
     Null,
     OcChange(OCheckListChange),
-    RunUpdateRequest(QxValueMap),
-    RunUpdated(QxValueMap),
+    RunUpdateRequest(QxRunChange),
+    RunUpdated(QxRunChange),
     RadioPunch,
     CardReadout,
 }

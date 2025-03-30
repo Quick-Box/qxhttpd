@@ -2,23 +2,21 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use anyhow::anyhow;
-use chrono::{FixedOffset, TimeDelta};
 use rocket::http::Status;
 use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
-use sqlx::{query, FromRow};
-use crate::db::{get_event_db, DbPool};
+use sqlx::{FromRow};
+use crate::db::{DbPool};
 use crate::{impl_sqlx_json_text_type_encode_decode, QxApiToken, SharedQxState};
 use crate::event::{load_event_info, load_event_info_for_api_token, EventId, SiId};
 use crate::qxdatetime::QxDateTime;
-use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow};
+use crate::util::{anyhow_to_custom_error};
 use sqlx::sqlite::SqliteArgumentValue;
 use sqlx::{Encode, Sqlite};
 use crate::changes::{add_change, ChangeData, DataType};
-use crate::qx::{QxValue, QxValueMap};
-use crate::runs::run_id_from_values;
+use crate::qx::QxRunChange;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -58,33 +56,6 @@ pub struct OChecklistRunner {
     pub StartTime: String,
     #[serde(default)]
     pub Comment: String,
-}
-
-pub fn try_value_map_from_oc_change(oc: &OCheckListChange, local_offset: Option<&FixedOffset>) -> anyhow::Result<QxValueMap> {
-    const SI_ID: &str = "si_id";
-    const CHECK_TIME: &str = "check_time";
-    let mut values = QxValueMap::new();
-    let run_id = oc.Runner.Id.parse::<i64>()?;
-    let dt = QxDateTime::parse_from_string(&oc.Runner.StartTime, local_offset)?.0
-        .checked_sub_signed(TimeDelta::minutes(2)); // estimate check time to be 2 minutes before start time
-    if let Some(dt) = dt {
-        values.insert(CHECK_TIME.to_string(), QxValue::DateTime(QxDateTime(dt)));
-    }
-    if let Some(change_log) = &oc.ChangeLog {
-        if change_log.contains_key("NewCard") {
-            values.insert(SI_ID.to_string(), QxValue::Number(oc.Runner.Card));
-        }
-        if let Some(dtstr) = change_log.get("Late start") {
-            // take check time from change log
-            let dt = QxDateTime::parse_from_string(dtstr, None)?;
-            values.insert(CHECK_TIME.to_string(), QxValue::DateTime(dt));
-        }
-        if let Some(_dtstr) = change_log.get("DNS") {
-            // no start - no check
-            values.remove(CHECK_TIME);
-        }
-    }
-    Ok(values)
 }
 
 
@@ -127,8 +98,8 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
     let now = QxDateTime::now();
     let change_dt = QxDateTime::parse_from_string(&change_set.Created, Some(now.0.offset()))?;
     for chng in change_set.Data {
-        let Ok(value_map) = try_value_map_from_oc_change(&chng, Some(change_dt.0.offset())) else { 
-            continue; 
+        let Ok(run_chng) = QxRunChange::try_from_oc_change(&chng, Some(change_dt.0.offset())) else {
+            continue;
         };
         {
             let data_type = DataType::OcChange;
@@ -136,9 +107,9 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
             add_change(event_id, "oc", data_type, data, None, None, state).await?;
         }
         {
-            let run_id = run_id_from_values(&value_map)?;
+            let run_id = run_chng.run_id;
             let data_type = DataType::RunUpdateRequest;
-            let data = ChangeData::RunUpdateRequest(value_map);
+            let data = ChangeData::RunUpdateRequest(run_chng);
             add_change(event_id, "oc", data_type, data, Some(run_id), None, state).await?;
         }
     }

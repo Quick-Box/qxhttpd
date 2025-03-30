@@ -18,7 +18,7 @@ use serde::{Deserialize};
 use sqlx::SqlitePool;
 use crate::auth::{UserInfo, QX_SESSION_ID};
 use crate::db::{DbPool, DbPoolFairing};
-use crate::qx::QxValueMap;
+use crate::qx::QxRunChange;
 use crate::qxdatetime::{dtstr, obtime, obtimems};
 use crate::util::anyhow_to_custom_error;
 
@@ -109,7 +109,7 @@ struct QxState {
     app_config: AppConfig,
     sessions: HashMap<QxSessionId, QxSession>,
     open_events: HashMap<EventId, OpenEvent>,
-    runs_changes_sender: broadcast::Sender<(EventId, QxValueMap)>,
+    runs_changes_sender: broadcast::Sender<(EventId, QxRunChange)>,
 }
 impl QxState {
     fn new(app_config: AppConfig) -> Self {
@@ -121,7 +121,7 @@ impl QxState {
             runs_changes_sender,
         }
     }
-    fn broadcast_runs_change(&self, chng: (EventId, QxValueMap)) -> anyhow::Result<()> {
+    fn broadcast_runs_change(&self, chng: (EventId, QxRunChange)) -> anyhow::Result<()> {
         self.runs_changes_sender.send(chng)?;
         Ok(())
     }
