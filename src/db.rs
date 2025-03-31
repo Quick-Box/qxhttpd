@@ -124,11 +124,11 @@ async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool>
     let mut create_tables = false;
     let database_url = if cfg!(test) {
         create_tables = true;
-        // "sqlite::memory:".to_string()
-        let db_path = format!("/tmp/{}.sqlite", schema_name);
-        let _ = std::fs::remove_file(&db_path);
-        std::fs::File::create(&db_path).map_err(|e | anyhow!("Failed to create SQLite database file {db_path} error: {e}"))?;
-        format!("sqlite://{db_path}")
+        "sqlite::memory:".to_string()
+        // let db_path = format!("/tmp/{}.sqlite", schema_name);
+        // let _ = std::fs::remove_file(&db_path);
+        // std::fs::File::create(&db_path).map_err(|e | anyhow!("Failed to create SQLite database file {db_path} error: {e}"))?;
+        // format!("sqlite://{db_path}")
     } else {
         let db_path = format!("{db_path}/{schema_name}.sqlite");
         if !Path::new(&db_path).exists() {

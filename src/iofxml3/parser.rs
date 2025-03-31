@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use crate::iofxml3::structs::StartList;
 use quick_xml::de::from_reader;
-use crate::event::EventId;
 use crate::qxdatetime::QxDateTime;
 use crate::runs::{ClassesRecord, RunsRecord};
 // thanks to https://github.com/Thomblin/xml_schema_generator
@@ -12,7 +11,7 @@ pub fn parse_startlist(data: &[u8]) -> anyhow::Result<StartList> {
     Ok(startlist)
 }
 
-pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyhow::Result<(Option<QxDateTime>, Vec<ClassesRecord>, Vec<RunsRecord>)> {
+pub async fn parse_startlist_xml_data(data: Vec<u8>) -> anyhow::Result<(Option<QxDateTime>, Vec<ClassesRecord>, Vec<RunsRecord>)> {
     let stlist = parse_startlist(&data)?;
     let start_00_str = format!("{}T{}", stlist.event.start_time.date, stlist.event.start_time.time);
     let mut fixed_offset = None;
@@ -23,7 +22,6 @@ pub async fn parse_startlist_xml_data(event_id: EventId, data: Vec<u8>) -> anyho
         if !classes.contains_key(&class_name) {
             let classrec = ClassesRecord {
                 id: 0,
-                event_id,
                 name: class_name.clone(),
                 length: cs.course.length.parse::<i64>().unwrap_or(0),
                 climb: cs.course.climb.parse::<i64>().unwrap_or(0),

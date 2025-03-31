@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use itertools::Itertools;
 use chrono::{DateTime, FixedOffset};
 use rocket::response::stream::{Event, EventStream};
@@ -5,7 +6,9 @@ use rocket::{Build, Rocket, State};
 use rocket::response::status::Custom;
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, SqlitePool};
+use sqlx::{FromRow, Sqlite, SqlitePool};
+use sqlx::query::Query;
+use sqlx::sqlite::SqliteArguments;
 use crate::db::{get_event_db, DbPool};
 use crate::event::{load_event_info_for_api_token, user_info, EventId};
 use crate::qxdatetime::QxDateTime;
@@ -17,7 +20,6 @@ use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct ClassesRecord {
     pub id: i64,
-    pub event_id: i64,
     pub name: String,
     pub length: i64,
     pub climb: i64,
@@ -30,7 +32,6 @@ pub struct ClassesRecord {
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct RunsRecord {
-    pub id: i64,
     pub run_id: i64,
     pub first_name: String,
     pub last_name: String,
@@ -47,7 +48,6 @@ pub struct RunsRecord {
 impl Default for RunsRecord {
     fn default() -> Self {
         Self {
-            id: 0,
             run_id: 0,
             first_name: "".to_string(),
             last_name: "".to_string(),
@@ -127,14 +127,24 @@ async fn apply_qe_run_change(change: &QxRunChange, edb: &SqlitePool) -> anyhow::
         let changed_fields = change.changed_fields();
         let placeholders = changed_fields.iter().map(|&fld_name| format!("{fld_name}=?") ).join(",");
         let qs = format!("UPDATE runs SET {placeholders} WHERE run_id=?");
-        let q = sqlx::query(&qs);
-        let q = q.bind(change.run_id);
-        let q = if changed_fields.contains(&"si_id") { q.bind(change.si_id) } else { q };
-        let q = if changed_fields.contains(&"registration") { q.bind(change.registration.as_ref()) } else { q };
-        let q = if changed_fields.contains(&"class_name") { q.bind(change.class_name.as_ref()) } else { q };
-        let q = if changed_fields.contains(&"start_time") { q.bind(change.start_time) } else { q };
-        let q = if changed_fields.contains(&"check_time") { q.bind(change.check_time) } else { q };
-        let q = if changed_fields.contains(&"finish_time") { q.bind(change.finish_time) } else { q };
+        let mut q = sqlx::query(&qs);
+        fn bind_field<'a>(q: Query<'a, Sqlite, SqliteArguments<'a>>, field_name: &'a str, change: &'a QxRunChange) -> anyhow::Result<Query<'a, Sqlite, SqliteArguments<'a>>> {
+            let q = if field_name == "si_id" { q.bind(change.si_id) }
+            else if field_name == "first_name" { q.bind(change.first_name.as_ref()) }
+            else if field_name == "last_name" { q.bind(change.last_name.as_ref()) }
+            else  if field_name == "registration" { q.bind(change.registration.as_ref()) } 
+            else if field_name == "class_name" { q.bind(change.class_name.as_ref()) } 
+            else if field_name == "start_time" { q.bind(change.start_time) } 
+            else if field_name == "check_time" { q.bind(change.check_time) } 
+            else if field_name == "finish_time" { q.bind(change.finish_time) } 
+            else { 
+                return Err(anyhow!("Dont know how to bind field {field_name}"))
+            };
+            Ok(q)
+        }
+        for field_name in changed_fields {
+            q = bind_field(q, field_name, change)?;
+        }
         let q = q.bind(run_id);
         q.execute(edb).await.map_err(sqlx_to_anyhow)?;
     }
@@ -173,7 +183,7 @@ async fn get_runs(event_id: EventId, class_name: Option<&str>, run_id: Option<i3
     let db = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
     let run_id_filter = run_id.map(|id| format!("AND run_id={id}")).unwrap_or_default();
     let class_filter = class_name.map(|n| format!("AND class_name='{n}'")).unwrap_or_default();
-    let qs = format!("SELECT * FROM runs WHERE id>0 {run_id_filter} {class_filter} ORDER BY run_id");
+    let qs = format!("SELECT * FROM runs WHERE run_id>0 {run_id_filter} {class_filter} ORDER BY run_id");
     let runs = sqlx::query_as::<_, RunsRecord>(&qs)
         .fetch_all(&db).await.map_err(sqlx_to_custom_error)?;
     Ok(runs.into())

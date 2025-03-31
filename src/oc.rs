@@ -6,7 +6,7 @@ use rocket::http::Status;
 use rocket::response::status::{Custom};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{Build, Rocket, State};
-use rocket_dyn_templates::{context, Template};
+use rocket_dyn_templates::{Template};
 use sqlx::{FromRow};
 use crate::db::{DbPool};
 use crate::{impl_sqlx_json_text_type_encode_decode, QxApiToken, SharedQxState};
@@ -135,27 +135,28 @@ async fn post_oc_change_set(api_token: QxApiToken, change_set_yaml: &str, state:
 #[derive(Serialize, FromRow, Clone, Debug)]
 struct OCOutRecord {
     id: i64,
-    event_id: i64,
     change_set: OCheckListChangeSet,
     created: chrono::DateTime<chrono::Utc>,
 }
 #[get("/event/<event_id>/oc/out")]
 async fn get_oc_out(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
-    let pool = &db.0;
-    // https://doc.rust-lang.org/rust-by-example/error/iter_result.html
-    let records = sqlx::query_as::<_, OCOutRecord>("SELECT * FROM ocout WHERE event_id=?")
-        .bind(event_id)
-        .fetch_all(pool).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-    let records = records.into_iter()
-        .flat_map(|r| { 
-            let created = r.created; 
-            r.change_set.Data.into_iter().map(move |d| (created, d)) 
-        }).collect::<Vec<_>>();
-    Ok(Template::render("oc-out", context! {
-            event,
-            records,
-        }))
+    // let pool = &db.0;
+    // // https://doc.rust-lang.org/rust-by-example/error/iter_result.html
+    // let records = sqlx::query_as::<_, OCOutRecord>("SELECT * FROM ocout WHERE event_id=?")
+    //     .bind(event_id)
+    //     .fetch_all(pool).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
+    // let records = records.into_iter()
+    //     .flat_map(|r| { 
+    //         let created = r.created; 
+    //         r.change_set.Data.into_iter().map(move |d| (created, d)) 
+    //     }).collect::<Vec<_>>();
+    // Ok(Template::render("oc-out", context! {
+    //         event,
+    //         records,
+    //     }))
+    debug!("OC out: {}", event.name);
+    Err(Custom(Status::InternalServerError, "get_oc_out NIY".to_string()))
 }
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
