@@ -173,15 +173,15 @@ async fn event_drop(event_id: EventId, db: &State<DbPool>) -> Result<(), anyhow:
     Ok(())
 }
 #[get("/event/create")]
-async fn get_event_create(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn event_create(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     event_edit_insert(None, session_id, state, db).await
 }
 #[get("/event/<event_id>/edit")]
-async fn get_event_edit(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn event_edit(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     event_edit_insert(Some(event_id), session_id, state, db).await
 }
 #[get("/event/<event_id>/delete")]
-async fn get_event_delete(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+async fn event_delete(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let user = user_info(session_id, state)?;
     let event = load_event_info(event_id, db).await?;
     if event.owner == user.email {
@@ -191,7 +191,10 @@ async fn get_event_delete(event_id: EventId, session_id: QxSessionId, state: &St
         Err(Custom(Status::Unauthorized, String::from("Event owner email mismatch!")))
     }
 }
-async fn get_event_impl(event_id: EventId, user: Option<UserInfo>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+
+#[get("/event/<event_id>")]
+async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let user = user_info_opt(session_id, state).map_err(anyhow_to_custom_error)?;
     let event = load_event_info(event_id, gdb).await?;
     let files = files::list_files(event_id, state).await?;
     Ok(Template::render("event", context! {
@@ -199,12 +202,6 @@ async fn get_event_impl(event_id: EventId, user: Option<UserInfo>, state: &State
         event,
         files,
     }))
-}
-
-#[get("/event/<event_id>")]
-async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info_opt(session_id, state).map_err(anyhow_to_custom_error)?;
-    get_event_impl(event_id, user, state, db).await
 }
 
 #[get("/api/event/current")]
@@ -232,16 +229,9 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
     Ok(Json(reloaded_event))
 }
 
-#[get("/event/<event_id>/startlist?<class_name>", rank = 2)]
-async fn get_event_startlist_anonymous(event_id: EventId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
-    get_event_startlist(event_id, class_name, None, state, gdb).await
-}
 #[get("/event/<event_id>/startlist?<class_name>")]
-async fn get_event_startlist_authorized(event_id: EventId, session_id: QxSessionId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state)?;
-    get_event_startlist(event_id, class_name, Some(user), state, gdb).await
-}
-async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: Option<UserInfo>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn get_event_startlist(event_id: EventId, session_id: MaybeSessionId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let user = user_info_opt(session_id, state).map_err(anyhow_to_custom_error)?;
     let event = load_event_info(event_id, gdb).await?;
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes ORDER BY name")
@@ -278,15 +268,14 @@ async fn get_event_startlist(event_id: EventId, class_name: Option<&str>, user: 
 async fn get_event_results(event_id: EventId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, gdb).await?;
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
-    let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes WHERE event_id=?")
-        .bind(event_id)
+    let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes ORDER BY name")
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     let class_name = if let Some(name) = class_name {
         name.to_string()
     } else if let Some(classrec) = classes.first() {
         classrec.name.clone()
     } else {
-        return Err(Custom(Status::BadRequest, String::from("Classes not found")));
+        return Err(Custom(Status::BadRequest, String::from("No classes defined")));
     };
     let classrec = {
         let Some(classrec) = classes.iter().find(|c| c.name == class_name) else {
@@ -406,14 +395,13 @@ async fn export_runs(event_id: EventId, state: &State<SharedQxState>) -> Result<
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             create_demo_event,
-            get_event_create,
-            get_event_edit,
-            get_event_delete,
+            event_create,
+            event_edit,
+            event_delete,
             post_event,
             get_event,
             upload_startlist,
-            get_event_startlist_anonymous,
-            get_event_startlist_authorized,
+            get_event_startlist,
             get_event_results,
             get_api_event_current,
             post_api_event_current,

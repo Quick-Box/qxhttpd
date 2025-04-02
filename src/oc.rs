@@ -15,7 +15,7 @@ use crate::qxdatetime::QxDateTime;
 use crate::util::{anyhow_to_custom_error};
 use sqlx::sqlite::SqliteArgumentValue;
 use sqlx::{Encode, Sqlite};
-use crate::changes::{add_change, ChangeData, DataType};
+use crate::changes::{add_change, ChangeData, ChangeStatus, DataType};
 use crate::qx::QxRunChange;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -24,7 +24,7 @@ pub struct OCheckListChangeSet {
     Version: String,
     Creator: String,
     Created: String,
-    Event: String,
+    Event: Option<String>,
     Data: Vec<OCheckListChange>,
 }
 
@@ -51,9 +51,11 @@ pub struct OChecklistRunner {
     pub Id: String,
     pub StartStatus: OChecklistStartStatus,
     pub Card: SiId,
-    pub ClassName: String,
+    pub NewCard: Option<SiId>,
+    // example at https://stigning.se/checklist/help_en.html doesn't contain ClassName field
+    pub ClassName: Option<String>, 
     pub Name: String,
-    pub StartTime: String,
+    pub StartTime: Option<String>,
     #[serde(default)]
     pub Comment: String,
 }
@@ -91,27 +93,49 @@ pub(crate) fn load_oc_dir(data_dir: &str) -> anyhow::Result<Vec<OCheckListChange
 }
 #[test]
 fn test_load_oc() {
-    load_oc_dir("tests/oc/data").unwrap();
+    let data = load_oc_dir("tests/oc/data").unwrap();
+    for change_set in data {
+        let change_dt = QxDateTime::parse_from_string(&change_set.Created, Some(QxDateTime::now().0.offset())).unwrap();
+        for chng in change_set.Data {
+            println!("{:?}", serde_json::to_string(&chng).unwrap());
+            let is_dns = || {
+                let Some(chnglog) = &chng.ChangeLog else { return false };
+                chnglog.get("DNS").is_some()
+            };
+            let run_chng = QxRunChange::try_from_oc_change(&chng, change_dt).unwrap();
+            println!("{:?}\n", serde_json::to_string(&run_chng).unwrap());
+            assert!(run_chng.run_id > 0);
+            if chng.Runner.StartTime.is_some() && !is_dns() {
+                assert!(run_chng.check_time.is_some());
+            }
+        }
+    }
 }
 
 pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListChangeSet, state: &State<SharedQxState>) -> anyhow::Result<()> {
     let now = QxDateTime::now();
     let change_dt = QxDateTime::parse_from_string(&change_set.Created, Some(now.0.offset()))?;
     for chng in change_set.Data {
-        let Ok(run_chng) = QxRunChange::try_from_oc_change(&chng, Some(change_dt.0.offset())) else {
-            continue;
+        let data_type = DataType::OcChange;
+        let data = ChangeData::OcChange(chng.clone());
+        add_change(event_id, "oc", data_type, &data, None, None, None, state).await?;
+        match QxRunChange::try_from_oc_change(&chng, change_dt) {
+            Ok(run_chng) => {
+                let run_id = run_chng.run_id;
+                let status = if run_chng.si_id.is_some() {
+                    Some(ChangeStatus::Pending)
+                } else {
+                    None
+                };
+                let data_type = DataType::RunUpdateRequest;
+                let data = ChangeData::RunUpdateRequest(run_chng);
+                add_change(event_id, "oc", data_type, &data, Some(run_id), None, status, state).await?;
+            }
+            Err(e) => {
+                warn!("Error create run change from OC change: {e}");
+                warn!("OC change {:?}", chng);
+            }
         };
-        {
-            let data_type = DataType::OcChange;
-            let data = ChangeData::OcChange(chng);
-            add_change(event_id, "oc", data_type, &data, None, None, state).await?;
-        }
-        {
-            let run_id = run_chng.run_id;
-            let data_type = DataType::RunUpdateRequest;
-            let data = ChangeData::RunUpdateRequest(run_chng);
-            add_change(event_id, "oc", data_type, &data, Some(run_id), None, state).await?;
-        }
     }
     Ok(())
 }

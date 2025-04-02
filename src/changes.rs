@@ -12,8 +12,11 @@ use crate::oc::OCheckListChange;
 use crate::qx::QxRunChange;
 use crate::util::{sqlx_to_anyhow};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub enum ChangeStatus {
+    #[serde(rename = "PND")]
+    #[default]
+    Pending,
     #[serde(rename = "ACC")]
     Accepted,
     #[serde(rename = "REJ")]
@@ -24,6 +27,7 @@ impl_sqlx_json_text_type_encode_decode!(ChangeStatus);
 impl Display for ChangeStatus {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            ChangeStatus::Pending => f.write_str("PND"),
             ChangeStatus::Accepted => f.write_str("ACC"),
             ChangeStatus::Rejected => f.write_str("REJ"),
         }
@@ -66,7 +70,7 @@ impl_sqlx_json_text_type_encode_decode!(ChangeData);
 pub struct ChangesRecord {
     pub id: i64,
     pub source: String,
-    pub data_type: String,
+    pub data_type: DataType,
     pub data: ChangeData,
     pub user_id: Option<String>,
     pub run_id: Option<i64>,
@@ -74,17 +78,18 @@ pub struct ChangesRecord {
     pub created: QxDateTime,
 }
 
-pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, data: &ChangeData, run_id: Option<RunId>, user_id: Option<&str>, state: &State<SharedQxState>) -> anyhow::Result<()> {
+pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, data: &ChangeData, run_id: Option<RunId>, user_id: Option<&str>, status: Option<ChangeStatus>, state: &State<SharedQxState>) -> anyhow::Result<()> {
     //let change = serde_json::to_value(change).map_err(|e| anyhow!("{e}"))?;
     let db = get_event_db(event_id, state).await?;
     query("INSERT INTO changes
-                (source, data_type, data, run_id, user_id, created)
-                VALUES (?, ?, ?, ?, ?, ?)")
+                (source, data_type, data, run_id, user_id, status, created)
+                VALUES (?, ?, ?, ?, ?, ?, ?)")
         .bind(source)
         .bind(data_type)
         .bind(data)
         .bind(run_id)
         .bind(user_id)
+        .bind(status)
         .bind(QxDateTime::now().trimmed_to_sec())
         .execute(&db)
         .await.map_err(sqlx_to_anyhow)?;

@@ -87,7 +87,7 @@ impl<'r> request::FromRequest<'r> for MaybeSessionId {
 
 #[derive(Serialize, Deserialize, PartialEq, Default, Clone, Debug)]
 struct QxApiToken(String);
-impl_sqlx_text_type_and_decode!(QxApiToken);
+impl_sqlx_text_type_encode_decode!(QxApiToken);
 
 #[rocket::async_trait]
 impl<'r> request::FromRequest<'r> for QxApiToken {

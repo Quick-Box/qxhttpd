@@ -12,7 +12,7 @@ use crate::{OpenEvent, SharedQxState};
 
 // macro to decode some type from SQL text
 #[macro_export]
-macro_rules! impl_sqlx_text_type_and_decode {
+macro_rules! impl_sqlx_text_type_encode_decode {
     ($type:ident) => {
         impl<DB: sqlx::Database> sqlx::Type<DB> for $type
         where str: sqlx::Type<DB>
@@ -31,6 +31,13 @@ macro_rules! impl_sqlx_text_type_and_decode {
                 Ok(Self(value.to_string()))
             }
         }
+
+        // impl<'r> Encode<'r, Sqlite> for $type {
+        //     fn encode_by_ref(&self, buf: &mut Vec<SqliteArgumentValue<'r>>) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
+        //         let s = format!("{}", self);
+        //         <String as Encode<Sqlite>>::encode(s, buf)
+        //     }
+        // }
     };
 }
 

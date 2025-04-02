@@ -13,7 +13,7 @@ use crate::db::{get_event_db, DbPool};
 use crate::event::{load_event_info_for_api_token, user_info, EventId};
 use crate::qxdatetime::QxDateTime;
 use crate::{QxApiToken, QxSessionId, SharedQxState};
-use crate::changes::{add_change, ChangeData, DataType};
+use crate::changes::{add_change, ChangeData, ChangeStatus, DataType};
 use crate::qx::QxRunChange;
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
 
@@ -68,7 +68,7 @@ pub async fn add_run_update_request_change(event_id: EventId, session_id: QxSess
     let change = change.into_inner();
     let data_type = DataType::RunUpdateRequest;
     let data = ChangeData::RunUpdateRequest(change.clone());
-    add_change(event_id, "www", data_type, &data, Some(change.run_id), Some(user.email.as_str()), state).await.map_err(anyhow_to_custom_error)?;
+    add_change(event_id, "www", data_type, &data, Some(change.run_id), Some(user.email.as_str()), Some(ChangeStatus::Pending), state).await.map_err(anyhow_to_custom_error)?;
     if let Err(e) = state.read().expect("not poisoned")
         .broadcast_runs_change((event_id, change)) {
         error!("Failed to send QE in record error: {e}");
@@ -84,7 +84,7 @@ async fn add_run_updated_change(change: Json<QxRunChange>, api_token: QxApiToken
     let run_id = run_change.run_id;
     let data_type = DataType::RunUpdated;
     let data = ChangeData::RunUpdated(run_change.clone());
-    add_change(event.id, "qe", data_type, &data, Some(run_id), None, state).await.map_err(anyhow_to_custom_error)?;
+    add_change(event.id, "qe", data_type, &data, Some(run_id), None, None, state).await.map_err(anyhow_to_custom_error)?;
     let db = get_event_db(event.id, state).await.map_err(anyhow_to_custom_error)?;
     apply_qe_run_change(&run_change, &db).await.map_err(anyhow_to_custom_error)?;
     Ok(())
