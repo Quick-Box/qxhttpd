@@ -4,37 +4,86 @@
         <div class="w3-container w3-theme-l1">
             <h2 class="w3-margin">Edit event {{event.name}}</h2>
         </div>
-        <form class="w3-container w3-margin" action="/event" method="post">
+        <form id="eventForm" class="w3-container w3-margin" action="/event" method="post">
             {{#with event}}
                 <div class="w3-row-padding">
                     <div class="w3-half">
-                        <label><b>Id</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" readonly type="text" placeholder="New event" name="id" value="{{id}}" required>
-                        <label><b>Name</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event name" name="name" value="{{name}}" >
-                        <label><b>Place</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event place" name="place" value="{{place}}" >
-                        <label><b>Start time</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event start date-time with UTC offset" name="start_time" value="{{start_time}}" >
+                        <label>
+                            <b>Id</b>
+                            <input class="w3-input w3-border w3-margin-bottom" readonly type="text" placeholder="New event" name="id" value="{{id}}" required>
+                        </label>
+                        <label>
+                            <b>Name</b>
+                            <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event name" name="name" value="{{name}}" >
+                        </label>
+                        <label>
+                            <b>Place</b>
+                            <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event place" name="place" value="{{place}}" >
+                        </label>
+                        <label>
+                            <b>Start time</b>
+                            <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter event start date-time with UTC offset" name="start_time" value="{{start_time}}" >
+                        </label>
                     </div>
                     <div class="w3-half">
                         <div style="display:flex; justify-content:center"><img src="data:image/png;base64,{{../api_token_qrc_img_data}}" alt="API token QRC" /></div>
-                        <label><b>API token</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" readonly type="text" placeholder="API token" name="api_token" value="{{api_token}}" required>
-                        <label><b>Owner</b></label>
-                        <input class="w3-input w3-border w3-margin-bottom" readonly type="text" name="owner" value="{{owner}}" required>
+                        <label>
+                            <b>API token</b>
+                            <input class="w3-input w3-border w3-margin-bottom" readonly type="text" placeholder="API token" name="api_token" value="{{api_token}}" required>
+                        </label>
+                        <label>
+                            <b>Owner</b>
+                            <input class="w3-input w3-border w3-margin-bottom" readonly type="text" name="owner" value="{{owner}}" required>
+                        </label>
                     </div>
                 </div>
             {{/with}}
-                <div class="w3-row w3-margin-top">
-                    {{#if event.id}}
-                        <a href="/event/{{event.id}}/delete" class="w3-button w3-round-large w3-red">Delete event</a>
-                    {{/if}}
-                    <button class="w3-button w3-round-large w3-theme w3-right" type="submit">Save</button>
-                    <a href="{{back_link}}" class="w3-button w3-round-large w3-right w3-border">Cancel</a>
-                </div>
         </form>
+        <div class="w3-bar w3-margin-top">
+            {{#if event.id}}
+                <a href="/event/{{event.id}}/delete" class="w3-button w3-round-large w3-red">Delete event</a>
+            {{/if}}
+            <button class="w3-button w3-round-large w3-theme w3-right" onclick="submitForm()">Save</button>
+            <a href="{{back_link}}" class="w3-button w3-round-large w3-right w3-border">Cancel</a>
+            <button onclick="uploadFile()" class="w3-button w3-round-large w3-right w3-border">Upload start list</button>
+            <input class="w3-right" type="file" id="fileInput" />
+            <label class="w3-right">Start list</label>
+        </div>
     </div>
+    <script>
+        function submitForm() {
+            const form = document.getElementById('eventForm');
+            form.submit();  // This will submit the form programmatically
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];  // Get the selected file
+
+            if (!file) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);  // Append the file to FormData
+
+            // Use fetch to upload the file
+            fetch('https://yourserver.com/upload', {
+                method: 'POST',
+                body: formData,
+            })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                        alert('File uploaded successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('File upload failed.');
+                    });
+        }
+    </script>
 
 {{/inline}}
 {{> layout}}
