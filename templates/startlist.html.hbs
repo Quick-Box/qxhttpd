@@ -29,7 +29,7 @@
             <th data-col-name="start_time">Start</th>
             <th data-col-name="name">Name</th>
             <th data-col-name="registration">Registration</th>
-            <th data-col-name="si">SI</th>
+            <th data-col-name="si_id">SI</th>
             <th data-col-name="edited_by">Edited by</th>
             <th data-col-name="run_id">Run Id</th>
         </tr>
@@ -40,6 +40,7 @@
                 data-start_time="{{ start_time }}"
                 data-last_name="{{ last_name }}"
                 data-first_name="{{ first_name }}"
+                data-registration="{{ registration }}"
                 data-si_id="{{ si_id }}"
                 data-edited_by="{{ edited_by }}"
                 data-run_id="{{ run_id }}"
@@ -49,12 +50,12 @@
                         <i onclick="editEntry('{{ last_name }}', '{{ first_name }}', '{{ registration }}', '{{ si_id }}')" class="fa fa-pencil-square-o"></i>
                     </td>
                 {{/if}}
-                <td class="w3-right-align" >{{ start_time }}</td>
-                <td>{{ last_name }} {{ first_name }}</td>
-                <td data-start_time="{{ start_time }}">{{ registration }}</td>
-                <td class="w3-right-align">{{ si_id }}</td>
-                <td>{{ edited_by }}</td>
-                <td class="w3-right-align">{{ run_id }}</td>
+                <td class="w3-right-align" ></td>
+                <td></td>
+                <td></td>
+                <td class="w3-right-align"></td>
+                <td></td>
+                <td class="w3-right-align"></td>
             </tr>
         {{/each}}
         </tbody>

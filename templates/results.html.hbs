@@ -19,27 +19,36 @@
     <table id="table" class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
-            <th class="start_time w3-right-align">Start</th>
-            <th>Name</th>
-            <th>Registration</th>
-            <th>Check</th>
-            <th class="finish_time w3-right-align">Finish</th>
-            <th class="time w3-right-align">Time</th>
-            <th>Status</th>
-            <th>Run Id</th>
+            <th data-col-name="start_time" class="w3-right-align">Start</th>
+            <th data-col-name="name">Name</th>
+            <th data-col-name="registration">Registration</th>
+            <th data-col-name="check_time" class="w3-right-align">Check</th>
+            <th data-col-name="finish_time" class="w3-right-align">Finish</th>
+            <th data-col-name="time" class="w3-right-align">Time</th>
+            <th data-col-name="status">Status</th>
+            <th data-col-name="run_id">Run Id</th>
         </tr>
         </thead>
         <tbody>
         {{#each runs}}
-            <tr>
-                <td class="w3-right-align">{{ start_time }}</td>
-                <td>{{ last_name }} {{ first_name }}</td>
-                <td>{{ registration }}</td>
-                <td>{{dtstr check_time }}</td>
-                <td class="w3-right-align">{{ finish_time }}</td>
+            <tr
+                    data-start_time="{{ start_time }}"
+                    data-finish_time="{{ finish_time }}"
+                    data-last_name="{{ last_name }}"
+                    data-first_name="{{ first_name }}"
+                    data-registration="{{ registration }}"
+                    data-si_id="{{ si_id }}"
+                    data-run_id="{{ run_id }}"
+                    data-status="{{ status }}"
+            >
                 <td class="w3-right-align"></td>
-                <td>{{ status }}</td>
-                <td class="w3-right-align">{{ run_id }}</td>
+                <td></td>
+                <td></td>
+                <td class="w3-right-align"></td>
+                <td class="w3-right-align"></td>
+                <td class="w3-right-align"></td>
+                <td></td>
+                <td class="w3-right-align"></td>
             </tr>
         {{/each}}
         </tbody>

@@ -16,7 +16,7 @@ function obtime(msec) {
     }
     return '';
 }
-
+/*
 function findColumnIndex(table, col_name) {
     const headerRow = table.querySelector(`thead tr`);
     const headerCells = headerRow.querySelectorAll("th");
@@ -33,23 +33,32 @@ function forEachTableRow(table, format_fn) {
         format_fn(row);
     }
 }
-
+*/
 function formatRunTable(start00) {
     const table = document.getElementById('table');
-    let col_start_time = findColumnIndex(table, 'start_time');
-    if (col_start_time >= 0) {
-        let col_finish_time = findColumnIndex(table, 'finish_time');
-        forEachTableRow(table, (row) => {
-            let start_time = row.dataset.start_time;
-            row.cells[col_start_time].innerHTML = obtime(msecSinceUntil(start00, start_time));
-            if (col_finish_time >= 0) {
-                let finish_time = row.dataset.finish_time;
-                row.cells[col_finish_time].innerHTML = obtime(msecSinceUntil(start00, finish_time));
-                let col_time = findColumnIndex(table, 'time');
-                if (col_time >= 0) {
-                    row.cells[col_time].innerHTML = obtime(msecSinceUntil(start_time, finish_time));
-                }
+    const headerRow = table.querySelector(`thead tr`);
+    const headerCells = headerRow.querySelectorAll("th");
+    for (let j = 0; j < headerCells.length; j++) {
+        const col_name = headerCells[j].dataset.colName;
+        for (let i = 1; i < table.rows.length; i++) {
+            const row = table.rows[i];
+            if (col_name === "start_time") {
+                row.cells[j].innerHTML = obtime(msecSinceUntil(start00, row.dataset.start_time));
             }
-        });
+            else if (col_name === "finish_time") {
+                row.cells[j].innerHTML = obtime(msecSinceUntil(start00, row.dataset.finish_time));
+            }
+            else if (col_name === "time") {
+                row.cells[j].innerHTML = obtime(msecSinceUntil(row.dataset.start_time, row.dataset.finish_time));
+            }
+            else if (col_name === "name") {
+                row.cells[j].innerHTML = `${row.dataset.last_name} ${row.dataset.first_name}`;
+            }
+            else {
+                const val = row.dataset[col_name];
+                // console.log(i, j, col_name, val);
+                row.cells[j].innerHTML = `${val}`;
+            }
+        }
     }
 }
