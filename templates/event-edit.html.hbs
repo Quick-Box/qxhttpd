@@ -39,23 +39,45 @@
                 </div>
             {{/with}}
         </form>
-        <div class="w3-bar w3-margin-top">
+        <div class="w3-flex" style="align-items:center;gap:8px">
+            <input class="" type="file" id="fileInput" />
+            <button onclick="uploadFile()" class="w3-button w3-round-large w3-border">Upload start list</button>
+            <div style="flex-grow: 8"></div>
             {{#if event.id}}
-                <a href="/event/{{event.id}}/delete" class="w3-button w3-round-large w3-red">Delete event</a>
+                <button onclick="document.getElementById('confirmDeleteEventDialog').style.display='block'" class="w3-button w3-round-large w3-red">Delete event</button>
+<!--                <a href="/event/{{event.id}}/delete" class="w3-button w3-round-large w3-red">Delete event</a>-->
             {{/if}}
-            <button class="w3-button w3-round-large w3-theme w3-right" onclick="submitForm()">Save</button>
-            <a href="{{back_link}}" class="w3-button w3-round-large w3-right w3-border">Cancel</a>
-            <button onclick="uploadFile()" class="w3-button w3-round-large w3-right w3-border">Upload start list</button>
-            <input class="w3-right" type="file" id="fileInput" />
-            <label class="w3-right">Start list</label>
+            <a href="{{back_link}}" class="w3-button w3-round-large w3-border">Cancel</a>
+            <button class="w3-button w3-round-large w3-theme" onclick="submitForm()">Save</button>
+        </div>
+        <div class="w3-margin"></div>
+    </div>
+
+    <div id="confirmDeleteEventDialog" class="w3-modal" style="display:none;">
+        <div class="w3-modal-content w3-animate-top">
+            <header class="w3-container w3-red">
+                <h2>Confirm Deletion</h2>
+            </header>
+            <div class="w3-container">
+                <p>Do you really want to delete this event?</p>
+            </div>
+            <footer class="w3-container w3-padding-16 w3-center">
+                <button onclick="deleteEvent()" class="w3-button w3-red">Yes</button>
+                <button onclick="document.getElementById('confirmDeleteEventDialog').style.display='none'" class="w3-button">No</button>
+            </footer>
         </div>
     </div>
+
     <script>
         function submitForm() {
             const form = document.getElementById('eventForm');
             form.submit();  // This will submit the form programmatically
         }
-
+        function deleteEvent() {
+            // alert("Event deleted!");
+            document.getElementById('confirmDeleteEventDialog').style.display = 'none';
+            window.location.href = "/event/{{event.id}}/delete";
+        }
         function uploadFile() {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];  // Get the selected file

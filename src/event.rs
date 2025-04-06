@@ -123,8 +123,8 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
         owner: user.email,
         api_token: QxApiToken(vals.api_token.to_string()),
     };
-    save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
-    Ok(Redirect::to("/"))
+    let event_id = save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
+    Ok(Redirect::to(format!("/event/{event_id}")))
 }
 pub fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, Custom<String>> {
     state.read().expect("Not poisoned")
