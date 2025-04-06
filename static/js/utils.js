@@ -35,7 +35,7 @@ function forEachTableRow(table, format_fn) {
 }
 
 function formatRunTable(start00) {
-    const table = document.getElementById('tables');
+    const table = document.getElementById('table');
     let col_start_time = findColumnIndex(table, 'start_time');
     if (col_start_time >= 0) {
         let col_finish_time = findColumnIndex(table, 'finish_time');

@@ -40,12 +40,9 @@
             {{/with}}
         </form>
         <div class="w3-flex" style="align-items:center;gap:8px">
-            <input class="" type="file" id="fileInput" />
-            <button onclick="uploadFile()" class="w3-button w3-round-large w3-border">Upload start list</button>
             <div style="flex-grow: 8"></div>
             {{#if event.id}}
                 <button onclick="document.getElementById('confirmDeleteEventDialog').style.display='block'" class="w3-button w3-round-large w3-red">Delete event</button>
-<!--                <a href="/event/{{event.id}}/delete" class="w3-button w3-round-large w3-red">Delete event</a>-->
             {{/if}}
             <a href="{{back_link}}" class="w3-button w3-round-large w3-border">Cancel</a>
             <button class="w3-button w3-round-large w3-theme" onclick="submitForm()">Save</button>
@@ -77,33 +74,6 @@
             // alert("Event deleted!");
             document.getElementById('confirmDeleteEventDialog').style.display = 'none';
             window.location.href = "/event/{{event.id}}/delete";
-        }
-        function uploadFile() {
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];  // Get the selected file
-
-            if (!file) {
-                alert("Please select a file to upload.");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);  // Append the file to FormData
-
-            // Use fetch to upload the file
-            fetch('https://yourserver.com/upload', {
-                method: 'POST',
-                body: formData,
-            })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Success:', data);
-                        alert('File uploaded successfully!');
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('File upload failed.');
-                    });
         }
     </script>
 

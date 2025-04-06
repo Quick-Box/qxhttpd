@@ -93,60 +93,6 @@ impl QxRunChange {
         ret
     }
 }
-// pub async fn import_runs(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<()> {
-//     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE event_id=? AND name=?")
-//         .bind(event_id)
-//         .bind(RUNS_CSV_FILE)
-//         .fetch_one(&db.0)
-//         .await.map_err(sqlx_to_anyhow)?.0;
-//     let runs: Vec<RunsRecord> = serde_json::from_slice(&data)?;
-// 
-//     let mut run_ids = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs WHERE event_id=?")
-//         .bind(event_id)
-//         .fetch_all(&db.0)
-//         .await.map_err(sqlx_to_anyhow)?;
-// 
-//     let txn = db.0.begin().await?;
-// 
-//     for run in runs {
-//         run_ids.retain(|n| n.0 != run.run_id);
-//         sqlx::query("INSERT OR REPLACE INTO runs (
-//                              event_id,
-//                              run_id,
-//                              si_id,
-//                              last_name,
-//                              first_name,
-//                              registration,
-//                              class_name,
-//                              start_time,
-//                              check_time,
-//                              finish_time,
-//                              status
-//                              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-//             .bind(event_id)
-//             .bind(run.run_id)
-//             .bind(run.si_id)
-//             .bind(run.last_name)
-//             .bind(run.first_name)
-//             .bind(run.registration)
-//             .bind(run.class_name)
-//             .bind(run.start_time.map(|d| d.0))
-//             .bind(run.check_time.map(|d| d.0))
-//             .bind(run.finish_time.map(|d| d.0))
-//             .bind(run.status)
-//             .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
-//     }
-//     for run_id in run_ids {
-//         sqlx::query("DELETE FROM runs WHERE run_id=? AND event_id=?")
-//             .bind(run_id.0)
-//             .bind(event_id)
-//             .execute(&db.0).await.map_err(sqlx_to_anyhow)?;
-//     }
-// 
-//     txn.commit().await?;
-// 
-//     Ok(())
-// }
 #[get("/event/<event_id>/changes?<from_id>")]
 async fn get_changes(event_id: EventId, from_id: Option<i64>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, gdb).await?;

@@ -4,6 +4,7 @@
     <div class="w3-bar">
         {{#if user}}
             <a href="/event/{{event.id}}/edit" class="w3-button w3-theme w3-round-large w3-border"><i class="fa fa-cog"></i> edit</a>
+            <button onclick="document.getElementById('uploadStartListDialog').style.display='block'" class="w3-button w3-theme w3-round-large w3-border">Upload start list</button>
         {{/if}}
         <a href="/event/{{event.id}}/export/runs" class="w3-button w3-theme w3-round-large">Export runs</a>
     </div>
@@ -20,5 +21,54 @@
         {{/each}}
     </ul>
 
+    <div id="uploadStartListDialog" class="w3-modal" style="display:none;">
+        <div class="w3-modal-content w3-animate-top w3-container">
+            <header class="">
+                <h2>Upload start list</h2>
+            </header>
+            <div class="">
+                <input type="file" id="fileInput" />
+            </div>
+            <footer class="w3-container w3-padding-16 w3-right">
+                <button onclick="uploadStartList()" class="w3-button w3-round-large w3-theme">Upload</button>
+                <button onclick="document.getElementById('uploadStartListDialog').style.display='none'" class="w3-button w3-round-large w3-border">Cancel</button>
+            </footer>
+        </div>
+    </div>
+
+<script>
+    function uploadStartList() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];  // Get the selected file
+
+        if (!file) {
+            alert("Please select a file to upload.");
+            return;
+        }
+
+        // const formData = new FormData();
+        // formData.append('file', file);  // Append the file to FormData
+
+        // Use fetch to upload the file
+        fetch('/api/event/current/upload/startlist', {
+            method: 'POST',
+            body: file,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'qx-api-token': '{{event.api_token}}'
+            }
+        }).then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert('File uploaded successfully!');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('File upload failed.');
+                });
+        document.getElementById('uploadStartListDialog').style.display='none'
+    }
+
+</script>
 {{/inline}}
 {{> layout}}

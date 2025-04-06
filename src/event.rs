@@ -52,13 +52,17 @@ impl EventRecord {
     }
 }
 
-pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<EventRecord, Custom<String>> {
+pub async fn load_event(event_id: EventId, db: &State<DbPool>) -> anyhow::Result<EventRecord> {
     let pool = &db.0;
     let event: EventRecord = sqlx::query_as("SELECT * FROM events WHERE id=?")
         .bind(event_id)
         .fetch_one(pool)
         .await
-        .map_err(sqlx_to_custom_error)?;
+        .map_err(sqlx_to_anyhow)?;
+    Ok(event)
+}
+pub async fn load_event_info(event_id: EventId, db: &State<DbPool>) -> Result<EventRecord, Custom<String>> {
+    let event = load_event(event_id, db).await.map_err(anyhow_to_custom_error)?;
     Ok(event)
 }
 pub async fn load_event_info_for_api_token(qx_api_token: &QxApiToken, db: &State<DbPool>) -> Result<EventRecord, Custom<String>> {
@@ -115,14 +119,27 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
     let start_time = QxDateTime::parse_from_iso(vals.start_time)
         .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
-    let event = EventRecord {
-        id: vals.id,
-        name: vals.name.to_string(),
-        place: vals.place.to_string(),
-        start_time,
-        owner: user.email,
-        api_token: QxApiToken(vals.api_token.to_string()),
+    let event = if vals.id > 0 {
+        let event = load_event_info(vals.id, db).await?;
+        EventRecord {
+            name: vals.name.to_string(),
+            place: vals.place.to_string(),
+            start_time,
+            ..event
+        }
+    } else {
+        EventRecord {
+            id: 0,
+            name: vals.name.to_string(),
+            place: vals.place.to_string(),
+            start_time,
+            owner: user.email.clone(),
+            api_token: QxApiToken(vals.api_token.to_string()),
+        }
     };
+    if &event.owner != &user.email {
+        return Err(Custom(Status::BadRequest, "Different event owner".to_string()))
+    }
     let event_id = save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     Ok(Redirect::to(format!("/event/{event_id}")))
 }
@@ -140,6 +157,15 @@ pub fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -
         }
     }
 }
+
+pub async fn user_and_event_owner_opt(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> anyhow::Result<Option<UserInfo>> {
+    let event = load_event(event_id, gdb).await?;
+    let user = user_info_opt(session_id, state)
+        .map_err(|err| anyhow!("{err}"))?
+        .and_then(|user| if user.email == event.owner {Some(user)} else {None});
+    Ok(user)
+}
+
 async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let user = user_info(session_id, state)?;
     let event = if let Some(event_id) = event_id {
@@ -194,10 +220,11 @@ async fn event_delete(event_id: EventId, session_id: QxSessionId, state: &State<
 
 #[get("/event/<event_id>")]
 async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info_opt(session_id, state).map_err(anyhow_to_custom_error)?;
     let event = load_event_info(event_id, gdb).await?;
+    let user = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)?;
     let files = files::list_files(event_id, state).await?;
     Ok(Template::render("event", context! {
+        api_token: user.as_ref().map(|_| event.api_token.clone()),
         user,
         event,
         files,
@@ -231,8 +258,8 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
 
 #[get("/event/<event_id>/startlist?<class_name>")]
 async fn get_event_startlist(event_id: EventId, session_id: MaybeSessionId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info_opt(session_id, state).map_err(anyhow_to_custom_error)?;
     let event = load_event_info(event_id, gdb).await?;
+    let user = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)?;
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes ORDER BY name")
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
@@ -251,7 +278,6 @@ async fn get_event_startlist(event_id: EventId, session_id: MaybeSessionId, clas
     };
     let start00 = event.start_time;
     let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE class_name=? ORDER BY start_time")
-        .bind(event_id)
         .bind(class_name)
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     Ok(Template::render("startlist", context! {
