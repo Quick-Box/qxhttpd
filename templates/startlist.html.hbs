@@ -4,7 +4,7 @@
     <h3><a href="/event/{{ event.id }}">{{ event.name }}</a></h3>
     <div class="w3-bar">
         {{#if user}}
-            <button onclick="openDialog('{{ last_name }}', '{{ first_name }}', '{{ registration }}', '{{ si_id }}')" class="w3-button w3-theme w3-round-large">New entry</button>
+            <button onclick="newEntry()" class="w3-button w3-theme w3-round-large">New entry</button>
         {{/if}}
     </div>
     <div>
@@ -26,25 +26,32 @@
             {{#if user}}
                 <th>Edit</th>
             {{/if}}
-            <th class="start_time">Start</th>
-            <th>Name</th>
-            <th>Registration</th>
-            <th>SI</th>
-            <th>Edited by</th>
-            <th>Run Id</th>
+            <th data-col-name="start_time">Start</th>
+            <th data-col-name="name">Name</th>
+            <th data-col-name="registration">Registration</th>
+            <th data-col-name="si">SI</th>
+            <th data-col-name="edited_by">Edited by</th>
+            <th data-col-name="run_id">Run Id</th>
         </tr>
         </thead>
         <tbody>
         {{#each runs}}
-            <tr>
+            <tr
+                data-start_time="{{ start_time }}"
+                data-last_name="{{ last_name }}"
+                data-first_name="{{ first_name }}"
+                data-si_id="{{ si_id }}"
+                data-edited_by="{{ edited_by }}"
+                data-run_id="{{ run_id }}"
+            >
                 {{#if ../user}}
                     <td>
-                        <i onclick="openDialog('{{ last_name }}', '{{ first_name }}', '{{ registration }}', '{{ si_id }}')" class="fa fa-pencil-square-o"></i>
+                        <i onclick="editEntry('{{ last_name }}', '{{ first_name }}', '{{ registration }}', '{{ si_id }}')" class="fa fa-pencil-square-o"></i>
                     </td>
                 {{/if}}
-                <td class="w3-right-align">{{ start_time }}</td>
+                <td class="w3-right-align" >{{ start_time }}</td>
                 <td>{{ last_name }} {{ first_name }}</td>
-                <td>{{ registration }}</td>
+                <td data-start_time="{{ start_time }}">{{ registration }}</td>
                 <td class="w3-right-align">{{ si_id }}</td>
                 <td>{{ edited_by }}</td>
                 <td class="w3-right-align">{{ run_id }}</td>
@@ -58,7 +65,11 @@
 
     formatRunTable('{{ start00 }}');
 
-    function openDialog(first_name, last_name, registration, si) {
+    function newEntry() {
+        let doc = document.getElementById('dlg')
+        doc.style.display='block'
+    }
+    function editEntry(first_name, last_name, registration, si) {
         let doc = document.getElementById('dlg')
         doc.querySelector('input[name="first_name"]').value = first_name;
         doc.querySelector('input[name="last_name"]').value = last_name;
@@ -68,7 +79,9 @@
         doc.style.display='block'
     }
     function saveDialog(name, registration, si) {
-
+        document.getElementById('dlg').style.display='none'
+    }
+    function hideDialog(name, registration, si) {
         document.getElementById('dlg').style.display='none'
     }
     </script>
@@ -99,7 +112,7 @@
             </div>
 
             <div class="w3-padding w3-light-grey">
-                <button onclick="document.getElementById('dlg').style.display='none'" type="button" class="w3-button  w3-round-large w3-red">Cancel</button>
+                <button onclick="hideDialog()" type="button" class="w3-button  w3-round-large w3-red">Cancel</button>
                 <button onclick="document.getElementById('dlg').style.display='none'" class="w3-button w3-green  w3-round-large w3-right" type="button">Save</button>
             </div>
 

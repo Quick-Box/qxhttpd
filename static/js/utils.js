@@ -21,7 +21,7 @@ function findColumnIndex(table, col_name) {
     const headerRow = table.querySelector(`thead tr`);
     const headerCells = headerRow.querySelectorAll("th");
     for (let i = 0; i < headerCells.length; i++) {
-        if (headerCells[i].classList.contains(col_name)) {
+        if (headerCells[i].dataset.colName === col_name) {
             return i;
         }
     }
@@ -40,10 +40,10 @@ function formatRunTable(start00) {
     if (col_start_time >= 0) {
         let col_finish_time = findColumnIndex(table, 'finish_time');
         forEachTableRow(table, (row) => {
-            let start_time = row.cells[col_start_time].innerHTML;
+            let start_time = row.dataset.start_time;
             row.cells[col_start_time].innerHTML = obtime(msecSinceUntil(start00, start_time));
             if (col_finish_time >= 0) {
-                let finish_time = row.cells[col_finish_time].innerHTML;
+                let finish_time = row.dataset.finish_time;
                 row.cells[col_finish_time].innerHTML = obtime(msecSinceUntil(start00, finish_time));
                 let col_time = findColumnIndex(table, 'time');
                 if (col_time >= 0) {
