@@ -16,6 +16,7 @@ use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
+use crate::changes::ChangesRecord;
 use crate::iofxml3::parser::parse_startlist_xml_data;
 use crate::qxdatetime::QxDateTime;
 use crate::runs::{ClassesRecord, RunsRecord};
@@ -257,7 +258,7 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
 }
 
 #[get("/event/<event_id>/startlist?<class_name>")]
-async fn get_event_startlist(event_id: EventId, session_id: MaybeSessionId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn get_event_start_list(event_id: EventId, session_id: MaybeSessionId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, gdb).await?;
     let user = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)?;
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
@@ -278,7 +279,13 @@ async fn get_event_startlist(event_id: EventId, session_id: MaybeSessionId, clas
     };
     let start00 = event.start_time;
     let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE class_name=? ORDER BY start_time")
-        .bind(class_name)
+        .bind(&class_name)
+        .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
+    let changes = sqlx::query_as::<_, ChangesRecord>("SELECT changes.* FROM changes INNER JOIN runs ON changes.run_id=runs.run_id 
+                 WHERE runs.class_name=?
+                   AND changes.data_type='RunUpdateRequest'
+                   AND changes.status='PND'")
+        .bind(&class_name)
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     Ok(Template::render("startlist", context! {
         user,
@@ -286,6 +293,7 @@ async fn get_event_startlist(event_id: EventId, session_id: MaybeSessionId, clas
         classrec,
         classes,
         runs,
+        changes,
         start00,
     }))
 }
@@ -327,14 +335,14 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, state: &
 
 }
 #[post("/api/event/current/upload/startlist", data = "<data>")]
-async fn upload_startlist(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
+async fn upload_start_list(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let file_id = crate::files::upload_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
-    import_startlist(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
+    import_start_list(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
     Ok(file_id)
 }
-pub async fn import_startlist(event_id: EventId, edb: &SqlitePool, gdb: &State<DbPool>) -> anyhow::Result<()> {
+pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE name=?")
         .bind(START_LIST_IOFXML3_FILE)
         .fetch_one(edb)
@@ -386,14 +394,6 @@ pub async fn import_startlist(event_id: EventId, edb: &SqlitePool, gdb: &State<D
     Ok(())
 }
 
-// #[post("/api/event/current/upload/runs", data = "<data>")]
-// async fn upload_event(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
-//     let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
-//     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
-//     let file_id = crate::files::upload_file(qx_api_token, RUNS_CSV_FILE, data, content_type, state, gdb).await?;
-//     import_runs(event_info.id, db).await.map_err(anyhow_to_custom_error)?;
-//     Ok(file_id)
-// }
 #[get("/event/create-demo")]
 async fn create_demo_event(state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let mut event_info = EventRecord::new("fanda.vacek@gmail.com");
@@ -426,8 +426,8 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             event_delete,
             post_event,
             get_event,
-            upload_startlist,
-            get_event_startlist,
+            upload_start_list,
+            get_event_start_list,
             get_event_results,
             get_api_event_current,
             post_api_event_current,

@@ -1,15 +1,8 @@
 use chrono::{NaiveDateTime, NaiveTime, TimeDelta};
-use rocket::response::status::Custom;
-use rocket::{Build, Rocket, State};
+use rocket::{Build, Rocket};
 use rocket::serde::{Deserialize, Serialize};
-use rocket_dyn_templates::{context, Template};
-use crate::event::{load_event_info, EventId};
 use crate::oc::OCheckListChange;
 use crate::qxdatetime::QxDateTime;
-use crate::changes::ChangesRecord;
-use crate::db::{get_event_db, DbPool};
-use crate::SharedQxState;
-use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error};
 
 fn is_false(b: &bool) -> bool {
     *b == false
@@ -93,26 +86,9 @@ impl QxRunChange {
         ret
     }
 }
-#[get("/event/<event_id>/changes?<from_id>")]
-async fn get_changes(event_id: EventId, from_id: Option<i64>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let event = load_event_info(event_id, gdb).await?;
-    let from_id = from_id.unwrap_or(0);
-    let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
-    let records: Vec<ChangesRecord> = sqlx::query_as("SELECT * FROM changes WHERE id>=? LIMIT 1000")
-        .bind(from_id)
-        .fetch_all(&edb)
-        .await
-        .map_err(sqlx_to_custom_error)?;
-    Ok(Template::render("changes", context! {
-            event,
-            records,
-        }))
-}
-
 
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
-        get_changes,
     ])
 }
 

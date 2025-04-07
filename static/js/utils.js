@@ -34,30 +34,47 @@ function forEachTableRow(table, format_fn) {
     }
 }
 */
-function formatRunTable(start00) {
+function formatRunTable(changes) {
     const table = document.getElementById('table');
+    const start00 = table.dataset.start00;
     const headerRow = table.querySelector(`thead tr`);
     const headerCells = headerRow.querySelectorAll("th");
     for (let j = 0; j < headerCells.length; j++) {
         const col_name = headerCells[j].dataset.colName;
+        if (col_name === undefined) {
+            continue;
+        }
         for (let i = 1; i < table.rows.length; i++) {
             const row = table.rows[i];
+            let cell_val;
             if (col_name === "start_time") {
-                row.cells[j].innerHTML = obtime(msecSinceUntil(start00, row.dataset.start_time));
+                cell_val = obtime(msecSinceUntil(start00, row.dataset.start_time));
             }
             else if (col_name === "finish_time") {
-                row.cells[j].innerHTML = obtime(msecSinceUntil(start00, row.dataset.finish_time));
+                cell_val = obtime(msecSinceUntil(start00, row.dataset.finish_time));
             }
             else if (col_name === "time") {
-                row.cells[j].innerHTML = obtime(msecSinceUntil(row.dataset.start_time, row.dataset.finish_time));
+                cell_val = obtime(msecSinceUntil(row.dataset.start_time, row.dataset.finish_time));
             }
             else if (col_name === "name") {
-                row.cells[j].innerHTML = `${row.dataset.last_name} ${row.dataset.first_name}`;
+                cell_val = `${row.dataset.last_name} ${row.dataset.first_name}`;
             }
             else {
                 const val = row.dataset[col_name];
                 // console.log(i, j, col_name, val);
-                row.cells[j].innerHTML = `${val}`;
+                cell_val = `${val}`;
+            }
+            let cell_val_chng = undefined;
+            const run_id= row.dataset.run_id;
+            const ch1 = changes.find(ch => ch.run_id === run_id);
+            if (ch1 !== undefined) {
+                cell_val_chng = ch1[col_name];
+            }
+            if (cell_val_chng === undefined) {
+                row.cells[j].innerHTML = cell_val;
+            }
+            else {
+                row.cells[j].innerHTML = `<s>${cell_val}</s><br>${cell_val_chng}`;
             }
         }
     }

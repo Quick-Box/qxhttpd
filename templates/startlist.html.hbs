@@ -20,7 +20,7 @@
         <span class="w3-bar-item w3-right">length: {{classrec.length}}</span>
     </div>
 
-    <table id="table" class="w3-table-all w3-hoverable">
+    <table id="table" data-start00="{{ start00 }}" class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
             {{#if user}}
@@ -47,7 +47,7 @@
             >
                 {{#if ../user}}
                     <td>
-                        <i onclick="editEntry('{{ last_name }}', '{{ first_name }}', '{{ registration }}', '{{ si_id }}')" class="fa fa-pencil-square-o"></i>
+                        <i onclick="editEntry({{ run_id }})" class="fa fa-pencil-square-o"></i>
                     </td>
                 {{/if}}
                 <td class="w3-right-align" ></td>
@@ -63,19 +63,32 @@
 
     <script src="/js/utils.js"></script>
     <script>
-
-    formatRunTable('{{ start00 }}');
+    const changes = {{changes}};
+    formatRunTable(changes);
 
     function newEntry() {
         let doc = document.getElementById('dlg')
         doc.style.display='block'
     }
-    function editEntry(first_name, last_name, registration, si) {
+    function editEntry(run_id) {
+        let table = document.getElementById('table')
+        const row = (() => {
+            // console.log('needle', run_id)
+            for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                let run_id2 = Number(row.dataset.run_id)
+                // console.log('row', run_id2)
+                if (run_id2 === run_id) {
+                    return row
+                }
+            }
+        })();
+
         let doc = document.getElementById('dlg')
-        doc.querySelector('input[name="first_name"]').value = first_name;
-        doc.querySelector('input[name="last_name"]').value = last_name;
-        doc.querySelector('input[name="registration"]').value = registration;
-        doc.querySelector('input[name="si"]').value = si;
+        doc.querySelector('input[name="first_name"]').value = row.dataset.first_name;
+        doc.querySelector('input[name="last_name"]').value = row.dataset.last_name;
+        doc.querySelector('input[name="registration"]').value = row.dataset.registration;
+        doc.querySelector('input[name="si"]').value = row.dataset.si_id;
 
         doc.style.display='block'
     }
