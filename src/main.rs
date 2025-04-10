@@ -1,26 +1,26 @@
 #[macro_use] extern crate rocket;
 
+use std::sync::Arc;
 use crate::event::{user_info_opt, EventId, EventRecord};
 use std::fmt::Debug;
 use std::collections::{HashMap};
 use std::sync::atomic::AtomicU64;
-use std::sync::{Arc, RwLock};
 use rocket::fs::{FileServer};
-use rocket::{request, State};
+use rocket::{request, tokio, State};
 use rocket::http::{CookieJar, Status};
 use rocket::response::{status};
 use rocket::response::status::{Custom};
 use rocket_dyn_templates::{Template, context, handlebars};
 use rocket::serde::Serialize;
-use rocket::tokio::sync::broadcast;
 use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
 use sqlx::SqlitePool;
 use crate::auth::{UserInfo, QX_SESSION_ID};
+use crate::changes::QxRunChange;
 use crate::db::{DbPool, DbPoolFairing};
-use crate::qx::QxRunChange;
 use crate::qxdatetime::{dtstr, obtime, obtimems};
 use crate::util::anyhow_to_custom_error;
+use async_broadcast::{broadcast};
 
 #[cfg(test)]
 mod tests;
@@ -32,7 +32,6 @@ mod files;
 mod util;
 mod iofxml3;
 mod qxdatetime;
-mod qx;
 mod runs;
 mod changes;
 
@@ -108,34 +107,36 @@ struct QxState {
     app_config: AppConfig,
     sessions: HashMap<QxSessionId, QxSession>,
     open_events: HashMap<EventId, OpenEvent>,
-    runs_changes_sender: broadcast::Sender<(EventId, QxRunChange)>,
+    runs_changes_sender: async_broadcast::Sender<(EventId, QxRunChange)>,
+    runs_changes_receiver: async_broadcast::Receiver<(EventId, QxRunChange)>,
 }
 impl QxState {
     fn new(app_config: AppConfig) -> Self {
-        let (runs_changes_sender, _receiver) = broadcast::channel(16);
+        let (runs_changes_sender, runs_changes_receiver) = broadcast(16);
         Self {
             app_config,
             sessions: Default::default(),
             open_events: Default::default(),
             runs_changes_sender,
+            runs_changes_receiver,
         }
     }
-    fn broadcast_runs_change(&self, chng: (EventId, QxRunChange)) -> anyhow::Result<()> {
-        self.runs_changes_sender.send(chng)?;
+    async fn broadcast_runs_change(&self, chng: (EventId, QxRunChange)) -> anyhow::Result<()> {
+        self.runs_changes_sender.broadcast(chng).await?;
         Ok(())
     }
 }
-type SharedQxState = RwLock<QxState>;
+type SharedQxState = tokio::sync::RwLock<QxState>;
 
 #[get("/")]
 async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info_opt(sid, state).map_err(anyhow_to_custom_error)?;
+    let user = user_info_opt(sid, state).await.map_err(anyhow_to_custom_error)?;
     let pool = &db.0;
     let events: Vec<EventRecord> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)
         .await
         .map_err(|e| status::Custom(Status::InternalServerError, e.to_string()))?;
-    let is_local_server = state.read().expect("Not poisoned").app_config.is_local_server();
+    let is_local_server = state.read().await.app_config.is_local_server();
     Ok(Template::render("index", context! {
         user,
         events,
@@ -197,7 +198,6 @@ fn rocket() -> _ {
     let rocket = auth::extend(rocket);
     let rocket = event::extend(rocket);
     let rocket = oc::extend(rocket);
-    let rocket = qx::extend(rocket);
     let rocket = runs::extend(rocket);
     let rocket = changes::extend(rocket);
     let rocket = files::extend(rocket);

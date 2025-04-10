@@ -116,14 +116,14 @@ impl Fairing for DbPoolFairing {
 
 pub async fn get_event_db(event_id: EventId, state: &State<SharedQxState>) -> anyhow::Result<SqlitePool> {
     let schema_name = event_id_to_schema_name(event_id);
-    let db_path = state.read().map_err(|e| anyhow!(e.to_string()))?.app_config.db_path.clone();
-    if let Some(ev) = state.read().map_err(|e| anyhow!(e.to_string()))?.open_events.get(&event_id) {
+    let db_path = state.read().await.app_config.db_path.clone();
+    if let Some(ev) = state.read().await.open_events.get(&event_id) {
         ev.hit_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         return Ok(ev.db.clone());
     }
     let pool = open_db(&db_path, &schema_name).await?;
     let oe = OpenEvent { hit_count: Arc::new(Default::default()), db: pool.clone() };
-    state.write().map_err(|e| anyhow!(e.to_string()))?.open_events.insert(event_id, oe);
+    state.write().await.open_events.insert(event_id, oe);
     Ok(pool)
 }
 

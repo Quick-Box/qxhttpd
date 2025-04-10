@@ -50,12 +50,11 @@
         // formData.append('file', file);  // Append the file to FormData
 
         // Use fetch to upload the file
-        fetch('/api/event/current/upload/startlist', {
+        fetch('/api/event/{{event.id}}/upload/startlist', {
             method: 'POST',
             body: file,
             headers: {
                 'Content-Type': 'multipart/form-data',
-                'qx-api-token': '{{event.api_token}}'
             }
         }).then(response => response.json())
                 .then(data => {

@@ -66,33 +66,83 @@
     const changes = {{changes}};
     formatRunTable(changes);
 
+    var edited_entry = {}
+
     function newEntry() {
-        let doc = document.getElementById('dlg')
-        doc.style.display='block'
+        edited_entry = {}
+        let dlg = document.getElementById('dlg')
+        dlg.querySelector('input[name="first_name"]').value = "";
+        dlg.querySelector('input[name="last_name"]').value = "";
+        dlg.querySelector('input[name="registration"]').value = "";
+        dlg.querySelector('input[name="si_id"]').value = "";
+        dlg.style.display='block'
     }
     function editEntry(run_id) {
         let table = document.getElementById('table')
-        const row = (() => {
+        edited_entry = (() => {
             // console.log('needle', run_id)
             for (let i = 1; i < table.rows.length; i++) {
                 const row = table.rows[i];
                 let run_id2 = Number(row.dataset.run_id)
                 // console.log('row', run_id2)
                 if (run_id2 === run_id) {
-                    return row
+                    return {
+                        run_id: row.dataset.run_id,
+                        first_name: row.dataset.first_name,
+                        last_name: row.dataset.last_name,
+                        registration: row.dataset.registration,
+                        si_id: row.dataset.si_id,
+                    }
                 }
             }
         })();
 
-        let doc = document.getElementById('dlg')
-        doc.querySelector('input[name="first_name"]').value = row.dataset.first_name;
-        doc.querySelector('input[name="last_name"]').value = row.dataset.last_name;
-        doc.querySelector('input[name="registration"]').value = row.dataset.registration;
-        doc.querySelector('input[name="si"]').value = row.dataset.si_id;
+        let dlg = document.getElementById('dlg')
+        dlg.querySelector('input[name="first_name"]').value = edited_entry.first_name;
+        dlg.querySelector('input[name="last_name"]').value = edited_entry.last_name;
+        dlg.querySelector('input[name="registration"]').value = edited_entry.registration;
+        dlg.querySelector('input[name="si_id"]').value = edited_entry.si_id;
 
-        doc.style.display='block'
+        dlg.style.display='block'
     }
     function saveDialog(name, registration, si) {
+        let doc = document.getElementById('dlg')
+        let change = {}
+        let add_change = fldname => {
+            let new_val = doc.querySelector(`input[name="${fldname}"]`).value.trim()
+            if (new_val !== "") {
+                let orig_val = edited_entry[fldname];
+                if (new_val !== orig_val) {
+                    change[fldname] = new_val;
+                }
+            }
+        }
+        add_change("first_name")
+        add_change("last_name")
+        add_change("registration")
+        add_change("si_id")
+        if (Object.keys(edited_entry).length === 0) {
+            // new entry
+            change.run_id = 0
+            change.class_name = "{{classrec.name}}"
+        }
+        if (Object.keys(change).length > 0) {
+            fetch('/api/event/{{ event.id }}/changes/run-update-request', {
+                method: 'POST',
+                body: JSON.stringify(change),
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                        alert('Entry change sent successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Sending entry update failed.');
+                    });
+        }
         document.getElementById('dlg').style.display='none'
     }
     function hideDialog(name, registration, si) {
@@ -121,13 +171,13 @@
                 </label>
                 <label>
                     SI Card
-                    <input class="w3-input w3-border" type="number" name="si" required>
+                    <input class="w3-input w3-border" type="number" name="si_id" required>
                 </label>
             </div>
 
             <div class="w3-padding w3-light-grey">
                 <button onclick="hideDialog()" type="button" class="w3-button  w3-round-large w3-red">Cancel</button>
-                <button onclick="document.getElementById('dlg').style.display='none'" class="w3-button w3-green  w3-round-large w3-right" type="button">Save</button>
+                <button onclick="saveDialog()" class="w3-button w3-green  w3-round-large w3-right" type="button">Save</button>
             </div>
 
         </div>

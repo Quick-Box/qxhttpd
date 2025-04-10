@@ -6,21 +6,19 @@ edition = "2024"
 [dependencies]
 rocket = { version = "0.5.1", features = ["tls", "json"] }
 rocket_oauth2 = "0.5.0"
-rand = "0.8"
+rand = "0.9.0"
 rocket_dyn_templates = { version = "0.2", features = ["handlebars"] }
-#home = "0.5"
 serde = "1.0"
-serde_yaml = "0.9"
+serde_yaml = "0.9.34-deprecated"
 serde_json = "1.0.132"
 quick-xml = { version = "0.37.2", features = ["serialize"] }
-log = "0.4.22"
 sqlx = { version = "0.8.3", features = ["sqlite", "macros", "migrate", "runtime-tokio", "chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1.0"
 reqwest = { version = "0.12", features = ["json"] }
-url = "2.5.4"
 qrcode = "0.14.1"
 base64 = "0.22.1"
 image = "0.25.5"
 flate2 = "1.1.0"
-itertools = "0.12.1"
+itertools = "0.14.0"
+async-broadcast = "0.7.2"

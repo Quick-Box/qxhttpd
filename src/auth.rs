@@ -37,11 +37,11 @@ impl TryFrom<&GoogleUserInfo> for UserInfo {
 pub fn generate_random_string(len: usize) -> String {
     const WOWELS: &str = "aeiouy";
     const CONSONANTS: &str = "bcdfghjklmnpqrstvwxz";
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     (0..len)
         .map(|n| {
             let charset = if n % 2 == 0 { CONSONANTS } else { WOWELS };
-            let idx = rng.gen_range(0..charset.len());
+            let idx = rng.random_range(0..charset.len());
             charset.chars().nth(idx).unwrap()
         })
         .collect()
@@ -63,11 +63,13 @@ struct GoogleUserInfo {
     picture: Value,
 }
 #[get("/login")]
-fn login(state: &State<SharedQxState>) -> Redirect {
+async fn login(state: &State<SharedQxState>) -> Redirect {
     // must be the same host as redirect_uri, both have to be localhost or 127.0.0.1
     // Redirect::to("/login/google") doesn't work because of state cookie error in rocket-oauth2 check
-    let (is_local_server, server_port) = state.read().map(|s| (s.app_config.is_local_server(), s.app_config.server_port))
-        .expect("Not poisoned");
+    let (is_local_server, server_port) = {
+        let s = state.read().await;
+        (s.app_config.is_local_server(), s.app_config.server_port)
+    };
     if is_local_server {
         Redirect::to(format!("http://localhost:{}/login/google", server_port))
     } else {
@@ -105,7 +107,7 @@ async fn google_auth(token: TokenResponse<GoogleUserInfo>, cookies: &CookieJar<'
     }
     let session_id = generate_session_id();
     info!("User log in, name: {}, email: {}, picture: {}", user_info.name, user_info.email, user_info.picture);
-    state.write().expect("not poisoned").sessions.insert(QxSessionId(session_id.clone()), QxSession{ user_info });
+    state.write().await.sessions.insert(QxSessionId(session_id.clone()), QxSession{ user_info });
     // Set a private cookie with the user's name, and redirect to the home page.
     cookies.add_private(
         Cookie::build((QX_SESSION_ID, session_id))

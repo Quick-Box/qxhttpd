@@ -1,0 +1,48 @@
+Version: 1.0
+Creator: "0 Checklist 3.0.2"
+Created: 2023-02-08T09:20:35+01:00
+Data:
+  - Runner:
+      NewCard: 1234567
+      StartStatus: Late start
+      Id: "3635"
+      Name: "Asher Khan"
+      Org: "Barnsley"
+      Card: 16715818
+      Comment: "Late and with the wrong card."
+    ChangeLog:
+      NewCard: 2023-02-08T09:12:17+01:00
+      LateStart: 2023-02-08T09:11:05+01:00
+      DNS: 2023-02-08709:11:03+01:00
+      Comment: 2023-02-08T09:12:17+01:00
+  - Runner:
+      NewCard: 654321
+      StartStatus: Started OK
+      Id: "4624"
+      Name: "Jaxson James"
+      Org: "Liverpool"
+      Card: 8938913
+    ChangeLog:
+      NewCard: 2023-02-08T09:12:42+01:00
+  - Runner:
+      StartStatus: DNS
+      Id: "6264"
+      Name: "Peyton Foster"
+      Org: "New Forest"
+      Card: 344815
+    ChangeLog:
+      DNS: 2023-02-08T09:10:44+01:00
+  - Runner:
+      StartStatus: Started OK
+      Id: "2646"
+      Name: "Cooper James"
+      Org: "Fife"
+      Card: 9049594
+    ChangeLog: null
+  - Runner:
+      StartStatus: Started OK
+      Id: "3847"
+      Name: "Austin Thomas"
+      Org: "East Riding"
+      Card: 4176180
+    ChangeLog: null

@@ -116,7 +116,7 @@ struct EventFormValues<'v> {
 // need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
 #[post("/event", data = "<form>")]
 async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let user = user_info(session_id, state)?;
+    let user = user_info(session_id, state).await?;
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
     let start_time = QxDateTime::parse_from_iso(vals.start_time)
         .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
@@ -144,15 +144,15 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
     let event_id = save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     Ok(Redirect::to(format!("/event/{event_id}")))
 }
-pub fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, Custom<String>> {
-    state.read().expect("Not poisoned")
+pub async fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, Custom<String>> {
+    state.read().await
         .sessions.get(&session_id).map(|s| s.user_info.clone()).ok_or( Custom(Status::Unauthorized, "Invalid session ID".to_string()) )
 }
-pub fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -> anyhow::Result<Option<UserInfo>> {
+pub async fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -> anyhow::Result<Option<UserInfo>> {
     match session_id {
         MaybeSessionId::None => Ok(None),
         MaybeSessionId::Some(session_id) => {
-            let user_info = state.read().map_err(|e| anyhow!("{e}"))?
+            let user_info = state.read().await
                 .sessions.get(&session_id).map(|s| s.user_info.clone());
             Ok(user_info)
         }
@@ -161,14 +161,13 @@ pub fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -
 
 pub async fn user_and_event_owner_opt(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> anyhow::Result<Option<UserInfo>> {
     let event = load_event(event_id, gdb).await?;
-    let user = user_info_opt(session_id, state)
-        .map_err(|err| anyhow!("{err}"))?
+    let user = user_info_opt(session_id, state).await?
         .and_then(|user| if user.email == event.owner {Some(user)} else {None});
     Ok(user)
 }
 
 async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state)?;
+    let user = user_info(session_id, state).await?;
     let event = if let Some(event_id) = event_id {
         load_event_info(event_id, db).await?
     } else {
@@ -209,7 +208,7 @@ async fn event_edit(event_id: EventId, session_id: QxSessionId, state: &State<Sh
 }
 #[get("/event/<event_id>/delete")]
 async fn event_delete(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let user = user_info(session_id, state)?;
+    let user = user_info(session_id, state).await?;
     let event = load_event_info(event_id, db).await?;
     if event.owner == user.email {
         event_drop(event_id, db).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
@@ -225,7 +224,6 @@ async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<
     let user = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)?;
     let files = files::list_files(event_id, state).await?;
     Ok(Template::render("event", context! {
-        api_token: user.as_ref().map(|_| event.api_token.clone()),
         user,
         event,
         files,
@@ -281,7 +279,7 @@ async fn get_event_start_list(event_id: EventId, session_id: MaybeSessionId, cla
     let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE class_name=? ORDER BY start_time")
         .bind(&class_name)
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
-    let changes = sqlx::query_as::<_, ChangesRecord>("SELECT changes.* FROM changes INNER JOIN runs ON changes.run_id=runs.run_id 
+    let changes = sqlx::query_as::<_, ChangesRecord>("SELECT changes.* FROM changes INNER JOIN runs ON changes.run_id=runs.run_id
                  WHERE runs.class_name=?
                    AND changes.data_type='RunUpdateRequest'
                    AND changes.status='PND'")
@@ -339,6 +337,17 @@ async fn upload_start_list(qx_api_token: QxApiToken, data: Data<'_>, content_typ
     let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let file_id = crate::files::upload_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
+    import_start_list(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
+    Ok(file_id)
+}
+#[post("/api/event/<event_id>/upload/startlist", data = "<data>")]
+async fn upload_start_list_user(event_id: EventId, data: Data<'_>, content_type: &ContentType, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
+    let Some(_user) = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)? else { 
+        return Err(Custom(Status::Unauthorized, String::from("Session expired or not valid")));
+    };
+    let event_info = load_event_info(event_id, gdb).await?;
+    let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
+    let file_id = crate::files::upload_file(event_info.api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
     import_start_list(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
     Ok(file_id)
 }
@@ -427,6 +436,7 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             post_event,
             get_event,
             upload_start_list,
+            upload_start_list_user,
             get_event_start_list,
             get_event_results,
             get_api_event_current,
