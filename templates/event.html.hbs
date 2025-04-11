@@ -57,13 +57,9 @@
                 'Content-Type': 'multipart/form-data',
             }
         }).then(response => response.json())
-                .then(data => {
-                    console.log('Success:', data);
+                .then(file_id => {
+                    console.log('Success, file_id:', file_id);
                     alert('File uploaded successfully!');
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('File upload failed.');
                 });
         document.getElementById('uploadStartListDialog').style.display='none'
     }
