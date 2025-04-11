@@ -1,8 +1,10 @@
 #[macro_use] extern crate rocket;
 
+use sqlx::Sqlite;
+use sqlx::Encode;
 use std::sync::Arc;
 use crate::event::{user_info_opt, EventId, EventRecord};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display, Formatter};
 use std::collections::{HashMap};
 use std::sync::atomic::AtomicU64;
 use rocket::fs::{FileServer};
@@ -21,6 +23,7 @@ use crate::db::{DbPool, DbPoolFairing};
 use crate::qxdatetime::{dtstr, obtime, obtimems};
 use crate::util::anyhow_to_custom_error;
 use async_broadcast::{broadcast};
+use sqlx::sqlite::{SqliteArgumentValue};
 
 #[cfg(test)]
 mod tests;
@@ -86,8 +89,20 @@ impl<'r> request::FromRequest<'r> for MaybeSessionId {
 
 #[derive(Serialize, Deserialize, PartialEq, Default, Clone, Debug)]
 struct QxApiToken(String);
+
+impl QxApiToken {
+    pub fn from_string(s: String) -> Self {
+        QxApiToken(s)
+    }
+}
+
 impl_sqlx_text_type_encode_decode!(QxApiToken);
 
+impl Display for QxApiToken {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 #[rocket::async_trait]
 impl<'r> request::FromRequest<'r> for QxApiToken {
     type Error = ();

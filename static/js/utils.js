@@ -64,17 +64,28 @@ function formatRunTable(changes) {
                 // console.log(i, j, col_name, val);
                 cell_val = `${val}`;
             }
-            let cell_val_chng = undefined;
-            const run_id= row.dataset.run_id;
-            const ch1 = changes.find(ch => ch.run_id === run_id);
-            if (ch1 !== undefined) {
-                cell_val_chng = ch1[col_name];
+            let cell_val_chng = [];
+            if (col_name !== "run_id") {
+                const run_id= Number(row.dataset.run_id);
+                changes.filter(ch => {
+                    return ch.run_id === run_id
+                }).forEach(ch => {
+                    let ch2 = ch.data.RunUpdateRequest.chng[col_name];
+                    if (ch2 !== undefined) {
+                        cell_val_chng.push([ch2, ch.user_id]);
+                    }
+                });
             }
-            if (cell_val_chng === undefined) {
+            if (cell_val_chng.length === 0) {
                 row.cells[j].innerHTML = cell_val;
             }
             else {
-                row.cells[j].innerHTML = `<s>${cell_val}</s><br>${cell_val_chng}`;
+                let s = `<span style="color: gray;"><del>${cell_val}</del></span>`;
+                cell_val_chng.forEach(ch => {
+                    s += `<br><span style="font-weight: bold; color: darkred;">${ch[0]}</span>
+                          <br><span class="w3-small" style="color: darkblue;">${ch[1]}</span>`
+                });
+                row.cells[j].innerHTML = s;
             }
         }
     }

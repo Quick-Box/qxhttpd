@@ -26,12 +26,12 @@
             {{#if user}}
                 <th>Edit</th>
             {{/if}}
-            <th data-col-name="start_time">Start</th>
+            <th data-col-name="start_time" class="w3-right-align">Start</th>
             <th data-col-name="name">Name</th>
             <th data-col-name="registration">Registration</th>
-            <th data-col-name="si_id">SI</th>
+            <th data-col-name="si_id" class="w3-right-align">SI</th>
             <th data-col-name="edited_by">Edited by</th>
-            <th data-col-name="run_id">Run Id</th>
+            <th data-col-name="run_id" class="w3-right-align">Run Id</th>
         </tr>
         </thead>
         <tbody>
@@ -47,7 +47,7 @@
             >
                 {{#if ../user}}
                     <td>
-                        <i onclick="editEntry({{ run_id }})" class="fa fa-pencil-square-o"></i>
+                        <i onclick="editEntry({{ run_id }})" class="w3-button w3-round w3-theme fa fa-pencil"></i>
                     </td>
                 {{/if}}
                 <td class="w3-right-align" ></td>
@@ -63,7 +63,7 @@
 
     <script src="/js/utils.js"></script>
     <script>
-    const changes = {{changes}};
+    const changes = {{stringify changes}};
     formatRunTable(changes);
 
     var edited_entry = {}

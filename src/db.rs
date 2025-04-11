@@ -6,9 +6,25 @@ use std::path::Path;
 use std::str::FromStr;
 use std::sync::Arc;
 use anyhow::{anyhow, Context};
-use sqlx::Executor;
+use sqlx::{Executor};
 use crate::event::EventId;
 use crate::{OpenEvent, SharedQxState};
+
+// pub fn row_to_json(row: &sqlx::sqlite::SqliteRow) -> anyhow::Result<Value> {
+//     let mut map = Map::new();
+//     for column in row.columns() {
+//         let name = column.name();
+//         let value: Value = match column.type_info().name() {
+//             "INTEGER" => row.try_get::<i64, _>(name).map(Value::from)?,
+//             "TEXT" => row.try_get::<String, _>(name).map(Value::from)?,
+//             "REAL" => row.try_get::<f64, _>(name).map(Value::from)?,
+//             "BLOB" => return Err(anyhow!("Sqlite BLOB to JSON NIY")),
+//             t => return Err(anyhow!("Sqlite type {t} to JSON NIY")),
+//         };
+//         map.insert(name.to_string(), value);
+//     }
+//     Ok(Value::Object(map))
+// }
 
 // macro to decode some type from SQL text
 #[macro_export]
@@ -28,16 +44,16 @@ macro_rules! impl_sqlx_text_type_encode_decode {
         {
             fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
                 let value = <&str as sqlx::Decode<DB>>::decode(value)?;
-                Ok(Self(value.to_string()))
+                Ok(Self::from_string(value.to_string()))
             }
         }
 
-        // impl<'r> Encode<'r, Sqlite> for $type {
-        //     fn encode_by_ref(&self, buf: &mut Vec<SqliteArgumentValue<'r>>) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
-        //         let s = format!("{}", self);
-        //         <String as Encode<Sqlite>>::encode(s, buf)
-        //     }
-        // }
+        impl<'r> Encode<'r, Sqlite> for $type {
+            fn encode_by_ref(&self, buf: &mut Vec<SqliteArgumentValue<'r>>) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
+                let s = format!("{}", self);
+                <String as Encode<Sqlite>>::encode(s, buf)
+            }
+        }
     };
 }
 

@@ -9,7 +9,7 @@ use rocket::serde::json::Json;
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, FromRow, SqlitePool};
 use crate::event::{load_event_info, load_event_info_for_api_token, user_info, EventId, RunId};
-use crate::{impl_sqlx_json_text_type_encode_decode, QxApiToken, QxSessionId, SharedQxState};
+use crate::{impl_sqlx_json_text_type_encode_decode, impl_sqlx_text_type_encode_decode, QxApiToken, QxSessionId, SharedQxState};
 use crate::qxdatetime::QxDateTime;
 use sqlx::{Encode, Sqlite};
 use sqlx::query::Query;
@@ -133,6 +133,10 @@ impl QxRunChange {
     }
 }
 
+const PND: &str = "PND";
+const ACC: &str = "ACC";
+const REJ: &str = "REJ";
+
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub enum ChangeStatus {
     #[serde(rename = "PND")]
@@ -143,14 +147,26 @@ pub enum ChangeStatus {
     #[serde(rename = "REJ")]
     Rejected,
 }
-impl_sqlx_json_text_type_encode_decode!(ChangeStatus);
+
+impl ChangeStatus {
+    pub fn from_string(s: String) -> Self {
+        match s.as_str() {
+            PND => Self::Pending,
+            ACC => Self::Accepted,
+            REJ => Self::Rejected,
+            _ => panic!("Unknown data type: {}", s),
+        }
+    }
+}
+
+impl_sqlx_text_type_encode_decode!(ChangeStatus);
 
 impl Display for ChangeStatus {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ChangeStatus::Pending => f.write_str("PND"),
-            ChangeStatus::Accepted => f.write_str("ACC"),
-            ChangeStatus::Rejected => f.write_str("REJ"),
+            ChangeStatus::Pending => f.write_str(PND),
+            ChangeStatus::Accepted => f.write_str(ACC),
+            ChangeStatus::Rejected => f.write_str(REJ),
         }
     }
 }
@@ -163,7 +179,21 @@ pub enum DataType {
     RadioPunch,
     CardReadout,
 }
-impl_sqlx_json_text_type_encode_decode!(DataType);
+
+impl DataType {
+    pub fn from_string(s: String) -> Self {
+        match s.as_str() {
+            "OcChange" => Self::OcChange,
+            "RunUpdateRequest" => Self::RunUpdateRequest,
+            "RunUpdated" => Self::RunUpdated,
+            "RadioPunch" => Self::RadioPunch,
+            "CardReadout" => Self::CardReadout,
+            _ => panic!("Unknown data type: {}", s),
+        }
+    }
+}
+
+impl_sqlx_text_type_encode_decode!(DataType);
 
 impl Display for DataType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

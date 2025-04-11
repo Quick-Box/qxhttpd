@@ -279,8 +279,9 @@ async fn get_event_start_list(event_id: EventId, session_id: MaybeSessionId, cla
     let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE class_name=? ORDER BY start_time")
         .bind(&class_name)
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
-    let changes = sqlx::query_as::<_, ChangesRecord>("SELECT changes.* FROM changes INNER JOIN runs ON changes.run_id=runs.run_id
+    let changes = sqlx::query_as::<_, ChangesRecord>("SELECT changes.* FROM changes, runs
                  WHERE runs.class_name=?
+                   AND changes.run_id=runs.run_id
                    AND changes.data_type='RunUpdateRequest'
                    AND changes.status='PND'")
         .bind(&class_name)
