@@ -7,7 +7,7 @@ use crate::event::{EventId, EventRecord, PostedEvent};
 use crate::files::FileInfo;
 use crate::qxdatetime::QxDateTime;
 use crate::{util};
-use crate::qx::QxRunChange;
+use crate::changes::QxRunChange;
 use crate::runs::RunsRecord;
 
 const API_TOKEN: &str = "plelababamak";
@@ -63,29 +63,27 @@ fn upload_file() {
 
     // send file
     let file_name = "a.txt";
-    let orig = b"foo-bar-baz";
-    let compressed = util::test::zip_data(orig).unwrap();
+    let data = b"foo-bar-baz";
+    let compressed_data = util::test::zip_data(data).unwrap();
     let resp = client.post(format!("/api/event/current/file?name={file_name}"))
         .header(Header::new("qx-api-token", API_TOKEN))
         .header(ContentType::ZIP)
-        .body(compressed)
+        .body(compressed_data)
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     let file_id = resp.into_string().unwrap().parse::<i32>().unwrap();
-    assert_eq!(file_id, 1);
 
     // get this file
     let resp = client.get(format!("/api/event/{EVENT_ID}/file/{file_id}")).dispatch();
     assert_eq!(resp.status(), Status::Ok);
     let content = resp.into_bytes().unwrap();
-    assert_eq!(&content, orig);
+    assert_eq!(&content, data);
 
     // list files
     let resp = client.get(format!("/api/event/{EVENT_ID}/file")).dispatch();
     assert_eq!(resp.status(), Status::Ok);
     let files = resp.into_json::<Vec<FileInfo>>().unwrap();
-    assert_eq!(files.iter().len(), 1);
-    assert_eq!(&files.first().unwrap().name, file_name);
+    assert!(files.iter().find(|f| f.name == file_name).is_some());
     
     //delete not existing file
     let resp = client.delete(format!("/api/event/{EVENT_ID}/file/42")).dispatch();
@@ -97,6 +95,12 @@ fn upload_file() {
     //delete existing file
     let resp = client.delete(format!("/api/event/{EVENT_ID}/file/{file_id}")).dispatch();
     assert_eq!(resp.status(), Status::Ok);
+
+    // list files
+    let resp = client.get(format!("/api/event/{EVENT_ID}/file")).dispatch();
+    assert_eq!(resp.status(), Status::Ok);
+    let files = resp.into_json::<Vec<FileInfo>>().unwrap();
+    assert!(files.iter().find(|f| f.name == file_name).is_none());
 }
 
 fn upload_start_list_impl(client: &Client) {

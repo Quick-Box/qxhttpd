@@ -20,7 +20,7 @@ pub struct FileInfo {
 pub async fn list_files(event_id: EventId, state: &State<SharedQxState>) -> Result<Vec<FileInfo>, Custom<String>> {
     println!("listing files of event: {event_id}");
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
-    let files = sqlx::query_as::<_, FileInfo>("SELECT id, name, LENGTH(data) AS size, created FROM files")
+    let files = sqlx::query_as::<_, FileInfo>("SELECT id, name, LENGTH(data) AS size, created FROM files ORDER BY name")
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     Ok(files)
 }
