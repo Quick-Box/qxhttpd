@@ -1,4 +1,4 @@
-use sqlx::{FromRow};
+use sqlx::{FromRow, SqlitePool};
 use rocket::{Build, Data, Rocket, State};
 use rocket::data::ToByteUnit;
 use rocket::http::{ContentType, Status};
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::db::{get_event_db, DbPool};
 use crate::event::{load_event_info_for_api_token, EventId};
 use crate::{QxApiToken, SharedQxState};
-use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error, unzip_data};
+use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, unzip_data};
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub struct FileInfo {
@@ -58,23 +58,25 @@ async fn delete_file(event_id: EventId, file_id: i64, state: &State<SharedQxStat
         Ok(())
     }
 }
+
+pub(crate) async fn save_file_to_db(name: &str, data: &[u8], edb: &SqlitePool) -> anyhow::Result<i64> {
+    let q = sqlx::query_as::<_, (i64,)>("INSERT OR REPLACE INTO files (name, data) VALUES (?, ?) RETURNING id")
+        .bind(name)
+        .bind(data);
+    Ok(q.fetch_one(edb).await.map_err(sqlx_to_anyhow)?.0)
+}
 #[post("/api/event/current/file?<name>", data = "<data>")]
 pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let data = data.open(50.mebibytes()).into_bytes().await.map_err(|e| Custom(Status::PayloadTooLarge, e.to_string()))?.into_inner();
-    let q = sqlx::query_as::<_, (i64,)>("INSERT OR REPLACE INTO files (name, data) VALUES (?, ?) RETURNING id")
-        .bind(name);
-    let q = if content_type == &ContentType::ZIP {
-        let decompressed = unzip_data(&data).map_err(|e| Custom(Status::UnprocessableEntity, e.to_string()))?;
-        info!("Event id: {}, updating file: {name} with {} bytes of data", event_info.id, decompressed.len());
-        q.bind(decompressed)
-    } else {
-        info!("Event id: {}, updating file: {name} with {} bytes of data", event_info.id, data.len());
-        q.bind(data)
+    let data = if content_type == &ContentType::ZIP {
+        unzip_data(&data).map_err(|e| Custom(Status::UnprocessableEntity, e.to_string()))?
+    } else { 
+        data
     };
-    let file_id = q.fetch_one(&edb).await.map_err(sqlx_to_custom_error)?.0;
-    Ok(format!("{}", file_id))
+    let file_id = save_file_to_db(name, &data, &edb).await.map_err(anyhow_to_custom_error)?;
+    Ok(format!("{file_id}"))
 }
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![

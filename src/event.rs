@@ -1,5 +1,6 @@
+use std::fs::OpenOptions;
 use rocket::serde::json::Json;
-use std::io::Cursor;
+use std::io::{Cursor, Read};
 use anyhow::anyhow;
 use base64::engine::general_purpose;
 use image::ImageFormat;
@@ -17,6 +18,7 @@ use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
 use crate::changes::ChangesRecord;
+use crate::files::save_file_to_db;
 use crate::iofxml3::parser::parse_startlist_xml_data;
 use crate::qxdatetime::QxDateTime;
 use crate::runs::{ClassesRecord, RunsRecord};
@@ -339,7 +341,7 @@ async fn upload_start_list(qx_api_token: QxApiToken, data: Data<'_>, content_typ
     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let file_id = crate::files::upload_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
     import_start_list(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
-    Ok(file_id)
+    Ok(format!("{file_id}"))
 }
 #[post("/api/event/<event_id>/upload/startlist", data = "<data>")]
 async fn upload_start_list_user(event_id: EventId, data: Data<'_>, content_type: &ContentType, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
@@ -350,7 +352,7 @@ async fn upload_start_list_user(event_id: EventId, data: Data<'_>, content_type:
     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let file_id = crate::files::upload_file(event_info.api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
     import_start_list(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
-    Ok(file_id)
+    Ok(format!("{file_id}"))
 }
 pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE name=?")
@@ -405,17 +407,29 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
 }
 
 #[get("/event/create-demo")]
-async fn create_demo_event(state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
+async fn create_demo_event(state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let mut event_info = EventRecord::new("fanda.vacek@gmail.com");
     event_info.name = String::from("Demo event");
     event_info.place = String::from("Deep forest 42");
     event_info.api_token = QxApiToken(String::from("plelababamak"));
-    let event_id = save_event(&event_info, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
+    let event_id = save_event(&event_info, gdb).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
+    {
+        // upload demo start list
+        let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
 
-    let data = crate::oc::load_oc_dir("tests/oc/data")
-        .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-    for chngset in data {
-        crate::oc::add_oc_change_set(event_id, chngset, state).await.map_err(anyhow_to_custom_error)?;
+        let mut file = OpenOptions::new().read(true).open(format!("tests/{START_LIST_IOFXML3_FILE}")).unwrap();
+        let mut data = vec![];
+        file.read_to_end(&mut data).unwrap();
+        let _file_id = save_file_to_db(START_LIST_IOFXML3_FILE, &data, &edb).await.map_err(anyhow_to_custom_error)?;
+        import_start_list(event_info.id, &edb, gdb).await.map_err(anyhow_to_custom_error)?;
+    }
+    {
+        // upload demo OC changes
+        let data = crate::oc::load_oc_dir("tests/oc/data")
+            .map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
+        for chngset in data {
+            crate::oc::add_oc_change_set(event_id, chngset, state).await.map_err(anyhow_to_custom_error)?;
+        }
     }
     Ok(Redirect::to(format!("/event/{event_id}")))
 }

@@ -24,7 +24,7 @@ pub(crate) mod test {
         deflater.read_to_end(&mut ret_vec).map_err(|e| e.to_string())?;
         Ok(ret_vec)
     }
-
+    
     #[test]
     fn test_zip() {
         let data = b"foo bar baz";
