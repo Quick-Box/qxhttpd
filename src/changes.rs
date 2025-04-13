@@ -4,10 +4,11 @@ use chrono::{NaiveDateTime, NaiveTime, TimeDelta};
 use itertools::Itertools;
 use rocket::{Build, Rocket, State};
 use rocket::response::status::Custom;
+use rocket::response::stream::{Event, EventStream};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::Json;
 use rocket_dyn_templates::{context, Template};
-use sqlx::{query, FromRow, SqlitePool};
+use sqlx::{query_as, FromRow, SqlitePool};
 use crate::event::{load_event_info, load_event_info_for_api_token, user_info, EventId, RunId};
 use crate::{impl_sqlx_json_text_type_encode_decode, impl_sqlx_text_type_encode_decode, QxApiToken, QxSessionId, SharedQxState};
 use crate::qxdatetime::QxDateTime;
@@ -137,7 +138,7 @@ const PND: &str = "PND";
 const ACC: &str = "ACC";
 const REJ: &str = "REJ";
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub enum ChangeStatus {
     #[serde(rename = "PND")]
     #[default]
@@ -171,7 +172,7 @@ impl Display for ChangeStatus {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum DataType {
     OcChange,
     RunUpdateRequest,
@@ -214,7 +215,7 @@ pub struct RunUpdateRequestData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) orig: Option<QxRunChange>,
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ChangeData {
     Null,
     OcChange(OCheckListChange),
@@ -224,7 +225,7 @@ pub enum ChangeData {
     CardReadout,
 }
 impl_sqlx_json_text_type_encode_decode!(ChangeData);
-#[derive(Serialize, Deserialize, FromRow, Debug)]
+#[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct ChangesRecord {
     pub id: i64,
     pub source: String,
@@ -236,12 +237,12 @@ pub struct ChangesRecord {
     pub created: QxDateTime,
 }
 
-pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, data: &ChangeData, run_id: Option<RunId>, user_id: Option<&str>, status: Option<ChangeStatus>, state: &State<SharedQxState>) -> anyhow::Result<()> {
+pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, data: &ChangeData, run_id: Option<RunId>, user_id: Option<&str>, status: Option<ChangeStatus>, state: &State<SharedQxState>) -> anyhow::Result<i64> {
     //let change = serde_json::to_value(change).map_err(|e| anyhow!("{e}"))?;
-    let db = get_event_db(event_id, state).await?;
-    query("INSERT INTO changes
+    let edb = get_event_db(event_id, state).await?;
+    let id: (i64, ) = query_as("INSERT INTO changes
                 (source, data_type, data, run_id, user_id, status, created)
-                VALUES (?, ?, ?, ?, ?, ?, ?)")
+                VALUES (?, ?, ?, ?, ?, ?, ?)  RETURNING id")
         .bind(source)
         .bind(data_type)
         .bind(data)
@@ -249,9 +250,14 @@ pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, da
         .bind(user_id)
         .bind(status)
         .bind(QxDateTime::now().trimmed_to_sec())
-        .execute(&db)
+        .fetch_one(&edb)
         .await.map_err(sqlx_to_anyhow)?;
-    Ok(())
+    let change: ChangesRecord = query_as("SELECT * FROM changes WHERE id=?")
+        .bind(id.0)
+        .fetch_one(&edb)
+        .await.map_err(sqlx_to_anyhow)?;
+    state.read().await.broadcast_change((event_id, change)).await?;
+    Ok(id.0)
 }
 
 #[get("/event/<event_id>/changes?<from_id>")]
@@ -360,9 +366,38 @@ async fn apply_qe_run_change(change: &QxRunChange, edb: &SqlitePool) -> anyhow::
     Ok(())
 }
 
+#[get("/api/event/<event_id>/changes/sse")]
+async fn changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
+    let mut chng_receiver = state.read().await.changes_receiver.clone();
+    EventStream! {
+        loop {
+            let (chng_event_id, change) = match chng_receiver.recv().await {
+                Ok(chng) => chng,
+                Err(e) => {
+                    error!("Read change record error: {e}");
+                    break;
+                }
+            };
+            if event_id == chng_event_id {
+                match serde_json::to_string(&change) {
+                    Ok(json) => {
+                        yield Event::data(json);
+                    }
+                    Err(e) => {
+                        error!("Serde error: {e}");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
         get_changes,
+        changes_sse,
         add_run_updated_change,
         add_run_update_request_change,
     ])

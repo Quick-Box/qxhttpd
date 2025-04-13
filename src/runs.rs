@@ -64,7 +64,7 @@ async fn runs_changes_sse(event_id: EventId, state: &State<SharedQxState>) -> Ev
             let (chng_event_id, change) = match chng_receiver.recv().await {
                 Ok(chng) => chng,
                 Err(e) => {
-                    error!("Receive QE in record error: {e}");
+                    error!("Read run change record error: {e}");
                     break;
                 }
             };

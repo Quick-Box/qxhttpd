@@ -5,8 +5,7 @@ use sqlx::migrate::Migrator;
 use std::path::Path;
 use std::str::FromStr;
 use std::sync::Arc;
-use anyhow::{anyhow, Context};
-use sqlx::{Executor};
+use anyhow::{anyhow};
 use crate::event::EventId;
 use crate::{OpenEvent, SharedQxState};
 
@@ -89,6 +88,7 @@ macro_rules! impl_sqlx_json_text_type_encode_decode {
 }
 
 static MIGRATOR: Migrator = sqlx::migrate!("db/migrations"); // Auto-discovers migrations in `migrations/`
+static EDB_MIGRATOR: Migrator = sqlx::migrate!("db/edb/migrations"); 
 
 pub struct DbPool(pub SqlitePool);
 
@@ -138,15 +138,21 @@ pub async fn get_event_db(event_id: EventId, state: &State<SharedQxState>) -> an
         return Ok(ev.db.clone());
     }
     let pool = open_db(&db_path, &schema_name).await?;
+
+    match EDB_MIGRATOR.run(&pool).await {
+        Ok(_) => info!("Event DB {schema_name} migrations applied successfully!"),
+        Err(err) => {
+            error!("Event DB {schema_name} migration error: {:?}", err);
+        }
+    };
+    
     let oe = OpenEvent { hit_count: Arc::new(Default::default()), db: pool.clone() };
     state.write().await.open_events.insert(event_id, oe);
     Ok(pool)
 }
 
 async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool> {
-    let mut create_tables = false;
     let database_url = if cfg!(test) {
-        create_tables = true;
         "sqlite::memory:".to_string()
         // let db_path = format!("/tmp/{}.sqlite", schema_name);
         // let _ = std::fs::remove_file(&db_path);
@@ -157,7 +163,6 @@ async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool>
         if !Path::new(&db_path).exists() {
             // info!("creating database: {database_url}");
             std::fs::File::create(&db_path).map_err(|e | anyhow!("Failed to create SQLite database file {db_path} error: {e}"))?;
-            create_tables = true;
         }
         format!("sqlite://{db_path}")
     };
@@ -169,12 +174,6 @@ async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool>
         .max_connections(5)
         .connect_with(opts)
         .await.map_err(|e| anyhow!(e.to_string()))?;
-    if create_tables && schema_name != EVENTS_DB {
-        info!("Creating tables for {database_url} ...");
-        pool.execute(include_str!("../db/script/create_event_db.sql"))
-            .await
-            .context("Failed to create Event DB")?;
-    }
     Ok(pool)
 }
 

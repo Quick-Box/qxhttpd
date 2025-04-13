@@ -87,9 +87,6 @@ fn upload_file() {
     
     //delete not existing file
     let resp = client.delete(format!("/api/event/{EVENT_ID}/file/42")).dispatch();
-    //if resp.status() != Status::Ok {
-    //    panic!("resp: {:?}", resp.into_string().unwrap());
-    //}
     assert_eq!(resp.status(), Status::NotFound);
 
     //delete existing file
