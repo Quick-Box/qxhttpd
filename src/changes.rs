@@ -134,6 +134,10 @@ impl QxRunChange {
     // }
 }
 
+const PENDING: &str = "Pending";
+const ACCEPTED: &str = "Accepted";
+const REJECTED: &str = "Rejected";
+
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub enum ChangeStatus {
     #[default]
@@ -147,9 +151,9 @@ impl ChangeStatus {
     pub fn from_str(s: &str) -> Self {
         
         match s {
-            stringify!(Pending) => Self::Pending,
-            stringify!(Accepted) => Self::Accepted,
-            stringify!(Rejected) => Self::Rejected,
+            PENDING => Self::Pending,
+            ACCEPTED => Self::Accepted,
+            REJECTED => Self::Rejected,
             _ => panic!("Unknown status: {}", s),
         }
     }
@@ -158,9 +162,9 @@ impl ChangeStatus {
 impl Display for ChangeStatus {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ChangeStatus::Pending => f.write_str("Pending"),
-            ChangeStatus::Accepted => f.write_str("Accepted"),
-            ChangeStatus::Rejected => f.write_str("Rejected"),
+            ChangeStatus::Pending => f.write_str(PENDING),
+            ChangeStatus::Accepted => f.write_str(ACCEPTED),
+            ChangeStatus::Rejected => f.write_str(REJECTED),
         }
     }
 }
@@ -223,6 +227,7 @@ pub struct ChangesRecord {
     pub data_type: DataType,
     pub data: ChangeData,
     pub user_id: Option<String>,
+    // we need run_id to be able to pair changes with rows in runs table
     pub run_id: Option<i64>,
     pub status: Option<ChangeStatus>,
     pub created: QxDateTime,
