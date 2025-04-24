@@ -174,14 +174,20 @@ pub enum DataType {
     CardReadout,
 }
 
+const OC_CHANGE: &str = "OcChange";
+const RUN_UPDATE_REQUEST: &str = "RunUpdateRequest";
+const RUN_UPDATED: &str = "RunUpdated";
+const RADIO_PUNCH: &str = "RadioPunch";
+const CARD_READOUT: &str = "CardReadout";
+
 impl DataType {
     pub fn from_str(s: &str) -> Self {
         match s {
-            stringify!(OcChange) => Self::OcChange,
-            stringify!(RunUpdateRequest) => Self::RunUpdateRequest,
-            stringify!(RunUpdated) => Self::RunUpdated,
-            stringify!(RadioPunch) => Self::RadioPunch,
-            stringify!(CardReadout) => Self::CardReadout,
+            OC_CHANGE => Self::OcChange,
+            RUN_UPDATE_REQUEST => Self::RunUpdateRequest,
+            RUN_UPDATED => Self::RunUpdated,
+            RADIO_PUNCH => Self::RadioPunch,
+            CARD_READOUT => Self::CardReadout,
             _ => panic!("Unknown data type: {}", s),
         }
     }
@@ -192,18 +198,17 @@ impl_sqlx_text_type_encode_decode!(DataType);
 impl Display for DataType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            DataType::OcChange => write!(f, "OcChange"),
-            DataType::RunUpdateRequest => write!(f, "RunUpdateRequest"),
-            DataType::RunUpdated => write!(f, "RunUpdated"),
-            DataType::RadioPunch => write!(f, "RadioPunch"),
-            DataType::CardReadout => write!(f, "CardReadout"),
+            DataType::OcChange => write!(f, "{}", OC_CHANGE),
+            DataType::RunUpdateRequest => write!(f, "{}", RUN_UPDATE_REQUEST),
+            DataType::RunUpdated => write!(f, "{}", RUN_UPDATED),
+            DataType::RadioPunch => write!(f, "{}", RADIO_PUNCH),
+            DataType::CardReadout => write!(f, "{}", CARD_READOUT),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ChangeData {
-    Null,
     OcChange(OCheckListChange),
     RunUpdateRequest(QxRunChange),
     RunUpdated(QxRunChange),
