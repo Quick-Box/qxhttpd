@@ -65,6 +65,13 @@ pub(crate) async fn save_file_to_db(name: &str, data: &[u8], edb: &SqlitePool) -
         .bind(data);
     Ok(q.fetch_one(edb).await.map_err(sqlx_to_anyhow)?.0)
 }
+pub(crate) async fn load_file_from_db(name: &str, edb: &SqlitePool) -> anyhow::Result<Vec<u8>> {
+    let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE name=?")
+        .bind(name)
+        .fetch_one(edb)
+        .await.map_err(sqlx_to_anyhow)?.0;
+    Ok(data)
+}
 #[post("/api/event/current/file?<name>", data = "<data>")]
 pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
     let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;

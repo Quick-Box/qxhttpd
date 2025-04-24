@@ -18,14 +18,14 @@ use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
 use crate::changes::ChangesRecord;
-use crate::files::save_file_to_db;
+use crate::files::{load_file_from_db, save_file_to_db};
 use crate::iofxml3::parser::parse_startlist_xml_data;
 use crate::qxdatetime::QxDateTime;
 use crate::runs::{ClassesRecord, RunsRecord};
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, string_to_custom_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
-// pub const RUNS_CSV_FILE: &str = "runs.csv";
+pub const RUNS_CSV_FILE: &str = "runs.csv";
 
 pub type RunId = i64;
 pub type SiId = i64;
@@ -74,7 +74,10 @@ pub async fn load_event_info_for_api_token(qx_api_token: &QxApiToken, db: &State
         .bind(&qx_api_token.0)
         .fetch_one(pool)
         .await
-        .map_err(|e| Custom(Status::Unauthorized, e.to_string()))?;
+        .map_err(|e| {
+            warn!("Unauthorized request for api token: {}", qx_api_token.0);
+            Custom(Status::Unauthorized, e.to_string())
+        })?;
     Ok(event)
 }
 pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> anyhow::Result<EventId> {
@@ -406,6 +409,65 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
     Ok(())
 }
 
+#[post("/api/event/current/upload/runs", data = "<data>")]
+async fn upload_runs(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
+    let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
+    let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
+    let file_id = crate::files::upload_file(qx_api_token, RUNS_CSV_FILE, data, content_type, state, gdb).await?;
+    import_runs(&edb).await.map_err(anyhow_to_custom_error)?;
+    Ok(file_id)
+}
+
+pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
+    let data = load_file_from_db(RUNS_CSV_FILE, edb).await?;
+    let mut rdr = csv::Reader::from_reader(&*data);
+    let runs: csv::Result<Vec< crate::runs::RunsRecord >> = rdr.deserialize().collect();
+    let runs = runs?;
+
+    let mut run_ids = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs")
+        .fetch_all(edb)
+        .await.map_err(sqlx_to_anyhow)?
+        .into_iter().map(|id| id.0).collect::<Vec<_>>();
+
+    let txn = edb.begin().await?;
+
+    for run in runs {
+        run_ids.retain(|id| *id != run.run_id);
+        sqlx::query("INSERT OR REPLACE INTO runs (
+                             run_id,
+                             si_id,
+                             last_name,
+                             first_name,
+                             registration,
+                             class_name,
+                             start_time,
+                             check_time,
+                             finish_time,
+                             status
+                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            .bind(run.run_id)
+            .bind(run.si_id)
+            .bind(run.last_name)
+            .bind(run.first_name)
+            .bind(run.registration)
+            .bind(run.class_name)
+            .bind(run.start_time.map(|d| d.0))
+            .bind(run.check_time.map(|d| d.0))
+            .bind(run.finish_time.map(|d| d.0))
+            .bind(run.status)
+            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+    }
+    for run_id in run_ids {
+        sqlx::query("DELETE FROM runs WHERE run_id=?")
+            .bind(run_id)
+            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+    }
+
+    txn.commit().await?;
+
+    Ok(())
+}
+
 #[get("/event/create-demo")]
 async fn create_demo_event(state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let mut event_info = EventRecord::new("fanda.vacek@gmail.com");
@@ -434,14 +496,6 @@ async fn create_demo_event(state: &State<SharedQxState>, gdb: &State<DbPool>) ->
     Ok(Redirect::to(format!("/event/{event_id}")))
 }
 
-#[get("/event/<event_id>/export/runs")]
-async fn export_runs(event_id: EventId, state: &State<SharedQxState>) -> Result<Json<Vec<RunsRecord>>, Custom<String>> {
-    let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
-    let runs = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs ORDER BY class_name, start_time")
-        .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
-    Ok(runs.into())
-}
-
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
             create_demo_event,
@@ -456,7 +510,7 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             get_event_results,
             get_api_event_current,
             post_api_event_current,
-            export_runs,
+            upload_runs,
         ])
 }
 

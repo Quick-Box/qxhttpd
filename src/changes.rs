@@ -8,13 +8,14 @@ use rocket::response::stream::{Event, EventStream};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::Json;
 use rocket_dyn_templates::{context, Template};
-use sqlx::{query_as, FromRow, SqlitePool};
+use sqlx::{query_as, FromRow, QueryBuilder, SqlitePool};
 use crate::event::{load_event_info, load_event_info_for_api_token, user_info, EventId, RunId};
 use crate::{impl_sqlx_json_text_type_encode_decode, impl_sqlx_text_type_encode_decode, QxApiToken, QxSessionId, SharedQxState};
 use crate::qxdatetime::QxDateTime;
 use sqlx::{Encode, Sqlite};
-use sqlx::query::Query;
+use sqlx::query::{Query};
 use sqlx::sqlite::{SqliteArgumentValue, SqliteArguments};
+use log::info;
 use crate::db::{get_event_db, DbPool};
 use crate::oc::OCheckListChange;
 use crate::runs::RunsRecord;
@@ -393,6 +394,27 @@ async fn changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventSt
     }
 }
 
+#[get("/api/event/<event_id>/changes?<from_id>&<data_type>&<status>")]
+async fn api_get_changes(event_id: EventId, from_id: Option<i64>, data_type: Option<&str>, status: Option<&str>, state: &State<SharedQxState>) -> Result<Json<Vec<ChangesRecord>>, Custom<String>> {
+    let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
+
+    let mut query_builder = QueryBuilder::new("SELECT * FROM changes WHERE id>=");
+    query_builder.push_bind(from_id.unwrap_or(0));
+    if let Some(data_type) = data_type {
+        query_builder.push(" AND data_type=");
+        query_builder.push_bind(data_type);
+    }
+    if let Some(status) = status {
+        query_builder.push(" AND status=");
+        query_builder.push_bind(status);
+    }
+    query_builder.push(" ORDER BY created");
+    
+    let query = query_builder.build_query_as::<ChangesRecord>();
+    let records: Vec<_> = query.fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
+    info!("records: {:?}", records);
+    Ok(records.into())
+}
 
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
@@ -400,5 +422,6 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
         changes_sse,
         add_run_updated_change,
         add_run_update_request_change,
+        api_get_changes,
     ])
 }
