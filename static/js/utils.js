@@ -70,7 +70,7 @@ function formatRunTable(changes) {
                 changes.filter(ch => {
                     return ch.run_id === run_id
                 }).forEach(ch => {
-                    let ch2 = ch.data.RunUpdateRequest.chng[col_name];
+                    let ch2 = ch.data.RunUpdateRequest[col_name];
                     if (ch2 !== undefined) {
                         cell_val_chng.push([ch2, ch.user_id]);
                     }

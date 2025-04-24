@@ -17,7 +17,7 @@ use crate::auth::{generate_random_string, UserInfo};
 use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
-use crate::changes::ChangesRecord;
+use crate::changes::{ChangesRecord, PENDING, RUN_UPDATE_REQUEST};
 use crate::files::{load_file_from_db, save_file_to_db};
 use crate::iofxml3::parser::parse_startlist_xml_data;
 use crate::qxdatetime::QxDateTime;
@@ -287,9 +287,11 @@ async fn get_event_start_list(event_id: EventId, session_id: MaybeSessionId, cla
     let changes = sqlx::query_as::<_, ChangesRecord>("SELECT changes.* FROM changes, runs
                  WHERE runs.class_name=?
                    AND changes.run_id=runs.run_id
-                   AND changes.data_type='RunUpdateRequest'
-                   AND changes.status='PND'")
+                   AND changes.data_type=?
+                   AND changes.status=?")
         .bind(&class_name)
+        .bind(RUN_UPDATE_REQUEST)
+        .bind(PENDING)
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     Ok(Template::render("startlist", context! {
         user,

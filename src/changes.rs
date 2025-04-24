@@ -134,7 +134,7 @@ impl QxRunChange {
     // }
 }
 
-const PENDING: &str = "Pending";
+pub const PENDING: &str = "Pending";
 const ACCEPTED: &str = "Accepted";
 const REJECTED: &str = "Rejected";
 
@@ -179,7 +179,7 @@ pub enum DataType {
 }
 
 const OC_CHANGE: &str = "OcChange";
-const RUN_UPDATE_REQUEST: &str = "RunUpdateRequest";
+pub const RUN_UPDATE_REQUEST: &str = "RunUpdateRequest";
 const RUN_UPDATED: &str = "RunUpdated";
 const RADIO_PUNCH: &str = "RadioPunch";
 const CARD_READOUT: &str = "CardReadout";
