@@ -43,7 +43,7 @@ macro_rules! impl_sqlx_text_type_encode_decode {
         {
             fn decode(value: <DB as sqlx::Database>::ValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
                 let value = <&str as sqlx::Decode<DB>>::decode(value)?;
-                Ok(Self::from_string(value.to_string()))
+                Ok(Self::from_str(value))
             }
         }
 

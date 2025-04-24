@@ -18,7 +18,6 @@ use sqlx::sqlite::{SqliteArgumentValue, SqliteArguments};
 use log::info;
 use crate::db::{get_event_db, DbPool};
 use crate::oc::OCheckListChange;
-use crate::runs::RunsRecord;
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
 
 fn is_false(b: &bool) -> bool {
@@ -58,20 +57,20 @@ pub struct QxRunChange {
 }
 
 impl QxRunChange {
-    pub fn new(run_id: RunId) -> Self {
-        Self {
-            run_id,
-            drop_record: false,
-            class_name: None,
-            registration: None,
-            first_name: None,
-            last_name: None,
-            si_id: None,
-            start_time: None,
-            check_time: None,
-            finish_time: None,
-        }
-    }
+    // pub fn new(run_id: RunId) -> Self {
+    //     Self {
+    //         run_id,
+    //         drop_record: false,
+    //         class_name: None,
+    //         registration: None,
+    //         first_name: None,
+    //         last_name: None,
+    //         si_id: None,
+    //         start_time: None,
+    //         check_time: None,
+    //         finish_time: None,
+    //     }
+    // }
     pub fn try_from_oc_change(oc: &OCheckListChange, change_set_created_time: QxDateTime) -> anyhow::Result<Self> {
         let mut change = Self {
             run_id: oc.Runner.Id.parse::<i64>()?,
@@ -118,57 +117,50 @@ impl QxRunChange {
         changed_fields!(class_name, registration, first_name, last_name, si_id, start_time, check_time, finish_time)
     }
 
-    pub(crate) fn intersect_with_run_record(&self, rec: &RunsRecord) -> Self {
-        macro_rules! intersect {
-            (($($fld_name:ident), +), ($($opt_fld_name:ident), +)) => {{
-                let mut ret = Self::new(rec.run_id);
-                $(
-                    if self.$fld_name.is_some() { ret.$fld_name = Some(rec.$fld_name.clone()); }
-                )*
-                $(
-                    if self.$opt_fld_name.is_some() { ret.$opt_fld_name = rec.$opt_fld_name.clone(); }
-                )*
-                ret
-            }}
-        }
-        intersect!((class_name, registration, first_name, last_name, si_id), (start_time, check_time, finish_time))
-    }
+    // pub(crate) fn intersect_with_run_record(&self, rec: &RunsRecord) -> Self {
+    //     macro_rules! intersect {
+    //         (($($fld_name:ident), +), ($($opt_fld_name:ident), +)) => {{
+    //             let mut ret = Self::new(rec.run_id);
+    //             $(
+    //                 if self.$fld_name.is_some() { ret.$fld_name = Some(rec.$fld_name.clone()); }
+    //             )*
+    //             $(
+    //                 if self.$opt_fld_name.is_some() { ret.$opt_fld_name = rec.$opt_fld_name.clone(); }
+    //             )*
+    //             ret
+    //         }}
+    //     }
+    //     intersect!((class_name, registration, first_name, last_name, si_id), (start_time, check_time, finish_time))
+    // }
 }
-
-const PND: &str = "PND";
-const ACC: &str = "ACC";
-const REJ: &str = "REJ";
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub enum ChangeStatus {
-    #[serde(rename = "PND")]
     #[default]
     Pending,
-    #[serde(rename = "ACC")]
     Accepted,
-    #[serde(rename = "REJ")]
     Rejected,
 }
+impl_sqlx_text_type_encode_decode!(ChangeStatus);
 
 impl ChangeStatus {
-    pub fn from_string(s: String) -> Self {
-        match s.as_str() {
-            PND => Self::Pending,
-            ACC => Self::Accepted,
-            REJ => Self::Rejected,
-            _ => panic!("Unknown data type: {}", s),
+    pub fn from_str(s: &str) -> Self {
+        
+        match s {
+            stringify!(Pending) => Self::Pending,
+            stringify!(Accepted) => Self::Accepted,
+            stringify!(Rejected) => Self::Rejected,
+            _ => panic!("Unknown status: {}", s),
         }
     }
 }
-
-impl_sqlx_text_type_encode_decode!(ChangeStatus);
 
 impl Display for ChangeStatus {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ChangeStatus::Pending => f.write_str(PND),
-            ChangeStatus::Accepted => f.write_str(ACC),
-            ChangeStatus::Rejected => f.write_str(REJ),
+            ChangeStatus::Pending => f.write_str("Pending"),
+            ChangeStatus::Accepted => f.write_str("Accepted"),
+            ChangeStatus::Rejected => f.write_str("Rejected"),
         }
     }
 }
@@ -183,13 +175,13 @@ pub enum DataType {
 }
 
 impl DataType {
-    pub fn from_string(s: String) -> Self {
-        match s.as_str() {
-            "OcChange" => Self::OcChange,
-            "RunUpdateRequest" => Self::RunUpdateRequest,
-            "RunUpdated" => Self::RunUpdated,
-            "RadioPunch" => Self::RadioPunch,
-            "CardReadout" => Self::CardReadout,
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            stringify!(OcChange) => Self::OcChange,
+            stringify!(RunUpdateRequest) => Self::RunUpdateRequest,
+            stringify!(RunUpdated) => Self::RunUpdated,
+            stringify!(RadioPunch) => Self::RadioPunch,
+            stringify!(CardReadout) => Self::CardReadout,
             _ => panic!("Unknown data type: {}", s),
         }
     }
@@ -209,18 +201,11 @@ impl Display for DataType {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct RunUpdateRequestData {
-    pub(crate) chng: QxRunChange,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) orig: Option<QxRunChange>,
-}
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ChangeData {
     Null,
     OcChange(OCheckListChange),
-    RunUpdateRequest(RunUpdateRequestData),
+    RunUpdateRequest(QxRunChange),
     RunUpdated(QxRunChange),
     RadioPunch,
     CardReadout,
@@ -281,13 +266,8 @@ async fn get_changes(event_id: EventId, from_id: Option<i64>, state: &State<Shar
 pub async fn add_run_update_request_change(event_id: EventId, session_id: QxSessionId, change: Json<QxRunChange>, state: &State<SharedQxState>) -> Result<(), Custom<String>> {
     let user = user_info(session_id, state).await?;
     let change = change.into_inner();
-    let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
-    let orig = sqlx::query_as::<_, RunsRecord>("SELECT * FROM runs WHERE run_id=?")
-        .bind(change.run_id)
-        .fetch_one(&edb).await.ok()
-        .map(|rec| change.intersect_with_run_record(&rec));
     let data_type = DataType::RunUpdateRequest;
-    let data = ChangeData::RunUpdateRequest(RunUpdateRequestData { chng: change.clone(), orig });
+    let data = ChangeData::RunUpdateRequest(change.clone());
     add_change(event_id, "www", data_type, &data, Some(change.run_id), Some(user.email.as_str()), Some(ChangeStatus::Pending), state).await.map_err(anyhow_to_custom_error)?;
     state.read().await.broadcast_runs_change((event_id, change)).await.map_err(anyhow_to_custom_error)?;
     Ok(())

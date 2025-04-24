@@ -15,7 +15,7 @@ use crate::qxdatetime::QxDateTime;
 use crate::util::{anyhow_to_custom_error};
 use sqlx::sqlite::SqliteArgumentValue;
 use sqlx::{Encode, Sqlite};
-use crate::changes::{add_change, ChangeData, ChangeStatus, DataType, QxRunChange, RunUpdateRequestData};
+use crate::changes::{add_change, ChangeData, ChangeStatus, DataType, QxRunChange};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -121,15 +121,13 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
         match QxRunChange::try_from_oc_change(&chng, change_dt) {
             Ok(run_chng) => {
                 let run_id = run_chng.run_id;
-                let mut orig_chng = QxRunChange::default();
                 let status = if run_chng.si_id.is_some() {
-                    orig_chng.si_id = Some(chng.Runner.Card);
                     Some(ChangeStatus::Pending)
                 } else {
                     None
                 };
                 let data_type = DataType::RunUpdateRequest;
-                let data = ChangeData::RunUpdateRequest(RunUpdateRequestData { chng: run_chng, orig: Some(orig_chng) });
+                let data = ChangeData::RunUpdateRequest(run_chng);
                 add_change(event_id, "oc", data_type, &data, Some(run_id), None, status, state).await?;
             }
             Err(e) => {

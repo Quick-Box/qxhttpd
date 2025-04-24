@@ -91,8 +91,8 @@ impl<'r> request::FromRequest<'r> for MaybeSessionId {
 struct QxApiToken(String);
 
 impl QxApiToken {
-    pub fn from_string(s: String) -> Self {
-        QxApiToken(s)
+    pub fn from_str(s: &str) -> Self {
+        QxApiToken(s.to_owned())
     }
 }
 
