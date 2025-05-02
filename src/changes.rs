@@ -15,7 +15,6 @@ use crate::qxdatetime::QxDateTime;
 use sqlx::{Encode, Sqlite};
 use sqlx::query::{Query};
 use sqlx::sqlite::{SqliteArgumentValue, SqliteArguments};
-use log::info;
 use crate::db::{get_event_db, DbPool};
 use crate::oc::OCheckListChange;
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
@@ -274,7 +273,7 @@ async fn get_changes(event_id: EventId, from_id: Option<i64>, state: &State<Shar
 
 #[post("/api/event/<event_id>/changes/run-update-request", data = "<change>")]
 pub async fn add_run_update_request_change(event_id: EventId, session_id: QxSessionId, change: Json<QxRunChange>, state: &State<SharedQxState>) -> Result<(), Custom<String>> {
-    let user = user_info(session_id, state).await?;
+    let user = user_info(&session_id, state).await?;
     let change = change.into_inner();
     let data_type = DataType::RunUpdateRequest;
     let data = ChangeData::RunUpdateRequest(change.clone());
@@ -402,7 +401,7 @@ async fn api_get_changes(event_id: EventId, from_id: Option<i64>, data_type: Opt
     
     let query = query_builder.build_query_as::<ChangesRecord>();
     let records: Vec<_> = query.fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
-    info!("records: {:?}", records);
+    // info!("records: {:?}", records);
     Ok(records.into())
 }
 

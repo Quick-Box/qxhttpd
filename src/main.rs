@@ -48,10 +48,11 @@ impl AppConfig {
         self.server_address == "127.0.0.1"
     }
 }
+#[derive(Clone, Debug)]
 struct QxSession {
     user_info: UserInfo,
 }
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug)]
 struct QxSessionId(String);
 #[rocket::async_trait]
 impl<'r> request::FromRequest<'r> for QxSessionId {
@@ -68,10 +69,9 @@ impl<'r> request::FromRequest<'r> for QxSessionId {
     }
 }
 
-enum MaybeSessionId {
-    None,
-    Some(QxSessionId),
-}
+#[derive(Debug)]
+pub struct MaybeSessionId(Option<QxSessionId>);
+
 #[rocket::async_trait]
 impl<'r> request::FromRequest<'r> for MaybeSessionId {
     type Error = ();
@@ -81,9 +81,9 @@ impl<'r> request::FromRequest<'r> for MaybeSessionId {
             .await
             .expect("request cookies");
         if let Some(cookie) = cookies.get_private(QX_SESSION_ID) {
-            return request::Outcome::Success(Self::Some(QxSessionId(cookie.value().to_string())));
+            return request::Outcome::Success(Self(Some(QxSessionId(cookie.value().to_string()))));
         }
-        request::Outcome::Success(Self::None)
+        request::Outcome::Success(Self(None))
     }
 }
 
@@ -156,7 +156,7 @@ type SharedQxState = tokio::sync::RwLock<QxState>;
 
 #[get("/")]
 async fn index(sid: MaybeSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info_opt(sid, state).await.map_err(anyhow_to_custom_error)?;
+    let user = user_info_opt(sid.0.as_ref(), state).await.map_err(anyhow_to_custom_error)?;
     let pool = &db.0;
     let events: Vec<EventRecord> = sqlx::query_as("SELECT * FROM events")
         .fetch_all(pool)

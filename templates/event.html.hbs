@@ -2,7 +2,7 @@
 
     <h2>{{ event.name }}</h2>
     <div class="w3-bar">
-        {{#if user}}
+        {{#if is_event_owner}}
             <a href="/event/{{event.id}}/edit" class="w3-button w3-theme w3-round-large w3-border"><i class="fa fa-cog"></i> edit</a>
             <button onclick="document.getElementById('uploadStartListDialog').style.display='block'" class="w3-button w3-theme w3-round-large w3-border">Upload start list</button>
         {{/if}}

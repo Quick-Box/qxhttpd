@@ -2,7 +2,6 @@ use std::fs::OpenOptions;
 use rocket::serde::json::Json;
 use std::io::{Cursor, Read};
 use anyhow::anyhow;
-use base64::engine::general_purpose;
 use image::ImageFormat;
 use rocket::form::{Contextual, Form};
 use rocket::http::{ContentType, Status};
@@ -121,7 +120,7 @@ struct EventFormValues<'v> {
 // need, do not use `Contextual`. Use the equivalent of `Form<Submit<'_>>`.
 #[post("/event", data = "<form>")]
 async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let user = user_info(session_id, state).await?;
+    let user = user_info(&session_id, state).await?;
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
     let start_time = QxDateTime::parse_from_iso(vals.start_time)
         .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
@@ -149,32 +148,51 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
     let event_id = save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     Ok(Redirect::to(format!("/event/{event_id}")))
 }
-pub async fn user_info(session_id: QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, Custom<String>> {
+pub async fn user_info(session_id: &QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, Custom<String>> {
     state.read().await
         .sessions.get(&session_id).map(|s| s.user_info.clone()).ok_or( Custom(Status::Unauthorized, "Invalid session ID".to_string()) )
 }
-pub async fn user_info_opt(session_id: MaybeSessionId, state: &State<SharedQxState>) -> anyhow::Result<Option<UserInfo>> {
-    match session_id {
-        MaybeSessionId::None => Ok(None),
-        MaybeSessionId::Some(session_id) => {
-            let user_info = state.read().await
-                .sessions.get(&session_id).map(|s| s.user_info.clone());
-            Ok(user_info)
+pub async fn user_info_opt(session_id: Option<&QxSessionId>, state: &State<SharedQxState>) -> anyhow::Result<Option<UserInfo>> {
+    match &session_id {
+        None => Ok(None),
+        Some(session_id) => {
+            get_user_info(session_id, state).await
         }
     }
 }
 
-pub async fn user_and_event_owner_opt(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> anyhow::Result<Option<UserInfo>> {
+pub async fn get_user_info(session_id: &QxSessionId, state: &State<SharedQxState>) -> anyhow::Result<Option<UserInfo>> {
+    let user_info = state.read().await
+        .sessions.get(session_id).map(|s| s.user_info.clone());
+    Ok(user_info)
+}
+
+pub async fn event_owner_opt(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> anyhow::Result<Option<UserInfo>> {
     let event = load_event(event_id, gdb).await?;
-    let user = user_info_opt(session_id, state).await?
+    let user = user_info_opt(session_id.0.as_ref(), state).await?
         .and_then(|user| if user.email == event.owner {Some(user)} else {None});
     Ok(user)
 }
 
-async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    let user = user_info(session_id, state).await?;
+pub fn is_event_owner(event: &EventRecord, user: Option<&UserInfo>) -> bool {
+    if let Some(user) = user {
+        user.email == event.owner
+    } else {
+        false
+    }
+}
+
+async fn event_edit_insert(event_id: Option<EventId>, session_id: &QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let user = get_user_info(session_id, state).await
+        .and_then(|u| if let Some(u) = u {Ok(u)} else {Err(anyhow!("Invalid session ID"))})
+        .map_err(anyhow_to_custom_error)?;
     let event = if let Some(event_id) = event_id {
-        load_event_info(event_id, db).await?
+        let event = load_event_info(event_id, db).await?;
+        if is_event_owner(&event, Some(&user)) {
+            event
+        } else {
+            return Err(Custom(Status::Unauthorized, "Event owner mismatch".to_string()))
+        }
     } else {
         EventRecord::new(&user.email)
     };
@@ -186,7 +204,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: QxSessionId, s
         let mut cursor = Cursor::new(&mut buffer);
         image.write_to(&mut cursor, ImageFormat::Png).unwrap();
         // Encode the image buffer to base64
-        general_purpose::STANDARD.encode(&buffer)
+        base64::engine::general_purpose::STANDARD.encode(&buffer)
     };
     Ok(Template::render("event-edit", context! {
         event_id,
@@ -205,15 +223,15 @@ async fn event_drop(event_id: EventId, db: &State<DbPool>) -> Result<(), anyhow:
 }
 #[get("/event/create")]
 async fn event_create(session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    event_edit_insert(None, session_id, state, db).await
+    event_edit_insert(None, &session_id, state, db).await
 }
 #[get("/event/<event_id>/edit")]
 async fn event_edit(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Template, Custom<String>> {
-    event_edit_insert(Some(event_id), session_id, state, db).await
+    event_edit_insert(Some(event_id), &session_id, state, db).await
 }
 #[get("/event/<event_id>/delete")]
 async fn event_delete(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Redirect, Custom<String>> {
-    let user = user_info(session_id, state).await?;
+    let user = user_info(&session_id, state).await?;
     let event = load_event_info(event_id, db).await?;
     if event.owner == user.email {
         event_drop(event_id, db).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
@@ -226,10 +244,12 @@ async fn event_delete(event_id: EventId, session_id: QxSessionId, state: &State<
 #[get("/event/<event_id>")]
 async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, gdb).await?;
-    let user = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)?;
+    let user = user_info_opt(session_id.0.as_ref(), state).await.map_err(anyhow_to_custom_error)?;
+    let is_event_owner = is_event_owner(&event, user.as_ref());
     let files = files::list_files(event_id, state).await?;
     Ok(Template::render("event", context! {
         user,
+        is_event_owner,
         event,
         files,
     }))
@@ -262,8 +282,10 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
 
 #[get("/event/<event_id>/startlist?<class_name>")]
 async fn get_event_start_list(event_id: EventId, session_id: MaybeSessionId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+    info!("GET session_id: {session_id:?}");
     let event = load_event_info(event_id, gdb).await?;
-    let user = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)?;
+    let user = user_info_opt(session_id.0.as_ref(), state).await.map_err(anyhow_to_custom_error)?;
+    info!("GET user: {user:?}");
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes ORDER BY name")
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
@@ -350,7 +372,7 @@ async fn upload_start_list(qx_api_token: QxApiToken, data: Data<'_>, content_typ
 }
 #[post("/api/event/<event_id>/upload/startlist", data = "<data>")]
 async fn upload_start_list_user(event_id: EventId, data: Data<'_>, content_type: &ContentType, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
-    let Some(_user) = user_and_event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)? else { 
+    let Some(_event_owner) = event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)? else {
         return Err(Custom(Status::Unauthorized, String::from("Session expired or not valid")));
     };
     let event_info = load_event_info(event_id, gdb).await?;

@@ -7,9 +7,9 @@ use rocket::log::private::info;
 use rocket::response::{Debug, Redirect};
 use rocket_oauth2::{OAuth2, TokenResponse};
 use serde_json::Value;
-use crate::{QxSession, QxSessionId, SharedQxState};
+use crate::{MaybeSessionId, QxSession, QxSessionId, SharedQxState};
 
-#[derive(Clone, serde::Serialize)]
+#[derive(serde::Serialize, Clone, Debug)]
 pub struct UserInfo {
     name: String,
     pub(crate) email: String,
@@ -62,6 +62,14 @@ struct GoogleUserInfo {
     email: Value,
     picture: Value,
 }
+#[get("/logout")]
+async fn logout(session_id: MaybeSessionId, state: &State<SharedQxState>) -> Redirect {
+    if let Some(session_id) = session_id.0 {
+        state.write().await.sessions.remove(&session_id);
+    }
+    Redirect::to("/")
+}
+
 #[get("/login")]
 async fn login(state: &State<SharedQxState>) -> Redirect {
     // must be the same host as redirect_uri, both have to be localhost or 127.0.0.1
@@ -107,6 +115,9 @@ async fn google_auth(token: TokenResponse<GoogleUserInfo>, cookies: &CookieJar<'
     }
     let session_id = generate_session_id();
     info!("User log in, name: {}, email: {}, picture: {}", user_info.name, user_info.email, user_info.picture);
+
+    info!("insert session_id: {session_id:?}");
+    
     state.write().await.sessions.insert(QxSessionId(session_id.clone()), QxSession{ user_info });
     // Set a private cookie with the user's name, and redirect to the home page.
     cookies.add_private(
@@ -120,6 +131,7 @@ async fn google_auth(token: TokenResponse<GoogleUserInfo>, cookies: &CookieJar<'
 
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
+            logout,
             login,
             google_login,
             google_auth,

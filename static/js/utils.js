@@ -56,9 +56,6 @@ function formatRunTable(changes) {
             else if (col_name === "time") {
                 cell_val = obtime(msecSinceUntil(row.dataset.start_time, row.dataset.finish_time));
             }
-            else if (col_name === "name") {
-                cell_val = `${row.dataset.last_name} ${row.dataset.first_name}`;
-            }
             else {
                 const val = row.dataset[col_name];
                 // console.log(i, j, col_name, val);

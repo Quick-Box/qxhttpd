@@ -5,10 +5,15 @@
         <a href="/" class="w3-bar-item w3-button">Quick Exchange</a>
 <!--        <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hover-white">About</a>-->
         {{#if user}}
-            <span class="w3-bar-item w3-right">{{user.name}}</span>
-            <img src="{{user.picture}}" alt="avatar" class="w3-circle w3-right"  width="40" height="40">
+            <div class="w3-dropdown-click w3-right">
+                <img src="{{user.picture}}" alt="avatar" class="w3-circle"  width="40" height="40">
+                <span onclick="toggleDropDown()" class="w3-button">{{user.name}}</span>
+                <div id="DropdownContent" class="w3-dropdown-content w3-bar-block w3-border">
+                    <a href="/logout" class="w3-bar-item w3-button">Log out</a>
+                </div>
+            </div>
         {{else}}
-            <a class="w3-bar-item w3-button w3-hover-black w3-right" href="/login">Login</a>
+            <a class="w3-bar-item w3-button w3-hover-black w3-right" href="/login">Log in</a>
         {{/if}}
     </div>
 <!--</div>-->
@@ -48,5 +53,14 @@
     function w3_close() {
         mySidebar.style.display = "none";
         overlayBg.style.display = "none";
+    }
+
+    function toggleDropDown() {
+        var x = document.getElementById("DropdownContent");
+        if (x.className.indexOf("w3-show") === -1) {
+            x.className += " w3-show";
+        } else {
+            x.className = x.className.replace(" w3-show", "");
+        }
     }
 </script>
