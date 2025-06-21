@@ -77,10 +77,10 @@ function formatRunTable(changes) {
                 row.cells[j].innerHTML = cell_val;
             }
             else {
-                let s = `<span style="color: gray;"><del>${cell_val}</del></span>`;
+                let s = `<div style="color: gray;"><del>${cell_val}</del></div>`;
                 cell_val_chng.forEach(ch => {
-                    s += `<br><span style="font-weight: bold; color: darkred;">${ch[0]}</span>
-                          <br><span class="w3-small" style="color: darkblue;">${ch[1]}</span>`
+                    s += `<div style="font-weight: bold; color: darkred;">${ch[0]}</div>
+                          <div class="w3-small" style="color: darkblue;">${ch[1]}</div>`
                 });
                 row.cells[j].innerHTML = s;
             }

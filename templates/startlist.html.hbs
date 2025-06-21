@@ -22,18 +22,18 @@
 
     <table id="table" data-start00="{{ start00 }}" class="w3-table-all w3-hoverable">
         <thead>
-        <tr class="w3-theme-l1">
-            {{#if user}}
-                <th>Edit</th>
-            {{/if}}
-            <th data-col-name="start_time" class="w3-right-align">Start</th>
-            <th data-col-name="last_name">Last name</th>
-            <th data-col-name="first_name">First name</th>
-            <th data-col-name="registration">Registration</th>
-            <th data-col-name="si_id" class="w3-right-align">SI</th>
-            <th data-col-name="edited_by">Edited by</th>
-            <th data-col-name="run_id" class="w3-right-align">Run Id</th>
-        </tr>
+            <tr class="w3-theme-l1">
+                {{#if user}}
+                    <th>Edit</th>
+                {{/if}}
+                <th data-col-name="start_time" class="w3-right-align">Start</th>
+                <th data-col-name="last_name">Last name</th>
+                <th data-col-name="first_name">First name</th>
+                <th data-col-name="registration">Registration</th>
+                <th data-col-name="si_id" class="w3-right-align">SI</th>
+                <th data-col-name="edited_by">Edited by</th>
+                <th data-col-name="run_id" class="w3-right-align">Run Id</th>
+            </tr>
         </thead>
         <tbody>
         {{#each runs}}
@@ -65,6 +65,7 @@
 
     <script src="/js/utils.js"></script>
     <script>
+
     const changes = {{stringify changes}};
     formatRunTable(changes);
 
@@ -165,7 +166,7 @@
     </script>
 
     <div id="dlg" class="w3-modal">
-        <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width: 95%">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width: 400px">
 
             <div class="w3-padding w3-theme">
                 <h2 class="">Edit runner</h2>
