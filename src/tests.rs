@@ -7,7 +7,7 @@ use crate::event::{EventId, EventRecord, PostedEvent};
 use crate::files::FileInfo;
 use crate::qxdatetime::QxDateTime;
 use crate::{util};
-use crate::changes::QxRunChange;
+use crate::changes::DataId;
 use crate::runs::RunsRecord;
 
 const API_TOKEN: &str = "plelababamak";
@@ -127,8 +127,8 @@ fn post_qe_change() {
     let client = create_test_server();
     upload_start_list_impl(&client);
 
-    fn apply_change(client: &Client, change: &QxRunChange) -> RunsRecord {
-        let resp = client.post("/api/event/current/changes/run-updated")
+    fn apply_change(client: &Client, run_id: DataId, change: &RunsRecord) -> RunsRecord {
+        let resp = client.post(format!("/api/event/current/changes/run-updated?run_id={}", run_id.unwrap()))
             .header(Header::new("qx-api-token", API_TOKEN))
             .header(ContentType::JSON)
             .json(&change)
@@ -140,24 +140,24 @@ fn post_qe_change() {
         resp.into_json::<Vec<RunsRecord>>().unwrap().first().unwrap().clone()
     }
     {
-        let change = QxRunChange {
+        let change = RunsRecord {
             run_id: 1,
             si_id: Some(12345),
             ..Default::default()
         };
-        let rec = apply_change(&client, &change);
-        assert_eq!(rec.si_id, 12345);
+        let rec = apply_change(&client, Some(1), &change);
+        assert_eq!(rec.si_id, Some(12345));
     }
     {
         let start_time = QxDateTime::now().trimmed_to_sec();
-        let change = QxRunChange {
+        let change = RunsRecord {
             run_id: 1,
             last_name: Some("Foo".to_string()),
             start_time: Some(start_time),
             ..Default::default()
         };
-        let rec = apply_change(&client, &change);
-        assert_eq!(rec.last_name, "Foo");
+        let rec = apply_change(&client, Some(1), &change);
+        assert_eq!(rec.last_name, Some("Foo".to_string()));
         assert_eq!(rec.start_time, Some(start_time));
     }
 }

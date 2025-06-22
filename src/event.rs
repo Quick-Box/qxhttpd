@@ -26,7 +26,7 @@ use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 pub const RUNS_CSV_FILE: &str = "runs.csv";
 
-pub type RunId = i64;
+// pub type RunId = i64;
 pub type SiId = i64;
 pub type EventId = i64;
 
@@ -142,7 +142,7 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
             api_token: QxApiToken(vals.api_token.to_string()),
         }
     };
-    if &event.owner != &user.email {
+    if event.owner != user.email {
         return Err(Custom(Status::BadRequest, "Different event owner".to_string()))
     }
     let event_id = save_event(&event, db).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
@@ -150,7 +150,7 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
 }
 pub async fn user_info(session_id: &QxSessionId, state: &State<SharedQxState>) -> Result<UserInfo, Custom<String>> {
     state.read().await
-        .sessions.get(&session_id).map(|s| s.user_info.clone()).ok_or( Custom(Status::Unauthorized, "Invalid session ID".to_string()) )
+        .sessions.get(session_id).map(|s| s.user_info.clone()).ok_or( Custom(Status::Unauthorized, "Invalid session ID".to_string()) )
 }
 pub async fn user_info_opt(session_id: Option<&QxSessionId>, state: &State<SharedQxState>) -> anyhow::Result<Option<UserInfo>> {
     match &session_id {
@@ -367,8 +367,8 @@ async fn upload_start_list(qx_api_token: QxApiToken, data: Data<'_>, content_typ
     let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let file_id = crate::files::upload_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
-    import_start_list(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
-    Ok(format!("{file_id}"))
+    import_start_list(event_info.id, &edb, gdb).await.map_err(anyhow_to_custom_error)?;
+    Ok(file_id.to_string())
 }
 #[post("/api/event/<event_id>/upload/startlist", data = "<data>")]
 async fn upload_start_list_user(event_id: EventId, data: Data<'_>, content_type: &ContentType, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
@@ -378,8 +378,8 @@ async fn upload_start_list_user(event_id: EventId, data: Data<'_>, content_type:
     let event_info = load_event_info(event_id, gdb).await?;
     let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
     let file_id = crate::files::upload_file(event_info.api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
-    import_start_list(event_info.id, &edb, &gdb).await.map_err(anyhow_to_custom_error)?;
-    Ok(format!("{file_id}"))
+    import_start_list(event_info.id, &edb, gdb).await.map_err(anyhow_to_custom_error)?;
+    Ok(file_id.to_string())
 }
 pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE name=?")
@@ -413,9 +413,8 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
                              class_name,
                              start_time,
                              check_time,
-                             finish_time,
-                             status
-                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                             finish_time
+                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .bind(run.run_id)
             .bind(run.si_id)
             .bind(run.last_name)
@@ -425,7 +424,7 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
             .bind(run.start_time.map(|d| d.0))
             .bind(run.check_time.map(|d| d.0))
             .bind(run.finish_time.map(|d| d.0))
-            .bind(run.status)
+            // .bind(run.status)
             .execute(edb).await.map_err(sqlx_to_anyhow)?;
     }
     txn.commit().await?;
@@ -466,9 +465,8 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
                              class_name,
                              start_time,
                              check_time,
-                             finish_time,
-                             status
-                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                             finish_time
+                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .bind(run.run_id)
             .bind(run.si_id)
             .bind(run.last_name)
@@ -478,7 +476,7 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
             .bind(run.start_time.map(|d| d.0))
             .bind(run.check_time.map(|d| d.0))
             .bind(run.finish_time.map(|d| d.0))
-            .bind(run.status)
+            // .bind(run.status)
             .execute(edb).await.map_err(sqlx_to_anyhow)?;
     }
     for run_id in run_ids {

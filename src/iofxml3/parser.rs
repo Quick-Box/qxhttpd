@@ -3,6 +3,7 @@ use crate::iofxml3::structs::StartList;
 use quick_xml::de::from_reader;
 use crate::qxdatetime::QxDateTime;
 use crate::runs::{ClassesRecord, RunsRecord};
+use crate::util::{empty_string_to_none, zero_to_none};
 // thanks to https://github.com/Thomblin/xml_schema_generator
 // xml_schema_generator --derive "Serialize, Deserialize, Debug" ~/p/qxhttpd/tests/startlist-iof3.xml > ~/p/qxhttpd/src/iofxml3/structs.rs 
 
@@ -33,20 +34,22 @@ pub async fn parse_startlist_xml_data(data: Vec<u8>) -> anyhow::Result<(Option<Q
             classes.insert(class_name.clone(), classrec);
         }
         for ps in &cs.person_start {
-            let mut runsrec = RunsRecord { class_name: class_name.clone(), ..Default::default() };
+            let mut runsrec = RunsRecord { class_name: empty_string_to_none(&class_name), ..Default::default() };
             let person = &ps.person;
             let name = &person.name;
-            runsrec.first_name = name.given.to_string();
-            runsrec.last_name = name.family.to_string();
-            runsrec.registration = person.id.iter().find(|id| id.id_type == "CZE")
-                .and_then(|id| id.text.clone()).unwrap_or_default();
+            runsrec.first_name = empty_string_to_none(&name.given);
+            runsrec.last_name = empty_string_to_none(&name.family);
+            runsrec.registration = person.id.iter()
+                .find(|id| id.id_type == "CZE")
+                .and_then(|id| id.text.as_ref().and_then(empty_string_to_none));
+            
             let Some(run_id) = person.id.iter().find(|id| id.id_type == "QuickEvent") else {
                 warn!("QuickEvent ID not found in person_start {:?}", ps);
                 continue;
             };
             let Some(run_id) = run_id.text.as_ref().and_then(|id| id.parse::<i64>().ok()) else {
                 // still can be a vacant
-                if !runsrec.registration.is_empty() {
+                if runsrec.registration.is_some() {
                     warn!("QuickEvent ID value invalid: {:?}", ps);
                 }
                 continue;
@@ -61,7 +64,7 @@ pub async fn parse_startlist_xml_data(data: Vec<u8>) -> anyhow::Result<(Option<Q
             }
             runsrec.start_time = Some(start_time);
             let si = &ps.start.control_card.as_ref().and_then(|si| si.parse::<i64>().ok()).unwrap_or_default();
-            runsrec.si_id = *si;
+            runsrec.si_id = zero_to_none(*si);
             runs.push(runsrec);
         }
     }

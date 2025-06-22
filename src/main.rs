@@ -18,12 +18,13 @@ use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
 use sqlx::SqlitePool;
 use crate::auth::{UserInfo, QX_SESSION_ID};
-use crate::changes::{ChangesRecord, QxRunChange};
+use crate::changes::{ChangesRecord};
 use crate::db::{DbPool, DbPoolFairing};
 use crate::qxdatetime::{dtstr, obtime, obtimems};
 use crate::util::anyhow_to_custom_error;
 use async_broadcast::{broadcast};
 use sqlx::sqlite::{SqliteArgumentValue};
+use crate::runs::RunsRecord;
 
 #[cfg(test)]
 mod tests;
@@ -124,8 +125,8 @@ struct QxState {
     open_events: HashMap<EventId, OpenEvent>,
     changes_sender: async_broadcast::Sender<(EventId, ChangesRecord)>,
     changes_receiver: async_broadcast::Receiver<(EventId, ChangesRecord)>,
-    runs_changes_sender: async_broadcast::Sender<(EventId, QxRunChange)>,
-    runs_changes_receiver: async_broadcast::Receiver<(EventId, QxRunChange)>,
+    //runs_changes_sender: async_broadcast::Sender<(EventId, Option<i64>, RunsRecord)>,
+    runs_changes_receiver: async_broadcast::Receiver<(EventId, Option<i64>, RunsRecord)>,
 }
 impl QxState {
     fn new(app_config: AppConfig) -> Self {
@@ -139,7 +140,7 @@ impl QxState {
             open_events: Default::default(),
             changes_sender,
             changes_receiver,
-            runs_changes_sender,
+            //runs_changes_sender,
             runs_changes_receiver,
         }
     }
@@ -147,10 +148,10 @@ impl QxState {
         self.changes_sender.broadcast(chng).await?;
         Ok(())
     }
-    async fn broadcast_runs_change(&self, chng: (EventId, QxRunChange)) -> anyhow::Result<()> {
-        self.runs_changes_sender.broadcast(chng).await?;
-        Ok(())
-    }
+    // async fn broadcast_runs_change(&self, chng: (EventId, Option<i64>, RunsRecord)) -> anyhow::Result<()> {
+    //     self.runs_changes_sender.broadcast(chng).await?;
+    //     Ok(())
+    // }
 }
 type SharedQxState = tokio::sync::RwLock<QxState>;
 

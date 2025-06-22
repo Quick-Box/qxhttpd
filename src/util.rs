@@ -54,3 +54,22 @@ pub(crate) fn sqlx_to_anyhow(err: sqlx::Error) -> anyhow::Error {
 //     warn!("Error: {}", err);
 //     err
 // }
+pub(crate) fn empty_string_to_none<T: Into<String>>(input: T) -> Option<String> {
+    let s = input.into();
+    if s.trim().is_empty() {
+        None
+    } else {
+        Some(s)
+    }
+}
+
+pub(crate) fn zero_to_none<T>(value: T) -> Option<T>
+where
+    T: PartialEq + Copy + From<u8>,
+{
+    if value == T::from(0u8) {
+        None
+    } else {
+        Some(value)
+    }
+}

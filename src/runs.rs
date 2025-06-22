@@ -1,4 +1,5 @@
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, TimeDelta};
+use qxhttpd_proc_macros::FieldsWithValue;
 use rocket::response::stream::{Event, EventStream};
 use rocket::{Build, Rocket, State};
 use rocket::response::status::Custom;
@@ -9,6 +10,7 @@ use crate::db::{get_event_db};
 use crate::event::{EventId};
 use crate::qxdatetime::QxDateTime;
 use crate::{SharedQxState};
+use crate::oc::OCheckListChange;
 use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error};
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
@@ -24,44 +26,81 @@ pub struct ClassesRecord {
 }
 
 
-#[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
+#[derive(Serialize, Deserialize, FromRow, Default, Clone, Debug)]
+#[derive(FieldsWithValue)]
 pub struct RunsRecord {
     pub run_id: i64,
-    pub first_name: String,
-    pub last_name: String,
-    pub class_name: String,
-    pub si_id: i64,
-    pub registration: String,
+    //#[serde(default)]
+    //#[serde(skip_serializing_if = "is_false")]
+    //pub drop_record: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub registration: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub first_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub si_id: Option<i64>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub start_time: Option<QxDateTime>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub check_time: Option<QxDateTime>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub finish_time: Option<QxDateTime>,
-    pub status: String,
 }
 // impl_sqlx_json_text_type_and_decode!(RunsRecord);
 
-impl Default for RunsRecord {
-    fn default() -> Self {
-        Self {
-            run_id: 0,
-            first_name: "".to_string(),
-            last_name: "".to_string(),
-            class_name: "".to_string(),
-            si_id: 0,
-            registration: "".to_string(),
-            start_time: Default::default(),
-            check_time: Default::default(),
-            finish_time: Default::default(),
-            status: "".to_string(),
+impl RunsRecord {
+    pub fn try_from_oc_change(oc: &OCheckListChange, change_set_created_time: QxDateTime) -> anyhow::Result<Self> {
+        let mut change = Self {
+            run_id: oc.Runner.Id.parse::<i64>()?,
+            ..Default::default()
+        };
+        if let Some(start_time) = &oc.Runner.StartTime {
+            // start time can be 10:20:30 or 25-05-01T10:20:03+01:00 depending on version of OCheckList
+            change.check_time = if start_time.len() == 8 {
+                let tm = NaiveTime::parse_from_str(start_time, "%H:%M:%S")?;
+                let dt = change_set_created_time.0.date_naive();
+                let dt = NaiveDateTime::new(dt, tm);
+                QxDateTime::from_local_timezone(dt, change_set_created_time.0.offset())
+            } else {
+                QxDateTime::parse_from_string(start_time, Some(change_set_created_time.0.offset()))?.0
+                    // estimate check time to be 2 minutes before start time
+                    .checked_sub_signed(TimeDelta::minutes(2))
+                    .map(QxDateTime)
+            };
         }
+        change.si_id = oc.Runner.NewCard;
+        if let Some(change_log) = &oc.ChangeLog {
+            if let Some(dtstr) = change_log.get("Late start") {
+                // take check time from change log
+                let dt = QxDateTime::parse_from_string(dtstr, None)?;
+                change. check_time = Some(dt);
+            }
+            if let Some(_dtstr) = change_log.get("DNS") {
+                // no start - no check
+                change.check_time = None;
+            }
+        }
+        Ok(change)
     }
 }
-
 #[get("/api/event/<event_id>/runs/changes/sse")]
 async fn runs_changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
     let mut chng_receiver = state.read().await.runs_changes_receiver.clone();
     EventStream! {
         loop {
-            let (chng_event_id, change) = match chng_receiver.recv().await {
+            let (chng_event_id, data_id, change) = match chng_receiver.recv().await {
                 Ok(chng) => chng,
                 Err(e) => {
                     error!("Read run change record error: {e}");
@@ -99,4 +138,22 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
         runs_changes_sse,
         get_runs,
     ])
+}
+
+#[test]
+fn test_fields_with_value() {
+    let p = RunsRecord {
+        run_id: 0,
+        class_name: Some(String::from("H21")),
+        registration: None,
+        first_name: None,
+        last_name: None,
+        si_id: Some(1234),
+        start_time: None,
+        check_time: None,
+        finish_time: Some(QxDateTime::now()),
+    };
+
+    let fields = p.fields_with_value();
+    assert_eq!(fields, vec!["class_name", "si_id", "finish_time"]);
 }

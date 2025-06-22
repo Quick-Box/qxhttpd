@@ -15,7 +15,8 @@ use crate::qxdatetime::QxDateTime;
 use crate::util::{anyhow_to_custom_error};
 use sqlx::sqlite::SqliteArgumentValue;
 use sqlx::{Encode, Sqlite};
-use crate::changes::{add_change, ChangeData, ChangeStatus, DataType, QxRunChange};
+use crate::changes::{add_change, ChangeData, ChangeStatus, DataType};
+use crate::runs::RunsRecord;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -101,7 +102,7 @@ fn test_load_oc() {
                 let Some(chnglog) = &chng.ChangeLog else { return false };
                 chnglog.get("DNS").is_some()
             };
-            let run_chng = QxRunChange::try_from_oc_change(&chng, change_dt).unwrap();
+            let run_chng = RunsRecord::try_from_oc_change(&chng, change_dt).unwrap();
             println!("{:?}\n", serde_json::to_string(&run_chng).unwrap());
             assert!(run_chng.run_id > 0);
             if chng.Runner.StartTime.is_some() && !is_dns() {
@@ -117,8 +118,8 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
     for chng in change_set.Data {
         let data_type = DataType::OcChange;
         let data = ChangeData::OcChange(chng.clone());
-        add_change(event_id, "oc", data_type, &data, None, None, None, state).await?;
-        match QxRunChange::try_from_oc_change(&chng, change_dt) {
+        add_change(event_id, "oc", data_type, None, &data, None, None, state).await?;
+        match RunsRecord::try_from_oc_change(&chng, change_dt) {
             Ok(run_chng) => {
                 let run_id = run_chng.run_id;
                 let status = if run_chng.si_id.is_some() {
@@ -128,7 +129,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
                 };
                 let data_type = DataType::RunUpdateRequest;
                 let data = ChangeData::RunUpdateRequest(run_chng);
-                add_change(event_id, "oc", data_type, &data, Some(run_id), None, status, state).await?;
+                add_change(event_id, "oc", data_type, Some(run_id), &data, None, status, state).await?;
             }
             Err(e) => {
                 warn!("Error create run change from OC change: {e}");
