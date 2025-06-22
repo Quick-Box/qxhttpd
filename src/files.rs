@@ -6,7 +6,7 @@ use rocket::response::status::{Custom};
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
 use crate::db::{get_event_db, DbPool};
-use crate::event::{load_event_info_for_api_token, EventId};
+use crate::event::{import_runs, import_start_list, load_event_info_for_api_token, EventId, RUNS_CSV_FILE, START_LIST_IOFXML3_FILE};
 use crate::{QxApiToken, SharedQxState};
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, unzip_data};
 
@@ -83,6 +83,12 @@ pub async fn upload_file(qx_api_token: QxApiToken, name: &str, data: Data<'_>, c
         data
     };
     let file_id = save_file_to_db(name, &data, &edb).await.map_err(anyhow_to_custom_error)?;
+    if name == START_LIST_IOFXML3_FILE {
+        import_start_list(event_info.id, &edb, gdb).await.map_err(anyhow_to_custom_error)?;
+    }
+    else if name == RUNS_CSV_FILE {
+        import_runs(&edb).await.map_err(anyhow_to_custom_error)?;
+    }
     Ok(format!("{file_id}"))
 }
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {

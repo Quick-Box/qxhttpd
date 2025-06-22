@@ -100,23 +100,26 @@ fn upload_file() {
     assert!(files.iter().find(|f| f.name == file_name).is_none());
 }
 
-fn upload_start_list_impl(client: &Client) {
-    let mut file = OpenOptions::new().read(true).open(format!("tests/{START_LIST_IOFXML3_FILE}")).unwrap();
+fn upload_test_file(client: &Client, file_name: &str) {
+    let mut file = OpenOptions::new().read(true).open(format!("tests/{file_name}")).unwrap();
     let mut data = vec![];
     file.read_to_end(&mut data).unwrap();
 
     let compressed = util::test::zip_data(&data).unwrap();
-    let resp = client.post("/api/event/current/upload/startlist")
+    let resp = client.post(format!("/api/event/current/file?name={file_name}"))
         .header(Header::new("qx-api-token", API_TOKEN))
         .header(ContentType::ZIP)
         .body(compressed)
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
 }
+fn upload_start_list(client: &Client) {
+    upload_test_file(&client, START_LIST_IOFXML3_FILE);
+}
 #[test]
-fn upload_start_list() {
+fn test_upload_start_list() {
     let client = create_test_server();
-    upload_start_list_impl(&client);
+    upload_start_list(&client);
     // get start list page
     let resp = client.get(format!("/event/{EVENT_ID}/startlist")).dispatch();
     assert_eq!(resp.status(), Status::Ok);
@@ -125,7 +128,7 @@ fn upload_start_list() {
 #[test]
 fn post_qe_change() {
     let client = create_test_server();
-    upload_start_list_impl(&client);
+    upload_start_list(&client);
 
     fn apply_change(client: &Client, run_id: DataId, change: &RunsRecord) -> RunsRecord {
         let resp = client.post(format!("/api/event/current/changes/run-updated?run_id={}", run_id.unwrap()))

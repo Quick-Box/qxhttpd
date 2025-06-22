@@ -4,10 +4,10 @@ use std::io::{Cursor, Read};
 use anyhow::anyhow;
 use image::ImageFormat;
 use rocket::form::{Contextual, Form};
-use rocket::http::{ContentType, Status};
+use rocket::http::{Status};
 use rocket::response::{Redirect};
 use rocket::response::status::Custom;
-use rocket::{Build, Data, Rocket, State};
+use rocket::{Build, Rocket, State};
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query, query_as, FromRow, SqlitePool};
 use crate::db::{get_event_db, DbPool};
@@ -167,12 +167,12 @@ pub async fn get_user_info(session_id: &QxSessionId, state: &State<SharedQxState
     Ok(user_info)
 }
 
-pub async fn event_owner_opt(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> anyhow::Result<Option<UserInfo>> {
-    let event = load_event(event_id, gdb).await?;
-    let user = user_info_opt(session_id.0.as_ref(), state).await?
-        .and_then(|user| if user.email == event.owner {Some(user)} else {None});
-    Ok(user)
-}
+// pub async fn event_owner_opt(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> anyhow::Result<Option<UserInfo>> {
+//     let event = load_event(event_id, gdb).await?;
+//     let user = user_info_opt(session_id.0.as_ref(), state).await?
+//         .and_then(|user| if user.email == event.owner {Some(user)} else {None});
+//     Ok(user)
+// }
 
 pub fn is_event_owner(event: &EventRecord, user: Option<&UserInfo>) -> bool {
     if let Some(user) = user {
@@ -308,7 +308,7 @@ async fn get_event_start_list(event_id: EventId, session_id: MaybeSessionId, cla
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     let changes = sqlx::query_as::<_, ChangesRecord>("SELECT changes.* FROM changes, runs
                  WHERE runs.class_name=?
-                   AND changes.run_id=runs.run_id
+                   AND changes.data_id=runs.run_id
                    AND changes.data_type=?
                    AND changes.status=?")
         .bind(&class_name)
@@ -362,25 +362,7 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, state: &
     }))
 
 }
-#[post("/api/event/current/upload/startlist", data = "<data>")]
-async fn upload_start_list(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
-    let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
-    let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
-    let file_id = crate::files::upload_file(qx_api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
-    import_start_list(event_info.id, &edb, gdb).await.map_err(anyhow_to_custom_error)?;
-    Ok(file_id.to_string())
-}
-#[post("/api/event/<event_id>/upload/startlist", data = "<data>")]
-async fn upload_start_list_user(event_id: EventId, data: Data<'_>, content_type: &ContentType, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
-    let Some(_event_owner) = event_owner_opt(event_id, session_id, state, gdb).await.map_err(anyhow_to_custom_error)? else {
-        return Err(Custom(Status::Unauthorized, String::from("Session expired or not valid")));
-    };
-    let event_info = load_event_info(event_id, gdb).await?;
-    let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
-    let file_id = crate::files::upload_file(event_info.api_token, START_LIST_IOFXML3_FILE, data, content_type, state, gdb).await?;
-    import_start_list(event_info.id, &edb, gdb).await.map_err(anyhow_to_custom_error)?;
-    Ok(file_id.to_string())
-}
+
 pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<DbPool>) -> anyhow::Result<()> {
     let data = sqlx::query_as::<_, (Vec<u8>,)>("SELECT data FROM files WHERE name=?")
         .bind(START_LIST_IOFXML3_FILE)
@@ -430,15 +412,6 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
     txn.commit().await?;
 
     Ok(())
-}
-
-#[post("/api/event/current/upload/runs", data = "<data>")]
-async fn upload_runs(qx_api_token: QxApiToken, data: Data<'_>, content_type: &ContentType, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<String, Custom<String>> {
-    let event_info = load_event_info_for_api_token(&qx_api_token, gdb).await?;
-    let edb = get_event_db(event_info.id, state).await.map_err(anyhow_to_custom_error)?;
-    let file_id = crate::files::upload_file(qx_api_token, RUNS_CSV_FILE, data, content_type, state, gdb).await?;
-    import_runs(&edb).await.map_err(anyhow_to_custom_error)?;
-    Ok(file_id)
 }
 
 pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
@@ -526,13 +499,10 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
             event_delete,
             post_event,
             get_event,
-            upload_start_list,
-            upload_start_list_user,
             get_event_start_list,
             get_event_results,
             get_api_event_current,
             post_api_event_current,
-            upload_runs,
         ])
 }
 

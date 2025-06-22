@@ -116,7 +116,7 @@ pub struct ChangesRecord {
     pub data: ChangeData,
     pub user_id: Option<String>,
     // we need run_id to be able to pair changes with rows in runs table
-    pub run_id: Option<i64>,
+    // pub run_id: Option<i64>,
     pub status: Option<ChangeStatus>,
     pub created: QxDateTime,
 }
