@@ -1,6 +1,5 @@
 use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, TimeDelta};
 use qxhttpd_proc_macros::FieldsWithValue;
-use rocket::response::stream::{Event, EventStream};
 use rocket::{Build, Rocket, State};
 use rocket::response::status::Custom;
 use rocket::serde::json::Json;
@@ -95,32 +94,32 @@ impl RunsRecord {
         Ok(change)
     }
 }
-#[get("/api/event/<event_id>/runs/changes/sse")]
-async fn runs_changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
-    let mut chng_receiver = state.read().await.runs_changes_receiver.clone();
-    EventStream! {
-        loop {
-            let (chng_event_id, data_id, change) = match chng_receiver.recv().await {
-                Ok(chng) => chng,
-                Err(e) => {
-                    error!("Read run change record error: {e}");
-                    break;
-                }
-            };
-            if event_id == chng_event_id {
-                match serde_json::to_string(&change) {
-                    Ok(json) => {
-                        yield Event::data(json);
-                    }
-                    Err(e) => {
-                        error!("Serde error: {e}");
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
+// #[get("/api/event/<event_id>/runs/changes/sse")]
+// async fn runs_changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
+//     let mut chng_receiver = state.read().await.runs_changes_receiver.clone();
+//     EventStream! {
+//         loop {
+//             let (chng_event_id, data_id, change) = match chng_receiver.recv().await {
+//                 Ok(chng) => chng,
+//                 Err(e) => {
+//                     error!("Read run change record error: {e}");
+//                     break;
+//                 }
+//             };
+//             if event_id == chng_event_id {
+//                 match serde_json::to_string(&change) {
+//                     Ok(json) => {
+//                         yield Event::data(json);
+//                     }
+//                     Err(e) => {
+//                         error!("Serde error: {e}");
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 #[get("/api/event/<event_id>/runs?<run_id>&<class_name>")]
 async fn get_runs(event_id: EventId, class_name: Option<&str>, run_id: Option<i32>, state: &State<SharedQxState>) -> Result<Json<Vec<RunsRecord>>, Custom<String>> {
@@ -135,7 +134,7 @@ async fn get_runs(event_id: EventId, class_name: Option<&str>, run_id: Option<i3
 
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
-        runs_changes_sse,
+        // runs_changes_sse,
         get_runs,
     ])
 }

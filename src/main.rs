@@ -24,7 +24,6 @@ use crate::qxdatetime::{dtstr, obtime, obtimems};
 use crate::util::anyhow_to_custom_error;
 use async_broadcast::{broadcast};
 use sqlx::sqlite::{SqliteArgumentValue};
-use crate::runs::RunsRecord;
 
 #[cfg(test)]
 mod tests;
@@ -126,14 +125,14 @@ struct QxState {
     changes_sender: async_broadcast::Sender<(EventId, ChangesRecord)>,
     changes_receiver: async_broadcast::Receiver<(EventId, ChangesRecord)>,
     //runs_changes_sender: async_broadcast::Sender<(EventId, Option<i64>, RunsRecord)>,
-    runs_changes_receiver: async_broadcast::Receiver<(EventId, Option<i64>, RunsRecord)>,
+    //runs_changes_receiver: async_broadcast::Receiver<(EventId, Option<i64>, RunsRecord)>,
 }
 impl QxState {
     fn new(app_config: AppConfig) -> Self {
         let (mut changes_sender, changes_receiver) = broadcast(2);
         changes_sender.set_overflow(true);
-        let (mut runs_changes_sender, runs_changes_receiver) = broadcast(2);
-        runs_changes_sender.set_overflow(true);
+        // let (mut runs_changes_sender, runs_changes_receiver) = broadcast(2);
+        // runs_changes_sender.set_overflow(true);
         Self {
             app_config,
             sessions: Default::default(),
@@ -141,7 +140,7 @@ impl QxState {
             changes_sender,
             changes_receiver,
             //runs_changes_sender,
-            runs_changes_receiver,
+            // runs_changes_receiver,
         }
     }
     async fn broadcast_change(&self, chng: (EventId, ChangesRecord)) -> anyhow::Result<()> {
