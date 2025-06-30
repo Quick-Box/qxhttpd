@@ -8,8 +8,8 @@ use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::Json;
 use rocket_dyn_templates::{context, Template};
 use sqlx::{query_as, FromRow, QueryBuilder, SqlitePool};
-use crate::event::{load_event_info, load_event_info_for_api_token, user_info, EventId};
-use crate::{impl_sqlx_json_text_type_encode_decode, impl_sqlx_text_type_encode_decode, QxApiToken, QxSessionId, SharedQxState};
+use crate::event::{load_event_info, load_event_info_for_api_token, user_info, user_info_opt, EventId};
+use crate::{impl_sqlx_json_text_type_encode_decode, impl_sqlx_text_type_encode_decode, MaybeSessionId, QxApiToken, QxSessionId, SharedQxState};
 use crate::qxdatetime::QxDateTime;
 use sqlx::{Encode, Sqlite};
 use sqlx::query::{Query};
@@ -145,8 +145,9 @@ pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, da
 }
 
 #[get("/event/<event_id>/changes?<from_id>")]
-async fn get_changes(event_id: EventId, from_id: Option<i64>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn get_changes(event_id: EventId, from_id: Option<i64>, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, gdb).await?;
+    let user = user_info_opt(session_id.0.as_ref(), state).await.map_err(anyhow_to_custom_error)?;
     let from_id = from_id.unwrap_or(0);
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
     let records: Vec<ChangesRecord> = sqlx::query_as("SELECT * FROM changes WHERE id>=? ORDER BY created DESC LIMIT 1000")
@@ -155,6 +156,7 @@ async fn get_changes(event_id: EventId, from_id: Option<i64>, state: &State<Shar
         .await
         .map_err(sqlx_to_custom_error)?;
     Ok(Template::render("changes", context! {
+            user,
             event,
             records,
         }))
