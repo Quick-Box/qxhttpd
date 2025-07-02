@@ -327,8 +327,9 @@ async fn get_event_start_list(event_id: EventId, session_id: MaybeSessionId, cla
 }
 
 #[get("/event/<event_id>/results?<class_name>")]
-async fn get_event_results(event_id: EventId, class_name: Option<&str>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+async fn get_event_results(event_id: EventId, class_name: Option<&str>, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, gdb).await?;
+    let user = user_info_opt(session_id.0.as_ref(), state).await.map_err(anyhow_to_custom_error)?;
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
     let classes = sqlx::query_as::<_, ClassesRecord>("SELECT * FROM classes ORDER BY name")
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
@@ -355,6 +356,7 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, state: &
     });
     Ok(Template::render("results", context! {
         event,
+        user,
         classrec,
         classes,
         runs,
