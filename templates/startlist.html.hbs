@@ -24,7 +24,7 @@
         <thead>
             <tr class="w3-theme-l1">
                 {{#if user}}
-                    <th>Edit</th>
+                    <th data-fn-name="editEntry" data-id-field-name="run_id" data-field-type="EditRow">Edit</th>
                 {{/if}}
                 <th data-field-name="start_time" data-field-type="RelativeToStartObTime" class="w3-right-align">Start</th>
                 <th data-field-name="last_name">Last name</th>
@@ -62,24 +62,8 @@
         function editEntry(run_id) {
             // document.getElementById('btSaveDialog').disabled = true;
             let table = document.getElementById('table')
-            edited_entry = (() => {
-                // console.log('needle', run_id)
-                for (let i = 1; i < table.rows.length; i++) {
-                    const row = table.rows[i];
-                    let run_id2 = Number(row.dataset.run_id)
-                    // console.log('row', run_id2)
-                    if (run_id2 === run_id) {
-                        return {
-                            run_id: Number(row.dataset.run_id),
-                            first_name: row.dataset.first_name,
-                            last_name: row.dataset.last_name,
-                            registration: row.dataset.registration,
-                            si_id: Number(row.dataset.si_id),
-                        }
-                    }
-                }
-            })();
-
+            const run_id_ix = field_index(table, "run_id");
+            edited_entry = runs.find(rec => rec.run_id === run_id);
             let dlg = document.getElementById('dlg')
             dlg.querySelector('input[name="first_name"]').value = edited_entry.first_name;
             dlg.querySelector('input[name="last_name"]').value = edited_entry.last_name;

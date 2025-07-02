@@ -17,19 +17,69 @@ function obtime(msec) {
     return '';
 }
 
-function applyChanges(table, changes) {
-    const header_cells = table.querySelectorAll("thead th");
-    const tbody = table.tBodies[0]
 
-    let field_index = (fld_name) => {
-        for (let i = 0; i < header_cells.length; i++) {
-            if (header_cells[i].dataset.fieldName === fld_name) {
-                return i;
+function fillTable(table, rows) {
+    const tbody = table.tBodies[0]
+    tbody.innerHTML = ""; // Removes all rows
+    const start00 = table.dataset.start00;
+    const header_cells = table.querySelectorAll("thead th");
+    for (const rec of rows) {
+        const row = document.createElement("tr");
+        for (const header_cell of header_cells) {
+            const cell = document.createElement("td");
+            const field_name = header_cell.dataset.fieldName;
+            const field_type = header_cell.dataset.fieldType;
+            cell.className = header_cell.className;
+
+            if (field_name === "name") {
+                cell.innerHTML = `${rec.last_name} ${rec.first_name}`;
             }
+            else if (field_name === "time") {
+                cell.innerHTML = obtime(msecSinceUntil(rec.start_time, rec.finish_time));
+            }
+            else if (field_type === "EditRow") {
+                const fn_name = header_cell.dataset.fnName;
+                const id_field_name = header_cell.dataset.idFieldName;
+                const row_id = rec[id_field_name];
+                cell.innerHTML = `<i onClick="${fn_name}(${row_id})" class="w3-button w3-round w3-theme fa fa-pencil"></i>`
+            }
+            else if (field_type === "RelativeToStartObTime") {
+                const rec_val = rec[field_name];
+                cell.innerHTML = obtime(msecSinceUntil(start00, rec_val));
+            }
+            else {
+                if (field_name === undefined) {
+                    cell.innerHTML = "Field name missing";
+                }
+                else {
+                    const rec_val = rec[field_name];
+                    if (rec_val === undefined) {
+                        cell.innerHTML = '';
+                    }
+                    else {
+                        cell.innerHTML = rec_val;
+                    }
+                }
+            }
+            row.appendChild(cell);
         }
-        return undefined;
+        tbody.appendChild(row);
     }
-    const run_id_ix = field_index("run_id");
+}
+
+function field_index(table, fld_name) {
+    const header_cells = table.querySelectorAll("thead th");
+    for (let i = 0; i < header_cells.length; i++) {
+        if (header_cells[i].dataset.fieldName === fld_name) {
+            return i;
+        }
+    }
+    return undefined;
+}
+
+function applyChanges(table, changes) {
+    const tbody = table.tBodies[0]
+    const run_id_ix = field_index(table,"run_id");
 
     let find_row = (run_id) => {
         const rows = tbody.querySelectorAll("table tr");
@@ -63,53 +113,12 @@ function applyChanges(table, changes) {
                 if (fld_name === 'run_id') {
                     continue;
                 }
-                const ix = field_index(fld_name);
+                const ix = field_index(table, fld_name);
                 if (ix !== undefined) {
                     let cell = row.children[ix];
                     add_change(cell, fld_name, rec);
                 }
             }
         }
-    }
-}
-
-function fillTable(table, rows) {
-    const tbody = table.tBodies[0]
-    tbody.innerHTML = ""; // Removes all rows
-    const start00 = table.dataset.start00;
-    const header_cells = table.querySelectorAll("thead th");
-    for (const rec of rows) {
-        const row = document.createElement("tr");
-        for (const header_cell of header_cells) {
-            const cell = document.createElement("td");
-            const field_name = header_cell.dataset.fieldName;
-            if (field_name !== undefined) {
-                const field_type = header_cell.dataset.fieldType;
-                cell.className = header_cell.className;
-
-                const rec_val = rec[field_name];
-                let cell_val;
-                if (field_name === "name") {
-                    cell_val = `${rec.last_name} ${rec.first_name}`;
-                }
-                else if (field_name === "time") {
-                    cell_val = obtime(msecSinceUntil(rec.start_time, rec.finish_time));
-                }
-                else if (field_type === "RelativeToStartObTime") {
-                    cell_val = obtime(msecSinceUntil(start00, rec_val));
-                }
-                else {
-                    if (rec_val === undefined) {
-                        cell_val = '';
-                    }
-                    else {
-                        cell_val = rec_val;
-                    }
-                }
-                cell.innerHTML = cell_val;
-            }
-            row.appendChild(cell);
-        }
-        tbody.appendChild(row);
     }
 }

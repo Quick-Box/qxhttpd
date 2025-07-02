@@ -221,6 +221,11 @@ fn rocket() -> _ {
         .mount("/", routes![
             index,
         ]);
+
+    info!("======================================================");
+    info!("Starting QuickExchange http server {}, ver. {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    info!("======================================================");
+
     let rocket = auth::extend(rocket);
     let rocket = event::extend(rocket);
     let rocket = oc::extend(rocket);
@@ -234,7 +239,6 @@ fn rocket() -> _ {
     let db_path = figment.extract_inner::<String>("db_path").expect("db_path");
     
     let cfg = AppConfig{ server_address, server_port, db_path };
-
     let state = QxState::new(cfg);
     rocket.manage(SharedQxState::new(state))
 }
