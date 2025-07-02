@@ -19,44 +19,24 @@
     <table id="table" data-start00="{{ start00 }}" class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
-            <th data-col-name="start_time" class="w3-right-align">Start</th>
-            <th data-col-name="name">Name</th>
-            <th data-col-name="registration">Registration</th>
-            <th data-col-name="check_time" class="w3-right-align">Check</th>
-            <th data-col-name="finish_time" class="w3-right-align">Finish</th>
-            <th data-col-name="time" class="w3-right-align">Time</th>
-            <th data-col-name="status">Status</th>
-            <th data-col-name="run_id">Run Id</th>
+            <th data-field-name="start_time" data-field-type="ObTime" class="w3-right-align">Start</th>
+            <th data-field-name="name">Name</th>
+            <th data-field-name="registration">Registration</th>
+            <th data-field-name="check_time" class="w3-right-align">Check</th>
+            <th data-field-name="finish_time" class="w3-right-align">Finish</th>
+            <th data-field-name="time" class="w3-right-align">Time</th>
+            <th data-field-name="run_id">Run Id</th>
         </tr>
         </thead>
-        <tbody>
-        {{#each runs}}
-            <tr
-                    data-start_time="{{ start_time }}"
-                    data-finish_time="{{ finish_time }}"
-                    data-last_name="{{ last_name }}"
-                    data-first_name="{{ first_name }}"
-                    data-registration="{{ registration }}"
-                    data-si_id="{{ si_id }}"
-                    data-run_id="{{ run_id }}"
-                    data-status="{{ status }}"
-            >
-                <td class="w3-right-align"></td>
-                <td></td>
-                <td></td>
-                <td class="w3-right-align"></td>
-                <td class="w3-right-align"></td>
-                <td class="w3-right-align"></td>
-                <td></td>
-                <td class="w3-right-align"></td>
-            </tr>
-        {{/each}}
+        <tbody id="table-body">
         </tbody>
     </table>
 
     <script src="/js/utils.js"></script>
     <script>
-    formatRunTable();
+        const runs = {{stringify runs}};
+        <!--const changes = {{stringify changes}};-->
+        fillTable(document.getElementById('table'), runs);
     </script>
 
 {{/inline}}

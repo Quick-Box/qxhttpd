@@ -352,7 +352,7 @@ async fn get_event_results(event_id: EventId, class_name: Option<&str>, session_
         .fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     runs.sort_by_key(|run| {
         let msec = QxDateTime::msec_since_until(&run.start_time, &run.finish_time);
-        if let Some(msec) = msec { msec } else { i64::MAX }
+        msec.unwrap_or(i64::MAX)
     });
     Ok(Template::render("results", context! {
         event,

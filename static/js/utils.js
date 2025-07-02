@@ -87,3 +87,46 @@ function formatRunTable(changes) {
         }
     }
 }
+
+function fillTable(table, rows) {
+    const tbody = table.tBodies[0]
+    tbody.innerHTML = ""; // Removes all rows
+    const start00 = table.dataset.start00;
+    const header_row = table.querySelector(`thead tr`);
+    const header_cells = header_row.querySelectorAll("th");
+    for (const rec of rows) {
+        const row = document.createElement("tr");
+        for (const header_cell of header_cells) {
+            const field_name = header_cell.dataset.fieldName;
+            if (field_name === undefined) {
+                continue;
+            }
+            const field_type = header_cell.dataset.fieldType;
+            const cell = document.createElement("td");
+            cell.className = header_cell.className;
+
+            const rec_val = rec[field_name];
+            let cell_val;
+            if (field_name === "name") {
+                cell_val = `${rec.last_name} ${rec.first_name}`;
+            }
+            else if (field_name === "time") {
+                cell_val = obtime(msecSinceUntil(rec.start_time, rec.finish_time));
+            }
+            else if (field_type === "ObTime") {
+                cell_val = obtime(msecSinceUntil(start00, rec_val));
+            }
+            else {
+                if (rec_val === undefined) {
+                    cell_val = '';
+                }
+                else {
+                    cell_val = rec_val;
+                }
+            }
+            cell.innerHTML = cell_val;
+            row.appendChild(cell);
+        }
+        tbody.appendChild(row);
+    }
+}
