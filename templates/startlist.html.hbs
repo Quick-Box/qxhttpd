@@ -26,145 +26,123 @@
                 {{#if user}}
                     <th>Edit</th>
                 {{/if}}
-                <th data-col-name="start_time" class="w3-right-align">Start</th>
-                <th data-col-name="last_name">Last name</th>
-                <th data-col-name="first_name">First name</th>
-                <th data-col-name="registration">Registration</th>
-                <th data-col-name="si_id" class="w3-right-align">SI</th>
-                <th data-col-name="edited_by">Edited by</th>
-                <th data-col-name="run_id" class="w3-right-align">Run Id</th>
+                <th data-field-name="start_time" data-field-type="RelativeToStartObTime" class="w3-right-align">Start</th>
+                <th data-field-name="last_name">Last name</th>
+                <th data-field-name="first_name">First name</th>
+                <th data-field-name="registration">Registration</th>
+                <th data-field-name="si_id" class="w3-right-align">SI</th>
+                <th data-field-name="run_id" class="w3-right-align">Run Id</th>
             </tr>
         </thead>
         <tbody>
-        {{#each runs}}
-            <tr
-                data-start_time="{{ start_time }}"
-                data-last_name="{{ last_name }}"
-                data-first_name="{{ first_name }}"
-                data-registration="{{ registration }}"
-                data-si_id="{{ si_id }}"
-                data-edited_by="{{ edited_by }}"
-                data-run_id="{{ run_id }}"
-            >
-                {{#if ../user}}
-                    <td>
-                        <i onclick="editEntry({{ run_id }})" class="w3-button w3-round w3-theme fa fa-pencil"></i>
-                    </td>
-                {{/if}}
-                <td class="w3-right-align" ></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="w3-right-align"></td>
-                <td></td>
-                <td class="w3-right-align"></td>
-            </tr>
-        {{/each}}
         </tbody>
     </table>
 
     <script src="/js/utils.js"></script>
     <script>
+        const runs = {{stringify runs}};
+        const changes = {{stringify changes}};
 
-    const changes = {{stringify changes}};
-    formatRunTable(changes);
+        let table = document.getElementById('table');
+        fillTable(table, runs);
+        applyChanges(table, changes);
 
-    var edited_entry = {}
+        var edited_entry = {}
 
-    function newEntry() {
-        // document.getElementById('btSaveDialog').disabled = true;
-        edited_entry = {}
-        let dlg = document.getElementById('dlg')
-        dlg.querySelector('input[name="first_name"]').value = "";
-        dlg.querySelector('input[name="last_name"]').value = "";
-        dlg.querySelector('input[name="registration"]').value = "";
-        dlg.querySelector('input[name="si_id"]').value = "";
-        dlg.style.display='block'
-    }
-    function editEntry(run_id) {
-        // document.getElementById('btSaveDialog').disabled = true;
-        let table = document.getElementById('table')
-        edited_entry = (() => {
-            // console.log('needle', run_id)
-            for (let i = 1; i < table.rows.length; i++) {
-                const row = table.rows[i];
-                let run_id2 = Number(row.dataset.run_id)
-                // console.log('row', run_id2)
-                if (run_id2 === run_id) {
-                    return {
-                        run_id: Number(row.dataset.run_id),
-                        first_name: row.dataset.first_name,
-                        last_name: row.dataset.last_name,
-                        registration: row.dataset.registration,
-                        si_id: Number(row.dataset.si_id),
+        function newEntry() {
+            // document.getElementById('btSaveDialog').disabled = true;
+            edited_entry = {}
+            let dlg = document.getElementById('dlg')
+            dlg.querySelector('input[name="first_name"]').value = "";
+            dlg.querySelector('input[name="last_name"]').value = "";
+            dlg.querySelector('input[name="registration"]').value = "";
+            dlg.querySelector('input[name="si_id"]').value = "";
+            dlg.style.display='block'
+        }
+        function editEntry(run_id) {
+            // document.getElementById('btSaveDialog').disabled = true;
+            let table = document.getElementById('table')
+            edited_entry = (() => {
+                // console.log('needle', run_id)
+                for (let i = 1; i < table.rows.length; i++) {
+                    const row = table.rows[i];
+                    let run_id2 = Number(row.dataset.run_id)
+                    // console.log('row', run_id2)
+                    if (run_id2 === run_id) {
+                        return {
+                            run_id: Number(row.dataset.run_id),
+                            first_name: row.dataset.first_name,
+                            last_name: row.dataset.last_name,
+                            registration: row.dataset.registration,
+                            si_id: Number(row.dataset.si_id),
+                        }
+                    }
+                }
+            })();
+
+            let dlg = document.getElementById('dlg')
+            dlg.querySelector('input[name="first_name"]').value = edited_entry.first_name;
+            dlg.querySelector('input[name="last_name"]').value = edited_entry.last_name;
+            dlg.querySelector('input[name="registration"]').value = edited_entry.registration;
+            dlg.querySelector('input[name="si_id"]').value = edited_entry.si_id;
+
+            dlg.style.display='block'
+        }
+        function saveDialog(name, registration, si) {
+            let doc = document.getElementById('dlg')
+            let change = {}
+            let add_change = fldname => {
+                let input = doc.querySelector(`input[name="${fldname}"]`);
+                let new_val = input.value.trim()
+                if (new_val !== "") {
+                    if (input.type === "number") {
+                        new_val = Number(new_val);
+                    }
+                    let orig_val = edited_entry[fldname];
+                    if (new_val !== orig_val) {
+                        change[fldname] = new_val;
                     }
                 }
             }
-        })();
-
-        let dlg = document.getElementById('dlg')
-        dlg.querySelector('input[name="first_name"]').value = edited_entry.first_name;
-        dlg.querySelector('input[name="last_name"]').value = edited_entry.last_name;
-        dlg.querySelector('input[name="registration"]').value = edited_entry.registration;
-        dlg.querySelector('input[name="si_id"]').value = edited_entry.si_id;
-
-        dlg.style.display='block'
-    }
-    function saveDialog(name, registration, si) {
-        let doc = document.getElementById('dlg')
-        let change = {}
-        let add_change = fldname => {
-            let input = doc.querySelector(`input[name="${fldname}"]`);
-            let new_val = input.value.trim()
-            if (new_val !== "") {
-                if (input.type === "number") {
-                    new_val = Number(new_val);
-                }
-                let orig_val = edited_entry[fldname];
-                if (new_val !== orig_val) {
-                    change[fldname] = new_val;
-                }
-            }
-        }
-        add_change("first_name")
-        add_change("last_name")
-        add_change("registration")
-        add_change("si_id")
-        if (Object.keys(change).length > 0) {
-            if (Object.keys(edited_entry).length === 0) {
-                // new entry
-                change.run_id = 0
-                change.class_name = "{{classrec.name}}"
-            }
-            else {
-                change.run_id = edited_entry.run_id;
-            }
-            const params = new URLSearchParams();
-            params.append("data_id", change.run_id);
-            fetch(`/api/event/{{ event.id }}/changes/run-update-request?${params}`, {
-                method: 'POST',
-                body: JSON.stringify(change),
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            }).then(response => {
-                if (response.ok) {
-                    window.location.reload();
+            add_change("first_name")
+            add_change("last_name")
+            add_change("registration")
+            add_change("si_id")
+            if (Object.keys(change).length > 0) {
+                if (Object.keys(edited_entry).length === 0) {
+                    // new entry
+                    change.run_id = 0
+                    change.class_name = "{{classrec.name}}"
                 }
                 else {
-                    console.error(`Sending entry update failed, error: HTTP error! Status: ${response.status}`);
-                    alert(`Sending entry update failed, error: HTTP error! Status: ${response.status}`);
+                    change.run_id = edited_entry.run_id;
                 }
-            })
+                const params = new URLSearchParams();
+                params.append("data_id", change.run_id);
+                fetch(`/api/event/{{ event.id }}/changes/run-update-request?${params}`, {
+                    method: 'POST',
+                    body: JSON.stringify(change),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                    else {
+                        console.error(`Sending entry update failed, error: HTTP error! Status: ${response.status}`);
+                        alert(`Sending entry update failed, error: HTTP error! Status: ${response.status}`);
+                    }
+                })
+            }
+            else {
+                alert(`Nothing to save.`);
+            }
+            // document.getElementById('dlg').style.display='none'
         }
-        else {
-            alert(`Nothing to save.`);
+        function hideDialog(name, registration, si) {
+            document.getElementById('dlg').style.display='none'
         }
-        // document.getElementById('dlg').style.display='none'
-    }
-    function hideDialog(name, registration, si) {
-        document.getElementById('dlg').style.display='none'
-    }
     </script>
 
     <div id="dlg" class="w3-modal">
