@@ -15,7 +15,7 @@ use crate::qxdatetime::QxDateTime;
 use crate::util::{anyhow_to_custom_error};
 use sqlx::sqlite::SqliteArgumentValue;
 use sqlx::{Encode, Sqlite};
-use crate::changes::{add_change, ChangeData, ChangeStatus, DataType};
+use crate::changes::{add_change, ChangeData, ChangeStatus, ChangesRecord, DataType};
 use crate::runs::RunsRecord;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -118,7 +118,17 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
     for chng in change_set.Data {
         let data_type = DataType::OcChange;
         let data = ChangeData::OcChange(chng.clone());
-        add_change(event_id, "oc", data_type, None, &data, None, None, state).await?;
+        add_change(event_id, ChangesRecord{
+            id: 0,
+            source: "oc".to_string(),
+            data_type,
+            data_id: None,
+            data,
+            user_id: None,
+            status: None,
+            created: QxDateTime::now(),
+            note: None,
+        }, state).await?;
         match RunsRecord::try_from_oc_change(&chng, change_dt) {
             Ok(run_chng) => {
                 let run_id = run_chng.run_id;
@@ -129,7 +139,17 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
                 };
                 let data_type = DataType::RunUpdateRequest;
                 let data = ChangeData::RunUpdateRequest(run_chng);
-                add_change(event_id, "oc", data_type, Some(run_id), &data, None, status, state).await?;
+                add_change(event_id, ChangesRecord{
+                    id: 0,
+                    source: "oc".to_string(),
+                    data_type,
+                    data_id: run_id.into(),
+                    data,
+                    user_id: None,
+                    status,
+                    created: QxDateTime::now(),
+                    note: None,
+                }, state).await?;
             }
             Err(e) => {
                 warn!("Error create run change from OC change: {e}");

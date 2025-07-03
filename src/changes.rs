@@ -112,32 +112,34 @@ pub struct ChangesRecord {
     pub id: i64,
     pub source: String,
     pub data_type: DataType,
-    pub data_id: Option<i64>,
+    pub data_id: DataId,
     pub data: ChangeData,
     pub user_id: Option<String>,
     // we need run_id to be able to pair changes with rows in runs table
     // pub run_id: Option<i64>,
     pub status: Option<ChangeStatus>,
     pub created: QxDateTime,
+    pub note: Option<String>,
 }
 #[allow(clippy::too_many_arguments)]
-pub async fn add_change(event_id: EventId, source: &str, data_type: DataType, data_id: Option<i64>, data: &ChangeData, user_id: Option<&str>, status: Option<ChangeStatus>, state: &State<SharedQxState>) -> anyhow::Result<i64> {
+pub async fn add_change(
+    event_id: EventId,
+    change: ChangesRecord,
+    state: &State<SharedQxState>
+) -> anyhow::Result<i64> {
     //let change = serde_json::to_value(change).map_err(|e| anyhow!("{e}"))?;
     let edb = get_event_db(event_id, state).await?;
     let id: (i64, ) = query_as("INSERT INTO changes
-                (source, data_type, data_id, data, user_id, status, created)
-                VALUES (?, ?, ?, ?, ?, ?, ?)  RETURNING id")
-        .bind(source)
-        .bind(data_type)
-        .bind(data_id)
-        .bind(data)
-        .bind(user_id)
-        .bind(status)
+                (source, data_type, data_id, data, note, user_id, status, created)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)  RETURNING id")
+        .bind(&change.source)
+        .bind(&change.data_type)
+        .bind(&change.data_id)
+        .bind(&change.data)
+        .bind(&change.note)
+        .bind(&change.user_id)
+        .bind(&change.status)
         .bind(QxDateTime::now().trimmed_to_sec())
-        .fetch_one(&edb)
-        .await.map_err(sqlx_to_anyhow)?;
-    let change: ChangesRecord = query_as("SELECT * FROM changes WHERE id=?")
-        .bind(id.0)
         .fetch_one(&edb)
         .await.map_err(sqlx_to_anyhow)?;
     state.read().await.broadcast_change((event_id, change)).await?;
@@ -162,33 +164,57 @@ async fn get_changes(event_id: EventId, from_id: Option<i64>, session_id: MaybeS
         }))
 }
 
-#[post("/api/event/<event_id>/changes/run-update-request?<data_id>", data = "<data>")]
+#[post("/api/event/<event_id>/changes/run-update-request?<data_id>&<note>", data = "<data>")]
 pub async fn add_run_update_request_change(
-    event_id: EventId, session_id: QxSessionId, 
-    data_id: Option<i64>, data: Json<RunsRecord>,
+    event_id: EventId,
+    session_id: QxSessionId,
+    data_id: Option<i64>,
+    note: Option<&str>,
+    data: Json<RunsRecord>,
     state: &State<SharedQxState>
 ) -> Result<(), Custom<String>> {
     let user = user_info(&session_id, state).await?;
-    let data = data.into_inner();
-    let data_type = DataType::RunUpdateRequest;
-    let data = ChangeData::RunUpdateRequest(data.clone());
-    add_change(event_id, "www", data_type, data_id, &data, Some(user.email.as_str()), Some(ChangeStatus::Pending), state).await.map_err(anyhow_to_custom_error)?;
+    let data = ChangeData::RunUpdateRequest(data.into_inner());
+    add_change(event_id, ChangesRecord{
+        id: 0,
+        source: "www".to_string(),
+        data_type: DataType::RunUpdateRequest,
+        data_id,
+        data,
+        user_id: Some(user.email),
+        status: Some(ChangeStatus::Pending),
+        created: QxDateTime::now(),
+        note: note.map(|s| s.to_string()),
+    }, state).await.map_err(anyhow_to_custom_error)?;
     //state.read().await.broadcast_runs_change((event_id, data_id, data)).await.map_err(anyhow_to_custom_error)?;
     Ok(())
 }
 
 #[post("/api/event/current/changes/run-updated?<run_id>", data = "<change>")]
 async fn add_run_updated_change(
-    run_id: DataId, change: Json<RunsRecord>,
-    api_token: QxApiToken, state: &State<SharedQxState>, db: &State<DbPool>
+    run_id: DataId,
+    change: Json<RunsRecord>,
+    api_token: QxApiToken,
+    state: &State<SharedQxState>,
+    db: &State<DbPool>
 ) -> Result<(), Custom<String>> {
     let event = load_event_info_for_api_token(&api_token, db).await?;
-    let run_change = change.into_inner();
-    let data_type = DataType::RunUpdated;
-    let data = ChangeData::RunUpdated(run_change.clone());
-    add_change(event.id, "qe", data_type, run_id, &data, None, None, state).await.map_err(anyhow_to_custom_error)?;
+    let runs_record = change.into_inner();
+    let data = ChangeData::RunUpdated(runs_record.clone());
+    add_change(event.id, ChangesRecord{
+        id: 0,
+        source: "qe".to_string(),
+        data_type: DataType::RunUpdated,
+        data_id: run_id,
+        data,
+        user_id: None,
+        status: None,
+        created: QxDateTime::now(),
+        note: None,
+    }, state).await.map_err(anyhow_to_custom_error)?;
+    // add_change(event.id, "qe", data_type, run_id, &data, None, None, None, state).await.map_err(anyhow_to_custom_error)?;
     let db = get_event_db(event.id, state).await.map_err(anyhow_to_custom_error)?;
-    apply_qe_run_change(run_id, &run_change, &db).await.map_err(anyhow_to_custom_error)?;
+    apply_qe_run_change(run_id, &runs_record, &db).await.map_err(anyhow_to_custom_error)?;
     Ok(())
 }
 
