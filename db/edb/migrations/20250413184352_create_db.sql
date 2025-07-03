@@ -1,13 +1,14 @@
 create table changes
 (
-    id INTEGER primary key autoincrement,
-    source    TEXT not null,
-    data_type TEXT not null,
-    data      TEXT,
-    run_id    INTEGER,
-    status    TEXT,
-    user_id   TEXT,
-    created   TEXT default CURRENT_TIMESTAMP
+    id             INTEGER primary key autoincrement,
+    source         TEXT not null,
+    data_type      TEXT not null,
+    data_id        INTEGER,
+    data           TEXT,
+    user_id        TEXT,
+    created        TEXT default CURRENT_TIMESTAMP,
+    status         TEXT,
+    status_message TEXT
 );
 
 create table classes
