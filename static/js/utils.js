@@ -67,19 +67,19 @@ function fillTable(table, rows) {
     }
 }
 
-function field_index(table, fld_name) {
-    const header_cells = table.querySelectorAll("thead th");
-    for (let i = 0; i < header_cells.length; i++) {
-        if (header_cells[i].dataset.fieldName === fld_name) {
-            return i;
-        }
-    }
-    return undefined;
-}
-
 function applyChanges(table, changes) {
+    const header_cells = table.querySelectorAll("thead th");
     const tbody = table.tBodies[0]
-    const run_id_ix = field_index(table,"run_id");
+
+    let field_index = (fld_name) => {
+        for (let i = 0; i < header_cells.length; i++) {
+            if (header_cells[i].dataset.fieldName === fld_name) {
+                return i;
+            }
+        }
+        return undefined;
+    }
+    const run_id_ix = field_index("run_id");
 
     let find_row = (run_id) => {
         const rows = tbody.querySelectorAll("table tr");
@@ -113,7 +113,7 @@ function applyChanges(table, changes) {
                 if (fld_name === 'run_id') {
                     continue;
                 }
-                const ix = field_index(table, fld_name);
+                const ix = field_index(fld_name);
                 if (ix !== undefined) {
                     let cell = row.children[ix];
                     add_change(cell, fld_name, rec);

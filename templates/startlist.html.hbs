@@ -62,7 +62,6 @@
         function editEntry(run_id) {
             // document.getElementById('btSaveDialog').disabled = true;
             let table = document.getElementById('table')
-            const run_id_ix = field_index(table, "run_id");
             edited_entry = runs.find(rec => rec.run_id === run_id);
             let dlg = document.getElementById('dlg')
             dlg.querySelector('input[name="first_name"]').value = edited_entry.first_name;

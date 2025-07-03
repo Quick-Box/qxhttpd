@@ -111,7 +111,7 @@ impl Fairing for DbPoolFairing {
         let pool= match open_db(&db_path, EVENTS_DB).await {
             Ok(p) => p,
             Err(err) => {
-                error!("Migration error: {:?}", err);
+                error!("Open DB error: {:?}", err);
                 return Err(rocket);
             }
         };
@@ -154,10 +154,6 @@ pub async fn get_event_db(event_id: EventId, state: &State<SharedQxState>) -> an
 async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool> {
     let database_url = if cfg!(test) {
         "sqlite::memory:".to_string()
-        // let db_path = format!("/tmp/{}.sqlite", schema_name);
-        // let _ = std::fs::remove_file(&db_path);
-        // std::fs::File::create(&db_path).map_err(|e | anyhow!("Failed to create SQLite database file {db_path} error: {e}"))?;
-        // format!("sqlite://{db_path}")
     } else {
         let db_path = format!("{db_path}/{schema_name}.sqlite");
         if !Path::new(&db_path).exists() {
@@ -166,6 +162,7 @@ async fn open_db(db_path: &str, schema_name: &str) -> anyhow::Result<SqlitePool>
         }
         format!("sqlite://{db_path}")
     };
+    info!("Opening DB {db_path}/{schema_name} as {database_url}");
     let opts = SqliteConnectOptions::from_str(&database_url).map_err(|e| anyhow!("Open db error: {e}"))?
         // .journal_mode(SqliteJournalMode::Wal) // use WAL for better concurrency
         //.pragma("foreign_keys", "true") // enable foreign keys

@@ -97,13 +97,13 @@ fn test_load_oc() {
     for change_set in data {
         let change_dt = QxDateTime::parse_from_string(&change_set.Created, Some(QxDateTime::now().0.offset())).unwrap();
         for chng in change_set.Data {
-            println!("{:?}", serde_json::to_string(&chng).unwrap());
+            debug!("{:?}", serde_json::to_string(&chng).unwrap());
             let is_dns = || {
                 let Some(chnglog) = &chng.ChangeLog else { return false };
                 chnglog.get("DNS").is_some()
             };
             let run_chng = RunsRecord::try_from_oc_change(&chng, change_dt).unwrap();
-            println!("{:?}\n", serde_json::to_string(&run_chng).unwrap());
+            debug!("{:?}\n", serde_json::to_string(&run_chng).unwrap());
             assert!(run_chng.run_id > 0);
             if chng.Runner.StartTime.is_some() && !is_dns() {
                 assert!(run_chng.check_time.is_some());
