@@ -133,6 +133,22 @@
         function hideDialog(name, registration, si) {
             document.getElementById('dlg').style.display='none'
         }
+        function deleteChange(change_id) {
+            if (confirm("Are you sure you want to delete this change?")) {
+                const params = new URLSearchParams();
+                params.append("change_id", change_id);
+                fetch(`/api/event/{{ event.id }}/changes?${params}`, {
+                    method: 'DELETE',
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        console.error(`Cannot delete change ID: ${change_id}`);
+                        alert(`Cannot delete change ID: ${change_id}, ${response.statusText}`);
+                    }
+                })
+            }
+        }
     </script>
 
     <div id="dlg" class="w3-modal">

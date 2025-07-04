@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 use anyhow::anyhow;
 use itertools::Itertools;
 use rocket::{Build, Rocket, State};
+use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::{Deserialize, Serialize};
@@ -307,7 +308,7 @@ async fn changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventSt
 }
 
 #[get("/api/event/<event_id>/changes?<from_id>&<data_type>&<status>")]
-async fn api_get_changes(event_id: EventId, from_id: Option<i64>, data_type: Option<&str>, status: Option<&str>, state: &State<SharedQxState>) -> Result<Json<Vec<ChangesRecord>>, Custom<String>> {
+async fn api_changes_get(event_id: EventId, from_id: Option<i64>, data_type: Option<&str>, status: Option<&str>, state: &State<SharedQxState>) -> Result<Json<Vec<ChangesRecord>>, Custom<String>> {
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
 
     let mut query_builder = QueryBuilder::new("SELECT * FROM changes WHERE id>=");
@@ -328,12 +329,39 @@ async fn api_get_changes(event_id: EventId, from_id: Option<i64>, data_type: Opt
     Ok(records.into())
 }
 
+#[delete("/api/event/<event_id>/changes?<change_id>")]
+async fn api_changes_delete(
+    event_id: EventId,
+    change_id: i64,
+    session_id: QxSessionId,
+    state: &State<SharedQxState>,
+) -> Result<(), Custom<String>> {
+    let user = user_info(&session_id, state).await?;
+    let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
+    let change: ChangesRecord = sqlx::query_as("SELECT * FROM changes WHERE id=?")
+        .bind(change_id)
+        .fetch_one(&edb)
+        .await
+        .map_err(sqlx_to_custom_error)?;
+    if let Some(user_id) = change.user_id {
+        if user_id == user.email {
+            sqlx::query("DELETE FROM changes WHERE id=?")
+                .bind(change_id)
+                .execute(&edb).await
+                .map_err(sqlx_to_custom_error)?;
+            return Ok(())
+        }
+    }
+    Err(Custom(Status::Unauthorized, "Only change owner can delete.".into()))
+}
+
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
         get_changes,
         changes_sse,
         add_run_updated_change,
         add_run_update_request_change,
-        api_get_changes,
+        api_changes_get,
+        api_changes_delete,
     ])
 }

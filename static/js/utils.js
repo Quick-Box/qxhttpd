@@ -105,8 +105,11 @@ function applyChanges(table, changes) {
         else {
             html = `<div class="overridden-by-change">${html}</div>`;
         }
-        html += `<div style="font-weight: bold; color: darkred;">${rec.data.RunUpdateRequest[fld_name]}</div>
-                  <div class="w3-small" style="color: darkblue;">${rec.user_id}</div>`
+        html += `<div style="font-weight: bold; color: darkred;">${rec.data.RunUpdateRequest[fld_name]}<a href="#" onclick="deleteChange(${rec.id})">❌</a></div>`
+        html += `<div class="w3-small" style="color: darkblue;">${rec.user_id}</div>`
+        if (rec.note) {
+            html += `<div class="w3-small">${rec.note}</div>`
+        }
         cell.innerHTML = html;
     }
 
