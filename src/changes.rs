@@ -165,6 +165,25 @@ async fn get_changes(event_id: EventId, from_id: Option<i64>, session_id: MaybeS
         }))
 }
 
+#[get("/event/<event_id>/my-changes")]
+async fn get_my_changes(event_id: EventId, session_id: QxSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+    let event = load_event_info(event_id, gdb).await?;
+    let user = user_info(&session_id, state).await?;
+    let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
+    let records: Vec<ChangesRecord> = sqlx::query_as("SELECT * FROM changes WHERE user_id=? ORDER BY created")
+        .bind(&user.email)
+        .fetch_all(&edb)
+        .await
+        .map_err(sqlx_to_custom_error)?;
+    let is_my_changes = true;
+    Ok(Template::render("changes", context! {
+            is_my_changes,
+            user,
+            event,
+            records,
+        }))
+}
+
 #[post("/api/event/<event_id>/changes/run-update-request?<data_id>&<note>", data = "<data>")]
 pub async fn add_run_update_request_change(
     event_id: EventId,
@@ -358,6 +377,7 @@ async fn api_changes_delete(
 pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
     rocket.mount("/", routes![
         get_changes,
+        get_my_changes,
         changes_sse,
         add_run_updated_change,
         add_run_update_request_change,

@@ -6,6 +6,9 @@
     <table class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
+            {{#if is_my_changes}}
+                <th>Edit</th>
+            {{/if}}
             <th>Status</th>
             <th>Data</th>
             <th class="w3-right-align">Data Id</th>
@@ -17,6 +20,11 @@
         <tbody>
         {{#each records}}
             <tr>
+                {{#if ../is_my_changes}}
+                    <td>
+                        <i onclick="deleteChange({{ id }})" class="w3-button w3-round w3-theme fa fa-pencil"></i>
+                    </td>
+                {{/if}}
                 <td>{{ stringify status }}</td>
                 <td>{{ stringify data }}</td>
                 <td class="w3-right-align">{{ data_id }}</td>
@@ -27,7 +35,24 @@
         {{/each}}
         </tbody>
     </table>
-
+<script>
+    function deleteChange(change_id) {
+        if (confirm("Are you sure you want to delete this change?")) {
+            const params = new URLSearchParams();
+            params.append("change_id", change_id);
+            fetch(`/api/event/{{ event.id }}/changes?${params}`, {
+                method: 'DELETE',
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    console.error(`Cannot delete change ID: ${change_id}`);
+                    alert(`Cannot delete change ID: ${change_id}, ${response.statusText}`);
+                }
+            })
+        }
+    }
+</script>
 
 {{/inline}}
 {{> layout}}
