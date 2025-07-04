@@ -23,7 +23,9 @@ function fillTable(table, rows) {
     tbody.innerHTML = ""; // Removes all rows
     const start00 = table.dataset.start00;
     const header_cells = table.querySelectorAll("thead th");
+    let row_no = 0;
     for (const rec of rows) {
+        row_no++;
         const row = document.createElement("tr");
         for (const header_cell of header_cells) {
             const cell = document.createElement("td");
@@ -36,6 +38,9 @@ function fillTable(table, rows) {
             }
             else if (field_name === "time") {
                 cell.innerHTML = obtime(msecSinceUntil(rec.start_time, rec.finish_time));
+            }
+            else if (field_type === "RowNumber") {
+                cell.innerHTML = `${row_no}.`
             }
             else if (field_type === "EditRow") {
                 const fn_name = header_cell.dataset.fnName;

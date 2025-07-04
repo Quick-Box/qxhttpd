@@ -1,7 +1,7 @@
 {{#*inline "page"}}
 
     <h2>Changes</h2>
-    <h3><a href="/event/{{ event.id }}">{{ event.name }}</a></h3>
+    <h3><a href="/event/{{ event.id }}">{{ event.name }} {{#if (gt event.stage_count 1)}} E{{ event.stage }} {{/if}}</a></h3>
 
     <table class="w3-table-all w3-hoverable">
         <thead>

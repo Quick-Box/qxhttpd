@@ -1,7 +1,7 @@
 {{#*inline "page"}}
 
     <h2>Results</h2>
-    <h3><a href="/event/{{ event.id }}">{{ event.name }}</a></h3>
+    <h3><a href="/event/{{ event.id }}">{{ event.name }} {{#if (gt event.stage_count 1)}} E{{ event.stage }} {{/if}}</a></h3>
 
     <div>
     {{#each classes}}
@@ -19,13 +19,14 @@
     <table id="table" data-start00="{{ start00 }}" class="w3-table-all w3-hoverable">
         <thead>
         <tr class="w3-theme-l1">
+            <th data-field-type="RowNumber" class="w3-right-align">Pos</th>
             <th data-field-name="start_time" data-field-type="RelativeToStartObTime" class="w3-right-align">Start</th>
-            <th data-field-name="name">Name</th>
+            <th data-field-name="name" class="w3-bold">Name</th>
             <th data-field-name="registration">Registration</th>
-            <th data-field-name="check_time" class="w3-right-align">Check</th>
-            <th data-field-name="finish_time" class="w3-right-align">Finish</th>
-            <th data-field-name="time" class="w3-right-align">Time</th>
-            <th data-field-name="run_id">Run Id</th>
+            <th data-field-name="check_time" data-field-type="RelativeToStartObTime" class="w3-right-align">Check</th>
+            <th data-field-name="finish_time" data-field-type="RelativeToStartObTime" class="w3-right-align">Finish</th>
+            <th data-field-name="time" class="w3-right-align w3-bold w3-border">Time</th>
+            <th data-field-name="run_id" class="w3-right-align">Run Id</th>
         </tr>
         </thead>
         <tbody id="table-body">

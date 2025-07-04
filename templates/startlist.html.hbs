@@ -1,7 +1,7 @@
 {{#*inline "page"}}
 
     <h2>Start list</h2>
-    <h3><a href="/event/{{ event.id }}">{{ event.name }}</a></h3>
+    <h3><a href="/event/{{ event.id }}">{{ event.name }} {{#if (gt event.stage_count 1)}} E{{ event.stage }} {{/if}}</a></h3>
     <div class="w3-bar">
         {{#if user}}
             <button onclick="newEntry()" class="w3-button w3-theme w3-round-large">New entry</button>
