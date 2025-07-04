@@ -1,8 +1,7 @@
 use std::fs::OpenOptions;
 use rocket::serde::json::Json;
-use std::io::{Cursor, Read};
+use std::io::{Read};
 use anyhow::anyhow;
-use image::ImageFormat;
 use rocket::form::{Contextual, Form};
 use rocket::http::{Status};
 use rocket::response::{Redirect};
@@ -13,7 +12,6 @@ use sqlx::{query, query_as, FromRow, SqlitePool};
 use crate::db::{get_event_db, DbPool};
 use crate::{files, MaybeSessionId, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
-use base64::Engine;
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
 use crate::changes::{ChangesRecord, PENDING, RUN_UPDATE_REQUEST};
@@ -21,7 +19,7 @@ use crate::files::{load_file_from_db, save_file_to_db};
 use crate::iofxml3::parser::parse_startlist_xml_data;
 use crate::qxdatetime::QxDateTime;
 use crate::runs::{ClassesRecord, RunsRecord};
-use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error, string_to_custom_error};
+use crate::util::{anyhow_to_custom_error, create_qrc, sqlx_to_anyhow, sqlx_to_custom_error, string_to_custom_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
 pub const RUNS_CSV_FILE: &str = "runs.csv";
@@ -206,16 +204,7 @@ async fn event_edit_insert(event_id: Option<EventId>, session_id: &QxSessionId, 
     } else {
         EventRecord::new(&user.email)
     };
-    let api_token_qrc_img_data = {
-        let code = qrcode::QrCode::new(event.api_token.0.as_bytes()).unwrap();
-        // Render the bits into an image.
-        let image = code.render::<::image::LumaA<u8>>().build();
-        let mut buffer: Vec<u8> = Vec::new();
-        let mut cursor = Cursor::new(&mut buffer);
-        image.write_to(&mut cursor, ImageFormat::Png).unwrap();
-        // Encode the image buffer to base64
-        base64::engine::general_purpose::STANDARD.encode(&buffer)
-    };
+    let api_token_qrc_img_data = create_qrc(event.api_token.0.as_bytes()).map_err(anyhow_to_custom_error)?;
     Ok(Template::render("event-edit", context! {
         event_id,
         user,
@@ -257,7 +246,16 @@ async fn get_event(event_id: EventId, session_id: MaybeSessionId, state: &State<
     let user = user_info_opt(session_id.0.as_ref(), state).await.map_err(anyhow_to_custom_error)?;
     let is_event_owner = is_event_owner(&event, user.as_ref());
     let files = files::list_files(event_id, state).await?;
+    let is_local_server = state.read().await.app_config.is_local_server();
+    let event_url = if is_local_server {
+        format!("http://localhost:8000/event/{event_id}")
+    } else {
+        format!("https://qxqx.org/event/{event_id}")
+    };
+    let event_qrc_img_data = create_qrc(event_url.as_bytes()).map_err(anyhow_to_custom_error)?;
     Ok(Template::render("event", context! {
+        event_url,
+        event_qrc_img_data,
         user,
         is_event_owner,
         event,

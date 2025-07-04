@@ -1,6 +1,8 @@
 use std::backtrace::Backtrace;
-use std::io::Read;
+use std::io::{Cursor, Read};
 use anyhow::anyhow;
+use base64::Engine;
+use image::ImageFormat;
 use rocket::http::Status;
 use rocket::response::status::Custom;
 
@@ -72,4 +74,15 @@ where
     } else {
         Some(value)
     }
+}
+
+pub(crate) fn create_qrc(data: &[u8]) -> anyhow::Result<String> {
+    let code = qrcode::QrCode::new(data)?;
+    // Render the bits into an image.
+    let image = code.render::<::image::LumaA<u8>>().build();
+    let mut buffer: Vec<u8> = Vec::new();
+    let mut cursor = Cursor::new(&mut buffer);
+    image.write_to(&mut cursor, ImageFormat::Png)?;
+    // Encode the image buffer to base64
+    Ok(base64::engine::general_purpose::STANDARD.encode(&buffer))
 }

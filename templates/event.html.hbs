@@ -8,15 +8,24 @@
         {{/if}}
         <a href="/event/{{event.id}}/export/runs" class="w3-button w3-theme w3-round-large">Export runs</a>
     </div>
-    <ul>
-        <li><a class="w3-button" href="/event/{{ event.id }}/startlist">Start list</a></li>
-        <li><a class="w3-button" href="/event/{{ event.id }}/results">Results</a></li>
-        {{#if user}}
-            <li><a class="w3-button" href="/event/{{ event.id }}/my-changes">My changes</a></li>
-        {{/if}}
-        <li><a class="w3-button" href="/event/{{ event.id }}/changes">Changes</a></li>
-    </ul>
-
+    <div class="w3-row-padding">
+        <div class="w3-half">
+            <ul>
+                <li><a class="w3-button" href="/event/{{ event.id }}/startlist">Start list</a></li>
+                <li><a class="w3-button" href="/event/{{ event.id }}/results">Results</a></li>
+                {{#if user}}
+                    <li><a class="w3-button" href="/event/{{ event.id }}/my-changes">My changes</a></li>
+                {{/if}}
+                <li><a class="w3-button" href="/event/{{ event.id }}/changes">Changes</a></li>
+            </ul>
+        </div>
+        <div class="w3-half">
+            <div style="display:flex; justify-content:center">
+                <img src="data:image/png;base64,{{event_qrc_img_data}}" alt="API token QRC" />
+            </div>
+            <p style="display:flex; justify-content:center">{{ event_url }}</p>
+        </div>
+    </div>
     <h3>Files</h3>
     <ul>
         {{#each files}}
