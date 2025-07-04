@@ -135,7 +135,7 @@ pub async fn add_change(
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)  RETURNING id")
         .bind(&change.source)
         .bind(&change.data_type)
-        .bind(&change.data_id)
+        .bind(change.data_id)
         .bind(&change.data)
         .bind(&change.note)
         .bind(&change.user_id)
@@ -147,14 +147,21 @@ pub async fn add_change(
     Ok(id.0)
 }
 
-#[get("/event/<event_id>/changes?<from_id>")]
-async fn get_changes(event_id: EventId, from_id: Option<i64>, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Template, Custom<String>> {
+#[get("/event/<event_id>/changes?<from_id>&<limit>")]
+async fn get_changes(
+    event_id: EventId,
+    from_id: Option<i64>,
+    limit: Option<i64>,
+    session_id: MaybeSessionId,
+    state: &State<SharedQxState>,
+    gdb: &State<DbPool>
+) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, gdb).await?;
     let user = user_info_opt(session_id.0.as_ref(), state).await.map_err(anyhow_to_custom_error)?;
-    let from_id = from_id.unwrap_or(0);
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
-    let records: Vec<ChangesRecord> = sqlx::query_as("SELECT * FROM changes WHERE id>=? ORDER BY created DESC LIMIT 1000")
-        .bind(from_id)
+    let records: Vec<ChangesRecord> = sqlx::query_as("SELECT * FROM changes WHERE id>=? ORDER BY created DESC LIMIT ?")
+        .bind(from_id.unwrap_or(0))
+        .bind(limit.unwrap_or(100))
         .fetch_all(&edb)
         .await
         .map_err(sqlx_to_custom_error)?;
@@ -192,10 +199,10 @@ pub async fn add_run_update_request_change(
     note: Option<&str>,
     data: Json<RunsRecord>,
     state: &State<SharedQxState>
-) -> Result<(), Custom<String>> {
+) -> Result<Json<i64>, Custom<String>> {
     let user = user_info(&session_id, state).await?;
     let data = ChangeData::RunUpdateRequest(data.into_inner());
-    add_change(event_id, ChangesRecord{
+    let change_id = add_change(event_id, ChangesRecord{
         id: 0,
         source: "www".to_string(),
         data_type: DataType::RunUpdateRequest,
@@ -207,7 +214,7 @@ pub async fn add_run_update_request_change(
         note: note.map(|s| s.to_string()),
     }, state).await.map_err(anyhow_to_custom_error)?;
     //state.read().await.broadcast_runs_change((event_id, data_id, data)).await.map_err(anyhow_to_custom_error)?;
-    Ok(())
+    Ok(Json(change_id))
 }
 
 #[post("/api/event/current/changes/run-updated?<run_id>", data = "<change>")]
@@ -326,8 +333,15 @@ async fn changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventSt
     }
 }
 
-#[get("/api/event/<event_id>/changes?<from_id>&<data_type>&<status>")]
-async fn api_changes_get(event_id: EventId, from_id: Option<i64>, data_type: Option<&str>, status: Option<&str>, state: &State<SharedQxState>) -> Result<Json<Vec<ChangesRecord>>, Custom<String>> {
+#[get("/api/event/<event_id>/changes?<from_id>&<limit>&<data_type>&<status>")]
+async fn api_changes_get(
+    event_id: EventId,
+    from_id: Option<i64>,
+    limit: Option<i64>,
+    data_type: Option<&str>,
+    status: Option<&str>,
+    state: &State<SharedQxState>
+) -> Result<Json<Vec<ChangesRecord>>, Custom<String>> {
     let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
 
     let mut query_builder = QueryBuilder::new("SELECT * FROM changes WHERE id>=");
@@ -341,7 +355,11 @@ async fn api_changes_get(event_id: EventId, from_id: Option<i64>, data_type: Opt
         query_builder.push_bind(status);
     }
     query_builder.push(" ORDER BY created");
-    
+    if let Some(limit) = limit {
+        query_builder.push(" LIMIT ");
+        query_builder.push_bind(limit);
+    }
+
     let query = query_builder.build_query_as::<ChangesRecord>();
     let records: Vec<_> = query.fetch_all(&edb).await.map_err(sqlx_to_custom_error)?;
     // info!("records: {:?}", records);

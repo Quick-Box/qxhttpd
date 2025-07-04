@@ -15,6 +15,17 @@ pub struct UserInfo {
     pub(crate) email: String,
     picture: String,
 }
+
+impl UserInfo {
+    #[cfg(test)]
+    pub fn create_test_user_info() -> UserInfo {
+        UserInfo{
+            name: "John Doe".to_string(),
+            email: "john@doe".to_string(),
+            picture: "".to_string(),
+        }
+    }
+}
 impl TryFrom<&GoogleUserInfo> for UserInfo {
     type Error = anyhow::Error;
 
@@ -46,12 +57,7 @@ pub fn generate_random_string(len: usize) -> String {
         })
         .collect()
 }
-// #[test]
-// fn test_generate_random_string() {
-//     for _i in 0 .. 50 {
-//         println!("{}", generate_random_string(10));
-//     }
-// }
+
 pub const QX_SESSION_ID: &str = "qx_session_id";
 
 /// User information to be retrieved from the Google People API.

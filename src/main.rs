@@ -26,6 +26,8 @@ use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use sqlx::sqlite::{SqliteArgumentValue};
 
 #[cfg(test)]
+use crate::event::TEST_SESSION_ID;
+#[cfg(test)]
 mod tests;
 mod db;
 mod auth;
@@ -62,7 +64,12 @@ impl<'r> request::FromRequest<'r> for QxSessionId {
             .guard::<&CookieJar<'_>>()
             .await
             .expect("request cookies");
-        if let Some(cookie) = cookies.get_private(QX_SESSION_ID) {
+        if cfg!(test) {
+            // didn't find a way, how to use private cookies with tests
+            if let Some(cookie) = cookies.get(QX_SESSION_ID) {
+                return request::Outcome::Success(Self(cookie.value().to_string()));
+            }
+        } else if let Some(cookie) = cookies.get_private(QX_SESSION_ID) {
             return request::Outcome::Success(Self(cookie.value().to_string()));
         }
         request::Outcome::Forward(Status::Unauthorized)
@@ -224,10 +231,8 @@ fn rocket() -> _ {
                                                if left <= right {
                                                    out.write("1")?;
                                                }
-                                           } else {
-                                               if left > right {
-                                                   out.write("1")?;
-                                               }
+                                           } else if left > right {
+                                               out.write("1")?;
                                            }
                                            Ok(())
                                        }));
@@ -255,7 +260,16 @@ fn rocket() -> _ {
     let db_path = figment.extract_inner::<String>("db_path").expect("db_path");
     
     let cfg = AppConfig{ server_address, server_port, db_path };
-    let state = QxState::new(cfg);
-    rocket.manage(SharedQxState::new(state))
+    #[cfg(test)]
+    {
+        let mut state = QxState::new(cfg);
+        state.sessions.insert(QxSessionId(TEST_SESSION_ID.into()), QxSession { user_info: UserInfo::create_test_user_info() });
+        rocket.manage(SharedQxState::new(state))
+    }
+    #[cfg(not(test))]
+    {
+        let state = QxState::new(cfg);
+        rocket.manage(SharedQxState::new(state))
+    }
 }
 

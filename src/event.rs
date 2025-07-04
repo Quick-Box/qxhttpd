@@ -88,8 +88,8 @@ pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> anyho
         query("UPDATE events SET name=?, place=?, stage=?, stage_count=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
-            .bind(&event.stage)
-            .bind(&event.stage_count)
+            .bind(event.stage)
+            .bind(event.stage_count)
             .bind(event.start_time.0)
             // .bind(&event.time_zone)
             .bind(event.id)
@@ -103,8 +103,8 @@ pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> anyho
         )
             .bind(&event.name)
             .bind(&event.place)
-            .bind(&event.stage)
-            .bind(&event.stage_count)
+            .bind(event.stage)
+            .bind(event.stage_count)
             .bind(event.start_time.0)
             .bind(&event.api_token.0)
             .bind(&event.owner)
@@ -479,14 +479,16 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub(crate) const TEST_API_TOKEN: &str = "plelababamak";
+pub(crate) const DEMO_API_TOKEN: &str = "plelababamak";
+#[cfg(test)]
+pub(crate) const TEST_SESSION_ID: &str = "123abc";
 
 #[get("/event/create-demo")]
 async fn create_demo_event(state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let mut event_info = EventRecord::new("fanda.vacek@gmail.com");
     event_info.name = String::from("Demo event");
     event_info.place = String::from("Deep forest 42");
-    event_info.api_token = QxApiToken(String::from(TEST_API_TOKEN));
+    event_info.api_token = QxApiToken(String::from(DEMO_API_TOKEN));
     let event_id = save_event(&event_info, gdb).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     {
         // upload demo start list
