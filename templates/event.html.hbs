@@ -1,6 +1,6 @@
 {{#*inline "page"}}
 
-    <h2>{{ event.name }}</h2>
+    <h2>{{ event.name }} {{#if (gt event.stage_count 1)}} E{{ event.stage }} {{/if}}</h2>
     <div class="w3-bar">
         {{#if is_event_owner}}
             <a href="/event/{{event.id}}/edit" class="w3-button w3-theme w3-round-large w3-border"><i class="fa fa-cog"></i> edit</a>

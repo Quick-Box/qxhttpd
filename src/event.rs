@@ -34,6 +34,8 @@ pub type EventId = i64;
 pub struct EventRecord {
     pub id: EventId,
     pub name: String,
+    pub stage: i64,
+    pub stage_count: i64,
     pub place: String,
     pub start_time: QxDateTime,
     pub owner: String,
@@ -45,6 +47,8 @@ impl EventRecord {
         Self {
             id: 0,
             name: "".to_string(),
+            stage: 1,
+            stage_count: 1,
             place: "".to_string(),
             start_time,
             // time_zone: "Europe/Prague".to_string(),
@@ -74,16 +78,18 @@ pub async fn load_event_info_for_api_token(qx_api_token: &QxApiToken, db: &State
         .fetch_one(pool)
         .await
         .map_err(|e| {
-            warn!("Unauthorized request for api token: {}", qx_api_token.0);
+            warn!("Unauthorized request for api token: {}, error: {}", qx_api_token.0, e);
             Custom(Status::Unauthorized, e.to_string())
         })?;
     Ok(event)
 }
 pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> anyhow::Result<EventId> {
     let id = if event.id > 0 {
-        query("UPDATE events SET name=?, place=?, start_time=? WHERE id=?")
+        query("UPDATE events SET name=?, place=?, stage=?, stage_count=?, start_time=? WHERE id=?")
             .bind(&event.name)
             .bind(&event.place)
+            .bind(&event.stage)
+            .bind(&event.stage_count)
             .bind(event.start_time.0)
             // .bind(&event.time_zone)
             .bind(event.id)
@@ -91,9 +97,14 @@ pub(crate) async fn save_event(event: &EventRecord, db: &State<DbPool>) -> anyho
             .await.map_err(|e| anyhow!("{e}"))?;
         event.id
     } else {
-        let id: (i64, ) = query_as("INSERT INTO events(name, place, start_time, api_token, owner) VALUES (?, ?, ?, ?, ?) RETURNING id")
+        let id: (i64, ) = query_as(
+            "INSERT INTO events(name, place, stage, stage_count, start_time, api_token, owner)
+                 VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id"
+        )
             .bind(&event.name)
             .bind(&event.place)
+            .bind(&event.stage)
+            .bind(&event.stage_count)
             .bind(event.start_time.0)
             .bind(&event.api_token.0)
             .bind(&event.owner)
@@ -109,6 +120,8 @@ struct EventFormValues<'v> {
     id: EventId,
     name: &'v str,
     place: &'v str,
+    stage: i64,
+    stage_count: i64,
     start_time: &'v str,
     // #[field(validate = len(1..))]
     // owner: &'v str,
@@ -124,22 +137,26 @@ async fn post_event<'r>(form: Form<Contextual<'r, EventFormValues<'r>>>, session
     let vals = form.value.as_ref().ok_or(Custom(Status::BadRequest, "Form data invalid".to_string()))?;
     let start_time = QxDateTime::parse_from_iso(vals.start_time)
         .map_err(|e| Custom(Status::BadRequest, format!("Unrecognized date-time string: {}, error: {e}", vals.start_time)))?;
-    let event = if vals.id > 0 {
-        let event = load_event_info(vals.id, db).await?;
-        EventRecord {
-            name: vals.name.to_string(),
-            place: vals.place.to_string(),
-            start_time,
-            ..event
-        }
-    } else {
+    let event = if vals.id == 0 {
         EventRecord {
             id: 0,
             name: vals.name.to_string(),
+            stage: vals.stage,
+            stage_count: vals.stage_count,
             place: vals.place.to_string(),
             start_time,
             owner: user.email.clone(),
             api_token: QxApiToken(vals.api_token.to_string()),
+        }
+    } else {
+        let event = load_event_info(vals.id, db).await?;
+        EventRecord {
+            name: vals.name.to_string(),
+            place: vals.place.to_string(),
+            stage: vals.stage,
+            stage_count: vals.stage_count,
+            start_time,
+            ..event
         }
     };
     if event.owner != user.email {
@@ -166,13 +183,6 @@ pub async fn get_user_info(session_id: &QxSessionId, state: &State<SharedQxState
         .sessions.get(session_id).map(|s| s.user_info.clone());
     Ok(user_info)
 }
-
-// pub async fn event_owner_opt(event_id: EventId, session_id: MaybeSessionId, state: &State<SharedQxState>, gdb: &State<DbPool>) -> anyhow::Result<Option<UserInfo>> {
-//     let event = load_event(event_id, gdb).await?;
-//     let user = user_info_opt(session_id.0.as_ref(), state).await?
-//         .and_then(|user| if user.email == event.owner {Some(user)} else {None});
-//     Ok(user)
-// }
 
 pub fn is_event_owner(event: &EventRecord, user: Option<&UserInfo>) -> bool {
     if let Some(user) = user {
@@ -263,6 +273,8 @@ async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Res
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PostedEvent {
     pub name: String,
+    pub stage: i64,
+    pub stage_count: i64,
     pub place: String,
     pub start_time: DateTime<FixedOffset>,
 }
@@ -272,6 +284,8 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
         return Err(string_to_custom_error("Event not found"));
     };
     event_info.name = posted_event.name.clone();
+    event_info.stage = posted_event.stage;
+    event_info.stage_count = posted_event.stage_count;
     event_info.place = posted_event.place.clone();
     event_info.start_time = posted_event.start_time.into();
     debug!("Post event info, start00: {}", event_info.start_time.to_iso_string());
@@ -465,12 +479,14 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
     Ok(())
 }
 
+pub(crate) const TEST_API_TOKEN: &str = "plelababamak";
+
 #[get("/event/create-demo")]
 async fn create_demo_event(state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Redirect, Custom<String>> {
     let mut event_info = EventRecord::new("fanda.vacek@gmail.com");
     event_info.name = String::from("Demo event");
     event_info.place = String::from("Deep forest 42");
-    event_info.api_token = QxApiToken(String::from("plelababamak"));
+    event_info.api_token = QxApiToken(String::from(TEST_API_TOKEN));
     let event_id = save_event(&event_info, gdb).await.map_err(|e| Custom(Status::BadRequest, e.to_string()))?;
     {
         // upload demo start list

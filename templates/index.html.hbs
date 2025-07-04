@@ -13,7 +13,7 @@
     <table class="w3-table-all w3-hoverable">
         {{#each events}}
             <tr>
-                <td><a href="/event/{{ this.id }}">{{this.name}}</a></td>
+                <td><a href="/event/{{ this.id }}">{{this.name}} {{#if (gt this.stage_count 1)}} E{{ this.stage }} {{/if}}</a></td>
                 <td>{{this.place}}</td>
                 <td>{{dtstr this.start_time}}</td>
                 <td>{{dtstr this.owner}}</td>

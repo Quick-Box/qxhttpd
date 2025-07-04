@@ -72,10 +72,10 @@
             dlg.style.display='block'
         }
         function saveDialog(name, registration, si) {
-            let doc = document.getElementById('dlg')
+            let dlg = document.getElementById('dlg')
             let change = {}
             let add_change = fldname => {
-                let input = doc.querySelector(`input[name="${fldname}"]`);
+                let input = dlg.querySelector(`input[name="${fldname}"]`);
                 let new_val = input.value.trim()
                 if (new_val !== "") {
                     if (input.type === "number") {
@@ -100,8 +100,15 @@
                 else {
                     change.run_id = edited_entry.run_id;
                 }
+                let note = (() => {
+                    let input = dlg.querySelector(`input[name="note"]`);
+                    return input.value.trim()
+                })();
                 const params = new URLSearchParams();
                 params.append("data_id", change.run_id);
+                if (note) {
+                    params.append("note", note);
+                }
                 fetch(`/api/event/{{ event.id }}/changes/run-update-request?${params}`, {
                     method: 'POST',
                     body: JSON.stringify(change),

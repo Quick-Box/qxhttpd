@@ -14,7 +14,6 @@ use rocket::response::{status};
 use rocket::response::status::{Custom};
 use rocket_dyn_templates::{Template, context, handlebars};
 use rocket::serde::Serialize;
-use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use serde::{Deserialize};
 use sqlx::SqlitePool;
 use crate::auth::{UserInfo, QX_SESSION_ID};
@@ -23,6 +22,7 @@ use crate::db::{DbPool, DbPoolFairing};
 use crate::qxdatetime::{dtstr, obtime, obtimems};
 use crate::util::anyhow_to_custom_error;
 use async_broadcast::{broadcast};
+use rocket_dyn_templates::handlebars::{Handlebars, Helper};
 use sqlx::sqlite::{SqliteArgumentValue};
 
 #[cfg(test)]
@@ -212,6 +212,22 @@ fn rocket() -> _ {
                                                out.write(&s)?;
                                            } else {
                                                out.write("--:--:--")?;
+                                           }
+                                           Ok(())
+                                       }));
+            handlebars.register_helper("gt",
+                                       Box::new(|h: &Helper, _r: &Handlebars, _: &handlebars::Context, _rc: &mut handlebars::RenderContext, out: &mut dyn handlebars::Output| -> handlebars::HelperResult {
+                                           let left = h.param(0).and_then(|v| v.value().as_i64()).unwrap_or(0);
+                                           let right = h.param(1).and_then(|v| v.value().as_i64()).unwrap_or(0);
+
+                                           if h.inverse().is_some() {
+                                               if left <= right {
+                                                   out.write("1")?;
+                                               }
+                                           } else {
+                                               if left > right {
+                                                   out.write("1")?;
+                                               }
                                            }
                                            Ok(())
                                        }));

@@ -1,4 +1,4 @@
-use crate::event::START_LIST_IOFXML3_FILE;
+use crate::event::{START_LIST_IOFXML3_FILE, TEST_API_TOKEN};
 use std::fs::OpenOptions;
 use std::io::{Read};
 use rocket::local::blocking::Client;
@@ -10,7 +10,6 @@ use crate::{util};
 use crate::changes::DataId;
 use crate::runs::RunsRecord;
 
-const API_TOKEN: &str = "plelababamak";
 const EVENT_ID: EventId = 1;
 
 fn create_test_server() -> Client {
@@ -27,7 +26,7 @@ fn update_event_data() {
     let client = create_test_server();
     
     let resp = client.get("/api/event/current")
-        .header(Header::new("qx-api-token", API_TOKEN))
+        .header(Header::new("qx-api-token", TEST_API_TOKEN))
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
@@ -37,17 +36,19 @@ fn update_event_data() {
     let dt = QxDateTime::now().trimmed_to_sec();
     let post_event = PostedEvent {
         name: "Foo".to_string(),
+        stage: 2,
+        stage_count: 3,
         place: "Bar".to_string(),
         start_time: dt.0,
     };
     let resp = client.post("/api/event/current")
-        .header(Header::new("qx-api-token", API_TOKEN))
+        .header(Header::new("qx-api-token", TEST_API_TOKEN))
         .json(&post_event)
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
 
     let resp = client.get("/api/event/current")
-        .header(Header::new("qx-api-token", API_TOKEN))
+        .header(Header::new("qx-api-token", TEST_API_TOKEN))
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     assert_eq!(resp.content_type(), Some(ContentType::JSON));
@@ -55,6 +56,8 @@ fn update_event_data() {
     assert_eq!(event.name, post_event.name);
     assert_eq!(event.place, post_event.place);
     assert_eq!(event.start_time.0, post_event.start_time);
+    assert_eq!(event.stage, post_event.stage);
+    assert_eq!(event.stage_count, post_event.stage_count);
 }
 
 #[test]
@@ -66,7 +69,7 @@ fn upload_file() {
     let data = b"foo-bar-baz";
     let compressed_data = util::test::zip_data(data).unwrap();
     let resp = client.post(format!("/api/event/current/file?name={file_name}"))
-        .header(Header::new("qx-api-token", API_TOKEN))
+        .header(Header::new("qx-api-token", TEST_API_TOKEN))
         .header(ContentType::ZIP)
         .body(compressed_data)
         .dispatch();
@@ -107,7 +110,7 @@ fn upload_test_file(client: &Client, file_name: &str) {
 
     let compressed = util::test::zip_data(&data).unwrap();
     let resp = client.post(format!("/api/event/current/file?name={file_name}"))
-        .header(Header::new("qx-api-token", API_TOKEN))
+        .header(Header::new("qx-api-token", TEST_API_TOKEN))
         .header(ContentType::ZIP)
         .body(compressed)
         .dispatch();
@@ -132,7 +135,7 @@ fn post_qe_change() {
 
     fn apply_change(client: &Client, run_id: DataId, change: &RunsRecord) -> RunsRecord {
         let resp = client.post(format!("/api/event/current/changes/run-updated?run_id={}", run_id.unwrap()))
-            .header(Header::new("qx-api-token", API_TOKEN))
+            .header(Header::new("qx-api-token", TEST_API_TOKEN))
             .header(ContentType::JSON)
             .json(&change)
             .dispatch();
