@@ -17,7 +17,7 @@ use sqlx::query::{Query};
 use sqlx::sqlite::{SqliteArgumentValue, SqliteArguments};
 use crate::db::{get_event_db, DbPool};
 use crate::oc::OCheckListChange;
-use crate::runs::RunsRecord;
+use crate::runs::{RunChange};
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
 
 pub(crate) type DataId = Option<i64>;
@@ -104,9 +104,10 @@ impl Display for DataType {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ChangeData {
+    DropRecord,
     OcChange(OCheckListChange),
-    RunUpdateRequest(RunsRecord),
-    RunUpdated(RunsRecord),
+    RunUpdateRequest(RunChange),
+    RunUpdated(RunChange),
     RadioPunch,
     CardReadout,
 }
@@ -123,7 +124,6 @@ pub struct ChangesRecord {
     // pub run_id: Option<i64>,
     pub status: Option<ChangeStatus>,
     pub created: QxDateTime,
-    pub note: Option<String>,
 }
 #[allow(clippy::too_many_arguments)]
 pub async fn add_change(
@@ -134,13 +134,12 @@ pub async fn add_change(
     //let change = serde_json::to_value(change).map_err(|e| anyhow!("{e}"))?;
     let edb = get_event_db(event_id, state).await?;
     let id: (i64, ) = query_as("INSERT INTO changes
-                (source, data_type, data_id, data, note, user_id, status, created)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)  RETURNING id")
+                (source, data_type, data_id, data, user_id, status, created)
+                VALUES (?, ?, ?, ?, ?, ?, ?)  RETURNING id")
         .bind(&change.source)
         .bind(&change.data_type)
         .bind(change.data_id)
         .bind(&change.data)
-        .bind(&change.note)
         .bind(&change.user_id)
         .bind(&change.status)
         .bind(QxDateTime::now().trimmed_to_sec())
@@ -194,13 +193,12 @@ async fn get_my_changes(event_id: EventId, session_id: QxSessionId, state: &Stat
         }))
 }
 
-#[post("/api/event/<event_id>/changes/run-update-request?<data_id>&<note>", data = "<data>")]
+#[post("/api/event/<event_id>/changes/run-update-request?<data_id>", data = "<data>")]
 pub async fn add_run_update_request_change(
     event_id: EventId,
     session_id: QxSessionId,
     data_id: Option<i64>,
-    note: Option<&str>,
-    data: Json<RunsRecord>,
+    data: Json<RunChange>,
     state: &State<SharedQxState>
 ) -> Result<Json<i64>, Custom<String>> {
     let user = user_info(&session_id, state).await?;
@@ -214,7 +212,6 @@ pub async fn add_run_update_request_change(
         user_id: Some(user.email),
         status: Some(ChangeStatus::Pending),
         created: QxDateTime::now(),
-        note: note.map(|s| s.to_string()),
     }, state).await.map_err(anyhow_to_custom_error)?;
     //state.read().await.broadcast_runs_change((event_id, data_id, data)).await.map_err(anyhow_to_custom_error)?;
     Ok(Json(change_id))
@@ -223,14 +220,14 @@ pub async fn add_run_update_request_change(
 #[post("/api/event/current/changes/run-updated?<run_id>", data = "<change>")]
 async fn add_run_updated_change(
     run_id: DataId,
-    change: Json<RunsRecord>,
+    change: Json<RunChange>,
     api_token: QxApiToken,
     state: &State<SharedQxState>,
     db: &State<DbPool>
 ) -> Result<(), Custom<String>> {
     let event = load_event_info_for_api_token(&api_token, db).await?;
-    let runs_record = change.into_inner();
-    let data = ChangeData::RunUpdated(runs_record.clone());
+    let run_change = change.into_inner();
+    let data = ChangeData::RunUpdated(run_change.clone());
     add_change(event.id, ChangesRecord{
         id: 0,
         source: "qe".to_string(),
@@ -240,15 +237,14 @@ async fn add_run_updated_change(
         user_id: None,
         status: None,
         created: QxDateTime::now(),
-        note: None,
     }, state).await.map_err(anyhow_to_custom_error)?;
     // add_change(event.id, "qe", data_type, run_id, &data, None, None, None, state).await.map_err(anyhow_to_custom_error)?;
     let db = get_event_db(event.id, state).await.map_err(anyhow_to_custom_error)?;
-    apply_qe_run_change(run_id, &runs_record, &db).await.map_err(anyhow_to_custom_error)?;
+    apply_qe_run_change(run_id, &run_change, &db).await.map_err(anyhow_to_custom_error)?;
     Ok(())
 }
 
-async fn apply_qe_run_change(run_id: DataId, change: &RunsRecord, edb: &SqlitePool) -> anyhow::Result<()> {
+async fn apply_qe_run_change(run_id: DataId, change: &RunChange, edb: &SqlitePool) -> anyhow::Result<()> {
     if let Some(run_id) = run_id {
         let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM runs WHERE run_id=?")
             .bind(run_id)
@@ -265,7 +261,7 @@ async fn apply_qe_run_change(run_id: DataId, change: &RunsRecord, edb: &SqlitePo
                  check_time,
                  finish_time
              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                .bind(change.run_id)
+                .bind(run_id)
                 .bind(change.si_id)
                 .bind(change.last_name.as_ref())
                 .bind(change.first_name.as_ref())
@@ -280,7 +276,7 @@ async fn apply_qe_run_change(run_id: DataId, change: &RunsRecord, edb: &SqlitePo
             let placeholders = changed_fields.iter().map(|&fld_name| format!("{fld_name}=?") ).join(",");
             let qs = format!("UPDATE runs SET {placeholders} WHERE run_id=?");
             let mut q = sqlx::query(&qs);
-            fn bind_field<'a>(q: Query<'a, Sqlite, SqliteArguments<'a>>, field_name: &'a str, change: &'a RunsRecord) -> anyhow::Result<Query<'a, Sqlite, SqliteArguments<'a>>> {
+            fn bind_field<'a>(q: Query<'a, Sqlite, SqliteArguments<'a>>, field_name: &'a str, change: &'a RunChange) -> anyhow::Result<Query<'a, Sqlite, SqliteArguments<'a>>> {
                 let q = if field_name == "si_id" { q.bind(change.si_id) }
                 else if field_name == "first_name" { q.bind(change.first_name.as_ref()) }
                 else if field_name == "last_name" { q.bind(change.last_name.as_ref()) }

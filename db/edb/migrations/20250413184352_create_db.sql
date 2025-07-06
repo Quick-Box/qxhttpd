@@ -8,8 +8,7 @@ create table changes
     user_id        TEXT,
     created        TEXT default CURRENT_TIMESTAMP,
     status         TEXT,
-    status_message TEXT,
-    note           TEXT
+    status_message TEXT
 );
 
 create table classes

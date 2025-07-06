@@ -91,6 +91,7 @@
             add_change("last_name")
             add_change("registration")
             add_change("si_id")
+            add_change("note")
             if (Object.keys(change).length > 0) {
                 if (Object.keys(edited_entry).length === 0) {
                     // new entry
@@ -106,9 +107,6 @@
                 })();
                 const params = new URLSearchParams();
                 params.append("data_id", change.run_id);
-                if (note) {
-                    params.append("note", note);
-                }
                 fetch(`/api/event/{{ event.id }}/changes/run-update-request?${params}`, {
                     method: 'POST',
                     body: JSON.stringify(change),

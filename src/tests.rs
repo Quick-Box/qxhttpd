@@ -12,7 +12,7 @@ use crate::qxdatetime::QxDateTime;
 use crate::{util};
 use crate::auth::QX_SESSION_ID;
 use crate::changes::DataId;
-use crate::runs::RunsRecord;
+use crate::runs::{RunChange, RunsRecord};
 
 const EVENT_ID: EventId = 1;
 
@@ -150,8 +150,7 @@ fn add_start_list_change_request() {
     let client = create_test_server();
 
     const RUN_ID: i64 = 1;
-    let run_change = RunsRecord{
-        run_id: RUN_ID,
+    let run_change = RunChange {
         class_name: None,
         registration: None,
         first_name: None,
@@ -160,10 +159,11 @@ fn add_start_list_change_request() {
         start_time: None,
         check_time: None,
         finish_time: None,
+        note: Some("foo".to_string()),
     };
 
     // create run change request
-    let resp = client.post(uri!(add_run_update_request_change(event_id = EVENT_ID, data_id = Some(RUN_ID), note = Some("foo"))))
+    let resp = client.post(uri!(add_run_update_request_change(event_id = EVENT_ID, data_id = Some(RUN_ID))))
         .cookie(Cookie::build((QX_SESSION_ID, TEST_SESSION_ID)))
         .header(ContentType::JSON)
         .json(&run_change)
@@ -184,9 +184,9 @@ fn add_start_list_change_request() {
         .dispatch();
     assert_eq!(resp.status(), Status::Ok);
     let change = resp.into_json::<Vec<ChangesRecord>>().unwrap().first().unwrap().clone();
-    assert_eq!(change.note, Some("foo".to_string()));
     if let ChangeData::RunUpdateRequest(change) = change.data {
         assert_eq!(change.si_id, Some(1234));
+        assert_eq!(change.note, Some("foo".to_string()));
     } else {
         panic!("unexpected change type");
     }

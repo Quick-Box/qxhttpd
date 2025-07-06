@@ -16,7 +16,7 @@ use crate::util::{anyhow_to_custom_error};
 use sqlx::sqlite::SqliteArgumentValue;
 use sqlx::{Encode, Sqlite};
 use crate::changes::{add_change, ChangeData, ChangeStatus, ChangesRecord, DataType};
-use crate::runs::RunsRecord;
+use crate::runs::{RunChange};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
@@ -102,9 +102,9 @@ fn test_load_oc() {
                 let Some(chnglog) = &chng.ChangeLog else { return false };
                 chnglog.get("DNS").is_some()
             };
-            let run_chng = RunsRecord::try_from_oc_change(&chng, change_dt).unwrap();
+            let (run_id, run_chng) = RunChange::try_from_oc_change(&chng, change_dt).unwrap();
             debug!("{:?}\n", serde_json::to_string(&run_chng).unwrap());
-            assert!(run_chng.run_id > 0);
+            assert!(run_id > 0);
             if chng.Runner.StartTime.is_some() && !is_dns() {
                 assert!(run_chng.check_time.is_some());
             }
@@ -127,16 +127,9 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
             user_id: None,
             status: None,
             created: QxDateTime::now(),
-            note: None,
         }, state).await?;
-        match RunsRecord::try_from_oc_change(&chng, change_dt) {
-            Ok(run_chng) => {
-                let run_id = run_chng.run_id;
-                let status = if run_chng.si_id.is_some() {
-                    Some(ChangeStatus::Pending)
-                } else {
-                    None
-                };
+        match RunChange::try_from_oc_change(&chng, change_dt) {
+            Ok((run_id, run_chng)) => {
                 let data_type = DataType::RunUpdateRequest;
                 let data = ChangeData::RunUpdateRequest(run_chng);
                 add_change(event_id, ChangesRecord{
@@ -146,9 +139,8 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
                     data_id: run_id.into(),
                     data,
                     user_id: None,
-                    status,
+                    status: Some(ChangeStatus::Pending),
                     created: QxDateTime::now(),
-                    note: None,
                 }, state).await?;
             }
             Err(e) => {
@@ -185,20 +177,6 @@ struct OCOutRecord {
 #[get("/event/<event_id>/oc/out")]
 async fn get_oc_out(event_id: EventId, db: &State<DbPool>) -> Result<Template, Custom<String>> {
     let event = load_event_info(event_id, db).await?;
-    // let pool = &db.0;
-    // // https://doc.rust-lang.org/rust-by-example/error/iter_result.html
-    // let records = sqlx::query_as::<_, OCOutRecord>("SELECT * FROM ocout WHERE event_id=?")
-    //     .bind(event_id)
-    //     .fetch_all(pool).await.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?;
-    // let records = records.into_iter()
-    //     .flat_map(|r| { 
-    //         let created = r.created; 
-    //         r.change_set.Data.into_iter().map(move |d| (created, d)) 
-    //     }).collect::<Vec<_>>();
-    // Ok(Template::render("oc-out", context! {
-    //         event,
-    //         records,
-    //     }))
     debug!("OC out: {}", event.name);
     Err(Custom(Status::InternalServerError, "get_oc_out NIY".to_string()))
 }

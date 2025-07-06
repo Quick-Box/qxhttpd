@@ -24,14 +24,9 @@ pub struct ClassesRecord {
     pub start_slot_count: i64,
 }
 
-
-#[derive(Serialize, Deserialize, FromRow, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[derive(FieldsWithValue)]
-pub struct RunsRecord {
-    pub run_id: i64,
-    //#[serde(default)]
-    //#[serde(skip_serializing_if = "is_false")]
-    //pub drop_record: bool,
+pub struct RunChange {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub class_name: Option<String>,
@@ -56,15 +51,15 @@ pub struct RunsRecord {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub finish_time: Option<QxDateTime>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
 }
-// impl_sqlx_json_text_type_and_decode!(RunsRecord);
 
-impl RunsRecord {
-    pub fn try_from_oc_change(oc: &OCheckListChange, change_set_created_time: QxDateTime) -> anyhow::Result<Self> {
-        let mut change = Self {
-            run_id: oc.Runner.Id.parse::<i64>()?,
-            ..Default::default()
-        };
+impl RunChange {
+    pub fn try_from_oc_change(oc: &OCheckListChange, change_set_created_time: QxDateTime) -> anyhow::Result<(i64, Self)> {
+        let run_id = oc.Runner.Id.parse::<i64>()?;
+        let mut change = Self::default();
         if let Some(start_time) = &oc.Runner.StartTime {
             // start time can be 10:20:30 or 25-05-01T10:20:03+01:00 depending on version of OCheckList
             change.check_time = if start_time.len() == 8 {
@@ -91,8 +86,31 @@ impl RunsRecord {
                 change.check_time = None;
             }
         }
-        Ok(change)
+        Ok((run_id, change))
     }
+}
+
+#[derive(Serialize, Deserialize, FromRow, Default, Clone, Debug)]
+pub struct RunsRecord {
+    pub run_id: i64,
+    pub class_name: Option<String>,
+    #[serde(default)]
+    pub registration: Option<String>,
+    #[serde(default)]
+    pub first_name: Option<String>,
+    #[serde(default)]
+    pub last_name: Option<String>,
+    #[serde(default)]
+    pub si_id: Option<i64>,
+    #[serde(default)]
+    pub start_time: Option<QxDateTime>,
+    #[serde(default)]
+    pub check_time: Option<QxDateTime>,
+    #[serde(default)]
+    pub finish_time: Option<QxDateTime>,
+}
+
+impl RunsRecord {
 }
 // #[get("/api/event/<event_id>/runs/changes/sse")]
 // async fn runs_changes_sse(event_id: EventId, state: &State<SharedQxState>) -> EventStream![] {
@@ -141,8 +159,7 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
 
 #[test]
 fn test_fields_with_value() {
-    let p = RunsRecord {
-        run_id: 0,
+    let p = RunChange {
         class_name: Some(String::from("H21")),
         registration: None,
         first_name: None,
@@ -151,6 +168,7 @@ fn test_fields_with_value() {
         start_time: None,
         check_time: None,
         finish_time: Some(QxDateTime::now()),
+        note: None,
     };
 
     let fields = p.fields_with_value();
