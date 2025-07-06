@@ -14,6 +14,7 @@ use crate::{files, MaybeSessionId, QxApiToken, QxSessionId, SharedQxState};
 use crate::auth::{generate_random_string, UserInfo};
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
+use log::info;
 use crate::changes::{ChangesRecord, PENDING, RUN_UPDATE_REQUEST};
 use crate::files::{load_file_from_db, save_file_to_db};
 use crate::iofxml3::parser::parse_startlist_xml_data;
@@ -390,14 +391,14 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
         .bind(event_id)
         .execute(&gdb.0).await.map_err(sqlx_to_anyhow)?;
 
-    let txn = edb.begin().await?;
+    let mut tx = edb.begin().await?;
     for cr in classes {
         sqlx::query("INSERT OR REPLACE INTO classes (name, length, climb, control_count) VALUES (?, ?, ?, ?)")
             .bind(cr.name)
             .bind(cr.length)
             .bind(cr.climb)
             .bind(cr.control_count)
-            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+            .execute(&mut *tx).await.map_err(sqlx_to_anyhow)?;
     }
     for run in runs {
         sqlx::query("INSERT OR REPLACE INTO runs (
@@ -420,10 +421,9 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
             .bind(run.start_time.map(|d| d.0))
             .bind(run.check_time.map(|d| d.0))
             .bind(run.finish_time.map(|d| d.0))
-            // .bind(run.status)
-            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+            .execute(&mut *tx).await.map_err(sqlx_to_anyhow)?;
     }
-    txn.commit().await?;
+    tx.commit().await?;
 
     Ok(())
 }
@@ -434,15 +434,15 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
     let runs: csv::Result<Vec< crate::runs::RunsRecord >> = rdr.deserialize().collect();
     let runs = runs?;
 
-    let mut run_ids = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs")
+    let mut run_ids_to_delete = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs")
         .fetch_all(edb)
         .await.map_err(sqlx_to_anyhow)?
         .into_iter().map(|id| id.0).collect::<Vec<_>>();
 
-    let txn = edb.begin().await?;
+    let mut tx = edb.begin().await?;
 
     for run in runs {
-        run_ids.retain(|id| *id != run.run_id);
+        run_ids_to_delete.retain(|id| *id != run.run_id);
         sqlx::query("INSERT OR REPLACE INTO runs (
                              run_id,
                              si_id,
@@ -464,15 +464,15 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
             .bind(run.check_time.map(|d| d.0))
             .bind(run.finish_time.map(|d| d.0))
             // .bind(run.status)
-            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+            .execute(&mut *tx).await.map_err(sqlx_to_anyhow)?;
     }
-    for run_id in run_ids {
+    for run_id in run_ids_to_delete {
         sqlx::query("DELETE FROM runs WHERE run_id=?")
             .bind(run_id)
-            .execute(edb).await.map_err(sqlx_to_anyhow)?;
+            .execute(&mut *tx).await.map_err(sqlx_to_anyhow)?;
     }
 
-    txn.commit().await?;
+    tx.commit().await?;
 
     Ok(())
 }
