@@ -1,3 +1,4 @@
+use crate::runs::rocket_uri_macro_get_runs;
 use crate::changes::{rocket_uri_macro_api_changes_get, ChangeData, ChangesRecord};
 use crate::changes::rocket_uri_macro_add_run_update_request_change;
 use crate::changes::rocket_uri_macro_api_changes_delete;
@@ -13,6 +14,7 @@ use crate::{util};
 use crate::auth::QX_SESSION_ID;
 use crate::changes::DataId;
 use crate::runs::{RunChange, RunsRecord};
+use crate::changes::rocket_uri_macro_add_run_updated_change;
 
 const EVENT_ID: EventId = 1;
 
@@ -222,8 +224,8 @@ fn post_qe3_change() {
     let client = create_test_server();
     upload_start_list(&client);
 
-    fn apply_change_in_qe3(client: &Client, run_id: DataId, change: &RunsRecord) -> RunsRecord {
-        let resp = client.post(format!("/api/event/current/changes/run-updated?run_id={}", run_id.unwrap()))
+    fn apply_change_in_qe3(client: &Client, run_id: DataId, change: Option<&RunChange>) -> Vec<RunsRecord> {
+        let resp = client.post(uri!(add_run_updated_change(run_id=run_id)))
             .header(Header::new("qx-api-token", DEMO_API_TOKEN))
             .header(ContentType::JSON)
             .json(&change)
@@ -231,29 +233,24 @@ fn post_qe3_change() {
         assert_eq!(resp.status(), Status::Ok);
 
         // get change
-        let resp = client.get(format!("/api/event/{EVENT_ID}/runs?run_id=1")).dispatch();
-        resp.into_json::<Vec<RunsRecord>>().unwrap().first().unwrap().clone()
+        let resp = client.get(uri!(get_runs(event_id=1, run_id=Some(1), class_name=None::<&str>))).dispatch();
+        resp.into_json::<Vec<RunsRecord>>().unwrap()
     }
 
     {
-        let change = RunsRecord {
-            run_id: 1,
-            si_id: Some(12345),
-            ..Default::default()
-        };
-        let rec = apply_change_in_qe3(&client, Some(1), &change);
-        assert_eq!(rec.si_id, Some(12345));
-    }
-    {
         let start_time = QxDateTime::now().trimmed_to_sec();
-        let change = RunsRecord {
-            run_id: 1,
+        let change = RunChange {
             last_name: Some("Foo".to_string()),
             start_time: Some(start_time),
             ..Default::default()
         };
-        let rec = apply_change_in_qe3(&client, Some(1), &change);
+        let rec = apply_change_in_qe3(&client, 1, Some(&change)).first().unwrap().clone();
         assert_eq!(rec.last_name, Some("Foo".to_string()));
         assert_eq!(rec.start_time, Some(start_time));
+    }
+    {
+        // drop rec id == 1
+        let rec_lst = apply_change_in_qe3(&client, 1, None).clone();
+        assert!(rec_lst.is_empty());
     }
 }

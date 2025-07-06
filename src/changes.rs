@@ -20,7 +20,7 @@ use crate::oc::OCheckListChange;
 use crate::runs::{RunChange};
 use crate::util::{anyhow_to_custom_error, sqlx_to_anyhow, sqlx_to_custom_error};
 
-pub(crate) type DataId = Option<i64>;
+pub(crate) type DataId = i64;
 
 pub const PENDING: &str = "Pending";
 const ACCEPTED: &str = "Accepted";
@@ -117,7 +117,7 @@ pub struct ChangesRecord {
     pub id: i64,
     pub source: String,
     pub data_type: DataType,
-    pub data_id: DataId,
+    pub data_id: Option<DataId>,
     pub data: ChangeData,
     pub user_id: Option<String>,
     // we need run_id to be able to pair changes with rows in runs table
@@ -220,19 +220,23 @@ pub async fn add_run_update_request_change(
 #[post("/api/event/current/changes/run-updated?<run_id>", data = "<change>")]
 async fn add_run_updated_change(
     run_id: DataId,
-    change: Json<RunChange>,
+    change: Json<Option<RunChange>>,
     api_token: QxApiToken,
     state: &State<SharedQxState>,
     db: &State<DbPool>
 ) -> Result<(), Custom<String>> {
     let event = load_event_info_for_api_token(&api_token, db).await?;
     let run_change = change.into_inner();
-    let data = ChangeData::RunUpdated(run_change.clone());
+    let data = if let Some(run_change) = &run_change {
+        ChangeData::RunUpdated(run_change.clone())
+    } else {
+        ChangeData::DropRecord
+    };
     add_change(event.id, ChangesRecord{
         id: 0,
         source: "qe".to_string(),
         data_type: DataType::RunUpdated,
-        data_id: run_id,
+        data_id: Some(run_id),
         data,
         user_id: None,
         status: None,
@@ -240,12 +244,16 @@ async fn add_run_updated_change(
     }, state).await.map_err(anyhow_to_custom_error)?;
     // add_change(event.id, "qe", data_type, run_id, &data, None, None, None, state).await.map_err(anyhow_to_custom_error)?;
     let db = get_event_db(event.id, state).await.map_err(anyhow_to_custom_error)?;
-    apply_qe_run_change(run_id, &run_change, &db).await.map_err(anyhow_to_custom_error)?;
+    apply_qe_run_change(run_id, run_change.as_ref(), &db).await.map_err(anyhow_to_custom_error)?;
     Ok(())
 }
 
-async fn apply_qe_run_change(run_id: DataId, change: &RunChange, edb: &SqlitePool) -> anyhow::Result<()> {
-    if let Some(run_id) = run_id {
+async fn apply_qe_run_change(run_id: DataId, change: Option<&RunChange>, edb: &SqlitePool) -> anyhow::Result<()> {
+    if let Some(change) = change {
+        let changed_fields = change.fields_with_value();
+        if changed_fields.is_empty() {
+            return Err(anyhow!("Cannot apply empty change"));
+        }
         let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM runs WHERE run_id=?")
             .bind(run_id)
             .fetch_one(edb).await.map_err(sqlx_to_anyhow)?;
@@ -272,7 +280,6 @@ async fn apply_qe_run_change(run_id: DataId, change: &RunChange, edb: &SqlitePoo
                 .bind(change.finish_time)
                 .execute(edb).await.map_err(sqlx_to_anyhow)?;
         } else {
-            let changed_fields = change.fields_with_value(); 
             let placeholders = changed_fields.iter().map(|&fld_name| format!("{fld_name}=?") ).join(",");
             let qs = format!("UPDATE runs SET {placeholders} WHERE run_id=?");
             let mut q = sqlx::query(&qs);
@@ -350,8 +357,7 @@ async fn api_changes_get(
         query_builder.push_bind(data_type);
     }
     if let Some(status) = status {
-        query_builder.push(" AND status=");
-        query_builder.push_bind(status);
+        query_builder.push(format!(" AND status LIKE '{status}%'"));
     }
     query_builder.push(" ORDER BY created");
     if let Some(limit) = limit {
