@@ -107,8 +107,8 @@ function applyChanges(table, changes) {
         }
         html += `<div style="font-weight: bold; color: darkred;">${rec.data.RunUpdateRequest[fld_name]}<a href="#" onclick="deleteChange(${rec.id})">❌</a></div>`
         html += `<div class="w3-small" style="color: darkblue;">${rec.user_id}</div>`
-        if (rec.note) {
-            html += `<div class="w3-small">${rec.note}</div>`
+        if (rec.data.RunUpdateRequest.note) {
+            html += `<div class="w3-small">${rec.data.RunUpdateRequest.note}</div>`
         }
         cell.innerHTML = html;
     }
@@ -118,7 +118,7 @@ function applyChanges(table, changes) {
         let row = find_row(run_id);
         if (row) {
             for (let fld_name in rec.data.RunUpdateRequest) {
-                if (fld_name === 'run_id') {
+                if (fld_name === 'note') {
                     continue;
                 }
                 const ix = field_index(fld_name);
