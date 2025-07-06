@@ -10,8 +10,9 @@
                 <th>Edit</th>
             {{/if}}
             <th>Status</th>
-            <th>Data</th>
             <th class="w3-right-align">Data Id</th>
+            <th>Data type</th>
+            <th>Data</th>
             <th>Source</th>
             <th>User ID</th>
             <th>Created</th>
@@ -26,8 +27,9 @@
                     </td>
                 {{/if}}
                 <td>{{ stringify status }}</td>
-                <td>{{ stringify data }}</td>
                 <td class="w3-right-align">{{ data_id }}</td>
+                <td>{{ data_type }}</td>
+                <td class="w3-tooltip"><span style="position:absolute;left:0;bottom:0px" class="w3-text w3-tag">{{ stringify data }}</span>data ...</td>
                 <td>{{ source }}</td>
                 <td>{{ user_id }}</td>
                 <td>{{ created }}</td>
