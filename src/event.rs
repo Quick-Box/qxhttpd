@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::OpenOptions;
 use rocket::serde::json::Json;
 use std::io::{Read};
@@ -434,15 +435,15 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
     let runs: csv::Result<Vec< crate::runs::RunsRecord >> = rdr.deserialize().collect();
     let runs = runs?;
 
-    let mut run_ids_to_delete = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs")
+    let new_run_ids = runs.iter().map(|run| run.run_id).collect::<HashSet<_>>();
+    let curr_run_ids = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs")
         .fetch_all(edb)
         .await.map_err(sqlx_to_anyhow)?
-        .into_iter().map(|id| id.0).collect::<Vec<_>>();
+        .into_iter().map(|id| id.0).collect::<HashSet<_>>();
 
     let mut tx = edb.begin().await?;
 
     for run in runs {
-        run_ids_to_delete.retain(|id| *id != run.run_id);
         sqlx::query("INSERT OR REPLACE INTO runs (
                              run_id,
                              si_id,
@@ -466,7 +467,7 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
             // .bind(run.status)
             .execute(&mut *tx).await.map_err(sqlx_to_anyhow)?;
     }
-    for run_id in run_ids_to_delete {
+    for run_id in curr_run_ids.difference(&new_run_ids) {
         sqlx::query("DELETE FROM runs WHERE run_id=?")
             .bind(run_id)
             .execute(&mut *tx).await.map_err(sqlx_to_anyhow)?;
