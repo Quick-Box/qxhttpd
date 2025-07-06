@@ -25,11 +25,13 @@ pub(crate) type DataId = Option<i64>;
 pub const PENDING: &str = "Pending";
 const ACCEPTED: &str = "Accepted";
 const REJECTED: &str = "Rejected";
+const LOCKED: &str = "Locked";
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub enum ChangeStatus {
     #[default]
     Pending,
+    Locked(i64),
     Accepted,
     Rejected,
 }
@@ -53,6 +55,7 @@ impl Display for ChangeStatus {
             ChangeStatus::Pending => f.write_str(PENDING),
             ChangeStatus::Accepted => f.write_str(ACCEPTED),
             ChangeStatus::Rejected => f.write_str(REJECTED),
+            ChangeStatus::Locked(n) => write!(f, "{LOCKED}({n})"),
         }
     }
 }
