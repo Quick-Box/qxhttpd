@@ -8,7 +8,8 @@ create table changes
     user_id        TEXT,
     created        TEXT default CURRENT_TIMESTAMP,
     status         TEXT,
-    status_message TEXT
+    status_message TEXT,
+    lock_number    INTEGER
 );
 
 create table classes
@@ -18,7 +19,7 @@ create table classes
     length           INTEGER,
     climb            INTEGER,
     control_count    INTEGER,
-    start_time       TEXT,
+    start_time       INTEGER,
     interval         INTEGER,
     start_slot_count INTEGER
 );

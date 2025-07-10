@@ -118,7 +118,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
     for chng in change_set.Data {
         let data_type = DataType::OcChange;
         let data = ChangeData::OcChange(chng.clone());
-        add_change(event_id, ChangesRecord{
+        add_change(event_id, ChangesRecord {
             id: 0,
             source: "oc".to_string(),
             data_type,
@@ -127,12 +127,13 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
             user_id: None,
             status: None,
             created: QxDateTime::now(),
+            lock_number: None,
         }, state).await?;
         match RunChange::try_from_oc_change(&chng, change_dt) {
             Ok((run_id, run_chng)) => {
                 let data_type = DataType::RunUpdateRequest;
                 let data = ChangeData::RunUpdateRequest(run_chng);
-                add_change(event_id, ChangesRecord{
+                add_change(event_id, ChangesRecord {
                     id: 0,
                     source: "oc".to_string(),
                     data_type,
@@ -141,6 +142,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
                     user_id: None,
                     status: Some(ChangeStatus::Pending),
                     created: QxDateTime::now(),
+                    lock_number: None,
                 }, state).await?;
             }
             Err(e) => {

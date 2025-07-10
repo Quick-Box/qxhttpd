@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, TimeDelta};
+use chrono::{NaiveDateTime, NaiveTime, TimeDelta};
 use qxhttpd_proc_macros::FieldsWithValue;
 use rocket::{Build, Rocket, State};
 use rocket::response::status::Custom;
@@ -14,15 +14,19 @@ use crate::util::{anyhow_to_custom_error, sqlx_to_custom_error};
 
 #[derive(Serialize, Deserialize, FromRow, Clone, Debug)]
 pub struct ClassesRecord {
+    #[serde(default)]
     pub id: i64,
     pub name: String,
     pub length: i64,
     pub climb: i64,
     pub control_count: i64,
-    pub start_time: Option<DateTime<FixedOffset>>,
+    pub start_time: i64,
     pub interval: i64,
     pub start_slot_count: i64,
 }
+
+#[allow(dead_code)]
+fn is_false(b: &bool) -> bool { !*b }
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug)]
 #[derive(FieldsWithValue)]
@@ -51,6 +55,9 @@ pub struct RunChange {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub finish_time: Option<QxDateTime>,
+    // #[serde(default)]
+    // #[serde(skip_serializing_if = "is_false")]
+    // pub rent_card: bool,
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,

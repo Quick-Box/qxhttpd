@@ -31,7 +31,7 @@ const LOCKED: &str = "Locked";
 pub enum ChangeStatus {
     #[default]
     Pending,
-    Locked(i64),
+    Locked,
     Accepted,
     Rejected,
 }
@@ -55,7 +55,7 @@ impl Display for ChangeStatus {
             ChangeStatus::Pending => f.write_str(PENDING),
             ChangeStatus::Accepted => f.write_str(ACCEPTED),
             ChangeStatus::Rejected => f.write_str(REJECTED),
-            ChangeStatus::Locked(n) => write!(f, "{LOCKED}({n})"),
+            ChangeStatus::Locked => f.write_str(LOCKED),
         }
     }
 }
@@ -120,10 +120,9 @@ pub struct ChangesRecord {
     pub data_id: Option<DataId>,
     pub data: ChangeData,
     pub user_id: Option<String>,
-    // we need run_id to be able to pair changes with rows in runs table
-    // pub run_id: Option<i64>,
     pub status: Option<ChangeStatus>,
     pub created: QxDateTime,
+    pub lock_number: Option<i64>,
 }
 #[allow(clippy::too_many_arguments)]
 pub async fn add_change(
@@ -203,7 +202,7 @@ pub async fn add_run_update_request_change(
 ) -> Result<Json<i64>, Custom<String>> {
     let user = user_info(&session_id, state).await?;
     let data = ChangeData::RunUpdateRequest(data.into_inner());
-    let change_id = add_change(event_id, ChangesRecord{
+    let change_id = add_change(event_id, ChangesRecord {
         id: 0,
         source: "www".to_string(),
         data_type: DataType::RunUpdateRequest,
@@ -212,6 +211,7 @@ pub async fn add_run_update_request_change(
         user_id: Some(user.email),
         status: Some(ChangeStatus::Pending),
         created: QxDateTime::now(),
+        lock_number: None,
     }, state).await.map_err(anyhow_to_custom_error)?;
     //state.read().await.broadcast_runs_change((event_id, data_id, data)).await.map_err(anyhow_to_custom_error)?;
     Ok(Json(change_id))
@@ -232,7 +232,7 @@ async fn add_run_updated_change(
     } else {
         ChangeData::DropRecord
     };
-    add_change(event.id, ChangesRecord{
+    add_change(event.id, ChangesRecord {
         id: 0,
         source: "qe".to_string(),
         data_type: DataType::RunUpdated,
@@ -241,6 +241,7 @@ async fn add_run_updated_change(
         user_id: None,
         status: None,
         created: QxDateTime::now(),
+        lock_number: None,
     }, state).await.map_err(anyhow_to_custom_error)?;
     // add_change(event.id, "qe", data_type, run_id, &data, None, None, None, state).await.map_err(anyhow_to_custom_error)?;
     let db = get_event_db(event.id, state).await.map_err(anyhow_to_custom_error)?;

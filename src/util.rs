@@ -5,6 +5,8 @@ use base64::Engine;
 use image::ImageFormat;
 use rocket::http::Status;
 use rocket::response::status::Custom;
+use serde::de::DeserializeOwned;
+use serde_json::Value;
 
 pub(crate) fn unzip_data(bytes: &[u8]) -> Result<Vec<u8>, String> {
     let mut z = flate2::read::ZlibDecoder::new(bytes);
@@ -85,4 +87,29 @@ pub(crate) fn create_qrc(data: &[u8]) -> anyhow::Result<String> {
     image.write_to(&mut cursor, ImageFormat::Png)?;
     // Encode the image buffer to base64
     Ok(base64::engine::general_purpose::STANDARD.encode(&buffer))
+}
+
+pub fn from_csv_json<T: DeserializeOwned>(data: Vec<Vec<Value>>) -> anyhow::Result<Vec<T>> {
+    if data.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let headers = &data[0];
+    let mut result = Vec::new();
+
+    for row in data.iter().skip(1) {
+        let mut map = serde_json::Map::new();
+
+        for (key, value) in headers.iter().zip(row.iter()) {
+            if let Value::String(k) = key {
+                map.insert(k.clone(), value.clone());
+            } else {
+                return Err(anyhow!("Header must be list of strings"));
+            }
+        }
+        info!("converting {:#?}", map);
+        let obj: T = serde_json::from_value(Value::Object(map))?;
+        result.push(obj);
+    }
+    Ok(result)
 }

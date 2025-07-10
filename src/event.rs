@@ -16,15 +16,16 @@ use crate::auth::{generate_random_string, UserInfo};
 use chrono::{DateTime, FixedOffset};
 use rocket::serde::{Deserialize, Serialize};
 use log::info;
+use serde_json::Value;
 use crate::changes::{ChangesRecord, PENDING, RUN_UPDATE_REQUEST};
 use crate::files::{load_file_from_db, save_file_to_db};
 use crate::iofxml3::parser::parse_startlist_xml_data;
 use crate::qxdatetime::QxDateTime;
 use crate::runs::{ClassesRecord, RunsRecord};
-use crate::util::{anyhow_to_custom_error, create_qrc, sqlx_to_anyhow, sqlx_to_custom_error, string_to_custom_error};
+use crate::util::{anyhow_to_custom_error, create_qrc, from_csv_json, sqlx_to_anyhow, sqlx_to_custom_error, string_to_custom_error};
 
 pub const START_LIST_IOFXML3_FILE: &str = "startlist-iof3.xml";
-pub const RUNS_CSV_FILE: &str = "runs.csv";
+pub const RUNS_CSV_JSON_FILE: &str = "runs.csv.json";
 
 // pub type RunId = i64;
 pub type SiId = i64;
@@ -271,16 +272,17 @@ async fn get_api_event_current(api_token: QxApiToken, db: &State<DbPool>) -> Res
     Ok(Json(event))
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PostedEvent {
+pub struct EventInfo {
     pub name: String,
     pub stage: i64,
     pub stage_count: i64,
     pub place: String,
     pub start_time: DateTime<FixedOffset>,
+    pub classes: Vec<Vec<Value>>,
 }
 #[post("/api/event/current", data = "<posted_event>")]
-async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<PostedEvent>, db: &State<DbPool>) -> Result<Json<EventRecord>, Custom<String>> {
-    let Ok( mut event_info) = load_event_info_for_api_token(&api_token, db).await else {
+async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<EventInfo>, state: &State<SharedQxState>, gdb: &State<DbPool>) -> Result<Json<EventRecord>, Custom<String>> {
+    let Ok( mut event_info) = load_event_info_for_api_token(&api_token, gdb).await else {
         return Err(string_to_custom_error("Event not found"));
     };
     event_info.name = posted_event.name.clone();
@@ -289,8 +291,12 @@ async fn post_api_event_current(api_token: QxApiToken, posted_event: Json<Posted
     event_info.place = posted_event.place.clone();
     event_info.start_time = posted_event.start_time.into();
     debug!("Post event info, start00: {}", event_info.start_time.to_iso_string());
-    let event_id = save_event(&event_info, db).await.map_err(anyhow_to_custom_error)?;
-    let reloaded_event = load_event_info(event_id, db).await?;
+    let event_id = save_event(&event_info, gdb).await.map_err(anyhow_to_custom_error)?;
+    let reloaded_event = load_event_info(event_id, gdb).await?;
+
+    let edb = get_event_db(event_id, state).await.map_err(anyhow_to_custom_error)?;
+    import_classes_from_csv_json(posted_event.classes.clone(), &edb).await.map_err(anyhow_to_custom_error)?;
+
     Ok(Json(reloaded_event))
 }
 
@@ -428,12 +434,34 @@ pub async fn import_start_list(event_id: EventId, edb: &SqlitePool, gdb: &State<
 
     Ok(())
 }
+pub async fn import_classes_from_csv_json(json: Vec<Vec<Value>>, edb: &SqlitePool) -> anyhow::Result<()> {
+    let classes: Vec<ClassesRecord> = from_csv_json(json)?;
+    let mut tx = edb.begin().await?;
 
-pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
-    let data = load_file_from_db(RUNS_CSV_FILE, edb).await?;
-    let mut rdr = csv::Reader::from_reader(&*data);
-    let runs: csv::Result<Vec< crate::runs::RunsRecord >> = rdr.deserialize().collect();
-    let runs = runs?;
+    for cr in classes {
+        sqlx::query("INSERT INTO classes (
+                            name,
+                            length,
+                            climb,
+                            control_count
+                        )
+                        VALUES (?, ?, ?, ?)
+                        ON CONFLICT(name) DO UPDATE SET
+                            length        = excluded.length,
+                            climb         = excluded.climb,
+                            control_count = excluded.control_count")
+            .bind(cr.name)
+            .bind(cr.length)
+            .bind(cr.climb)
+            .bind(cr.control_count)
+            .execute(&mut *tx).await.map_err(sqlx_to_anyhow)?;
+    }
+
+    tx.commit().await?;
+    Ok(())
+}
+pub async fn import_runs_from_csv_json(json: Vec<Vec<Value>>, edb: &SqlitePool) -> anyhow::Result<()> {
+    let runs: Vec<RunsRecord> = from_csv_json(json)?;
 
     let new_run_ids = runs.iter().map(|run| run.run_id).collect::<HashSet<_>>();
     let curr_run_ids = sqlx::query_as::<_, (i64,)>("SELECT run_id FROM runs")
@@ -444,7 +472,7 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
     let mut tx = edb.begin().await?;
 
     for run in runs {
-        sqlx::query("INSERT OR REPLACE INTO runs (
+        sqlx::query("INSERT INTO runs (
                              run_id,
                              si_id,
                              last_name,
@@ -454,7 +482,16 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
                              start_time,
                              check_time,
                              finish_time
-                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         ON CONFLICT(run_id) DO UPDATE SET
+                            si_id        = excluded.si_id,
+                            last_name    = excluded.last_name,
+                            first_name   = excluded.first_name,
+                            registration = excluded.registration,
+                            class_name   = excluded.class_name,
+                            start_time   = excluded.start_time,
+                            check_time   = excluded.check_time,
+                            finish_time  = excluded.finish_time")
             .bind(run.run_id)
             .bind(run.si_id)
             .bind(run.last_name)
@@ -476,6 +513,11 @@ pub async fn import_runs(edb: &SqlitePool) -> anyhow::Result<()> {
     tx.commit().await?;
 
     Ok(())
+}
+pub async fn import_runs_from_db_file(edb: &SqlitePool) -> anyhow::Result<()> {
+    let data = load_file_from_db(RUNS_CSV_JSON_FILE, edb).await?;
+    let json: Vec<Vec<Value>> = serde_json::from_slice(&data)?;
+    import_runs_from_csv_json(json, edb).await
 }
 
 pub(crate) const DEMO_API_TOKEN: &str = "plelababamak";

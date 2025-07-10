@@ -7,7 +7,7 @@ use std::fs::OpenOptions;
 use std::io::{Read};
 use rocket::local::blocking::Client;
 use rocket::http::{ContentType, Cookie, Header, Status};
-use crate::event::{EventId, EventRecord, PostedEvent};
+use crate::event::{EventId, EventRecord, EventInfo};
 use crate::files::FileInfo;
 use crate::qxdatetime::QxDateTime;
 use crate::{util};
@@ -53,7 +53,7 @@ fn update_event_data() {
     assert_eq!(event.id, 1);
 
     let dt = QxDateTime::now().trimmed_to_sec();
-    let post_event = PostedEvent {
+    let post_event = EventInfo {
         name: "Foo".to_string(),
         stage: 2,
         stage_count: 3,
