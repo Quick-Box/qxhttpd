@@ -121,6 +121,7 @@ pub struct ChangesRecord {
     pub data: ChangeData,
     pub user_id: Option<String>,
     pub status: Option<ChangeStatus>,
+    // pub status_message: Option<String>,
     pub created: QxDateTime,
     pub lock_number: Option<i64>,
 }
