@@ -121,7 +121,7 @@ pub struct ChangesRecord {
     pub data: ChangeData,
     pub user_id: Option<String>,
     pub status: Option<ChangeStatus>,
-    // pub status_message: Option<String>,
+    pub status_message: Option<String>,
     pub created: QxDateTime,
     pub lock_number: Option<i64>,
 }
@@ -211,6 +211,7 @@ pub async fn add_run_update_request_change(
         data,
         user_id: Some(user.email),
         status: Some(ChangeStatus::Pending),
+        status_message: None,
         created: QxDateTime::now(),
         lock_number: None,
     }, state).await.map_err(anyhow_to_custom_error)?;
@@ -280,6 +281,7 @@ async fn add_run_updated_change(run_id: DataId, change: Json<Option<RunChange>>,
         data,
         user_id: None,
         status: None,
+        status_message: None,
         created: QxDateTime::now(),
         lock_number: None,
     }, state).await.map_err(anyhow_to_custom_error)?;

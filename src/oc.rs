@@ -126,6 +126,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
             data,
             user_id: None,
             status: None,
+            status_message: None,
             created: QxDateTime::now(),
             lock_number: None,
         }, state).await?;
@@ -141,6 +142,7 @@ pub(crate) async fn add_oc_change_set(event_id: EventId, change_set: OCheckListC
                     data,
                     user_id: None,
                     status: Some(ChangeStatus::Pending),
+                    status_message: None,
                     created: QxDateTime::now(),
                     lock_number: None,
                 }, state).await?;
