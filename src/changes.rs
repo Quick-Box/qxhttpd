@@ -217,14 +217,27 @@ pub async fn add_run_update_request_change(
     Ok(Json(change_id))
 }
 
+#[get("/api/event/current/changes/lock-change?<change_id>&<lock_number>")]
+async fn api_changes_lock_change(change_id: i64, lock_number: i64, api_token: QxApiToken, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<Json<i64>, Custom<String>> {
+    let event = load_event_info_for_api_token(&api_token, db).await?;
+    let db = get_event_db(event.id, state).await.map_err(anyhow_to_custom_error)?;
+    let id: (Option<i64>,) = sqlx::query_as("SELECT lock_number FROM changes WHERE id=?")
+        .bind(change_id)
+        .bind(lock_number)
+        .fetch_one(&db).await.map_err(sqlx_to_custom_error)?;
+    if let Some(id) = id.0 {
+        Ok(Json(id))
+    } else {
+        sqlx::query("UPDATE changes SET lock_number=?, status='Locked'  WHERE id=? AND lock_number IS NULL")
+            .bind(lock_number)
+            .bind(change_id)
+            .execute(&db).await.map_err(sqlx_to_custom_error)?;
+        Ok(lock_number.into())
+    }
+}
+
 #[post("/api/event/current/changes/run-updated?<run_id>", data = "<change>")]
-async fn add_run_updated_change(
-    run_id: DataId,
-    change: Json<Option<RunChange>>,
-    api_token: QxApiToken,
-    state: &State<SharedQxState>,
-    db: &State<DbPool>
-) -> Result<(), Custom<String>> {
+async fn add_run_updated_change(run_id: DataId, change: Json<Option<RunChange>>, api_token: QxApiToken, state: &State<SharedQxState>, db: &State<DbPool>) -> Result<(), Custom<String>> {
     let event = load_event_info_for_api_token(&api_token, db).await?;
     let run_change = change.into_inner();
     let data = if let Some(run_change) = &run_change {
@@ -407,5 +420,6 @@ pub fn extend(rocket: Rocket<Build>) -> Rocket<Build> {
         add_run_update_request_change,
         api_changes_get,
         api_changes_delete,
+        api_changes_lock_change,
     ])
 }

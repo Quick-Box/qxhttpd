@@ -1,6 +1,6 @@
 {{#*inline "page"}}
 
-    <h2>Start list</h2>
+    <h2>{{ classrec.name }} - Start list</h2>
     <h3><a href="/event/{{ event.id }}">{{ event.name }} {{#if (gt event.stage_count 1)}} E{{ event.stage }} {{/if}}</a></h3>
     <div class="w3-bar">
         {{#if user}}
@@ -156,6 +156,7 @@
                 <h2 class="">Edit runner</h2>
             </div>
             <div class="w3-panel">
+                <h3>Class {{ classrec.name }}</h3>
                 <label>
                     First Name
                     <input class="w3-input w3-border" type="text" name="first_name" required>

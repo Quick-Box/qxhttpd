@@ -107,7 +107,7 @@ pub fn from_csv_json<T: DeserializeOwned>(data: Vec<Vec<Value>>) -> anyhow::Resu
                 return Err(anyhow!("Header must be list of strings"));
             }
         }
-        info!("converting {:#?}", map);
+        // info!("converting {:#?}", map);
         let obj: T = serde_json::from_value(Value::Object(map))?;
         result.push(obj);
     }
