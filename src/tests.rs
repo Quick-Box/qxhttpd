@@ -59,6 +59,7 @@ fn update_event_data() {
         stage_count: 3,
         place: "Bar".to_string(),
         start_time: dt.0,
+        classes: vec![],
     };
     let resp = client.post("/api/event/current")
         .header(Header::new("qx-api-token", DEMO_API_TOKEN))
