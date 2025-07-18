@@ -44,7 +44,7 @@ impl ChangeStatus {
             PENDING => Self::Pending,
             ACCEPTED => Self::Accepted,
             REJECTED => Self::Rejected,
-            _ => panic!("Unknown status: {}", s),
+            _ => panic!("Unknown status: {s}"),
         }
     }
 }
@@ -83,7 +83,7 @@ impl DataType {
             RUN_UPDATED => Self::RunUpdated,
             RADIO_PUNCH => Self::RadioPunch,
             CARD_READOUT => Self::CardReadout,
-            _ => panic!("Unknown data type: {}", s),
+            _ => panic!("Unknown data type: {s}"),
         }
     }
 }
@@ -93,11 +93,11 @@ impl_sqlx_text_type_encode_decode!(DataType);
 impl Display for DataType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            DataType::OcChange => write!(f, "{}", OC_CHANGE),
-            DataType::RunUpdateRequest => write!(f, "{}", RUN_UPDATE_REQUEST),
-            DataType::RunUpdated => write!(f, "{}", RUN_UPDATED),
-            DataType::RadioPunch => write!(f, "{}", RADIO_PUNCH),
-            DataType::CardReadout => write!(f, "{}", CARD_READOUT),
+            DataType::OcChange => write!(f, "{OC_CHANGE}"),
+            DataType::RunUpdateRequest => write!(f, "{RUN_UPDATE_REQUEST}"),
+            DataType::RunUpdated => write!(f, "{RUN_UPDATED}"),
+            DataType::RadioPunch => write!(f, "{RADIO_PUNCH}"),
+            DataType::CardReadout => write!(f, "{CARD_READOUT}"),
         }
     }
 }

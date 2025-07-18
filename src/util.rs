@@ -40,15 +40,15 @@ pub(crate) mod test {
 
 pub(crate) fn string_to_custom_error(err: &str) -> Custom<String> {
     error!("Error: {err}\nbacktrace: {}", Backtrace::capture());
-    Custom(Status::InternalServerError, format!("Error: {}", err))
+    Custom(Status::InternalServerError, format!("Error: {err}"))
 }
 pub(crate) fn sqlx_to_custom_error(err: sqlx::Error) -> Custom<String> {
     error!("SQL Error: {err}\nbacktrace: {}", Backtrace::capture());
-    Custom(Status::InternalServerError, format!("SQLx error: {}", err))
+    Custom(Status::InternalServerError, format!("SQLx error: {err}"))
 }
 pub(crate) fn anyhow_to_custom_error(err: anyhow::Error) -> Custom<String> {
     error!("Error: {err}\nbacktrace: {}", Backtrace::capture());
-    Custom(Status::InternalServerError, format!("Error: {}", err))
+    Custom(Status::InternalServerError, format!("Error: {err}"))
 }
 pub(crate) fn sqlx_to_anyhow(err: sqlx::Error) -> anyhow::Error {
     error!("SQL Error: {err}\nbacktrace: {}", Backtrace::capture());

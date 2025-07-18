@@ -85,9 +85,9 @@ async fn login(state: &State<SharedQxState>) -> Redirect {
         (s.app_config.is_local_server(), s.app_config.server_port)
     };
     if is_local_server {
-        Redirect::to(format!("http://localhost:{}/login/google", server_port))
+        Redirect::to(format!("http://localhost:{server_port}/login/google"))
     } else {
-        Redirect::to(format!("https://qxqx.org:{}/login/google", server_port))
+        Redirect::to(format!("https://qxqx.org:{server_port}/login/google"))
     }
 }
 
